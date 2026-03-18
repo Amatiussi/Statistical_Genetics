@@ -1,0 +1,92 @@
+---
+title: "Relatório: Package swirl"
+author: "Ana Matiussi"
+format: pdf
+editor: visual
+---
+
+## Pacote swirl
+
+Para mais informações sobre o pacote, podem ser consultados o site oficial ([swirlstats.com](http://swirlstats.com/)) e o repositório oficial do projeto no GitHub ([repositório do swirl no GitHub](https://github.com/swirldev/swirl)).
+
+## Introdução
+
+O pacote "swirl" é uma ferramenta desenvolvida para auxiliar iniciantes no aprendizado da linguagem R de forma interativa. Seu principal objetivo é unir teoria e prática no próprio ambiente de programação, permitindo que o estudante aprenda conceitos básicos enquanto executa comandos no console. Dessa forma, o processo de aprendizagem se torna mais dinâmico, intuitivo e acessível, especialmente para quem está tendo os primeiros contatos com programação.
+
+Para realizar a atividade, foram utilizados os seguintes comandos no R:
+
+```{r eval=FALSE}
+install.packages("swirl")
+library(swirl)
+swirl()
+```
+
+Após iniciar o pacote, foi selecionado o curso **“R Programming: The basics of programming in R”**, que apresenta uma sequência de lições introdutórias sobre programação em R. Dentro desse curso, há diversos módulos, entre eles:
+
+1.  Basic Building Blocks
+
+2.  Workspace and Files
+
+3.  Sequences of Numbers
+
+4.  Vectors
+
+5.  Missing Values
+
+6.  Subsetting Vectors
+
+7.  Matrices and Data Frames
+
+8.  Logic
+
+9.  Functions
+
+10. lapply and sapply
+
+11. vapply and tapply
+
+12. Looking at Data
+
+13. Simulation
+
+14. Dates and Times
+
+15. Base Graphics
+
+Dentre esses módulos, foi escolhido o **“12: Looking at Data”**, que aborda formas de explorar, resumir e compreender conjuntos de dados.
+
+## Módulo realizado: Looking at Data
+
+O módulo aborda comandos básicos para explorar e compreender conjuntos de dados no R. Essa etapa tem grande importância, pois antes de realizar qualquer análise, é necessário conhecer a estrutura do banco de dados, suas variáveis e algumas características gerais.
+
+## Conceitos e comandos praticados
+
+-   `dim()`: utilizado para verificar as dimensões de um objeto, como número de linhas e colunas;
+
+-   `names()`: permite visualizar os nomes das variáveis ou colunas de um conjunto de dados;
+
+-   `head()`: mostra as primeiras observações do banco de dados;
+
+-   `tail()`: exibe as últimas observações;
+
+-   `class()`: identifica a classe ou o tipo do objeto no R, como `data.frame`, `matrix`, `vector`, entre outros.
+
+-   `nrow()`: informa o número de linhas de um objeto, como um banco de dados ou matriz.
+
+-   `ncol()`: informa o número de colunas de um objeto.
+
+-   `str()`: apresenta a estrutura do objeto, incluindo tipo de dados e exemplos de valores;
+
+-   `summary()`: fornece um resumo estatístico das variáveis, como mínimo, máximo, média, mediana e quartis, quando aplicável.
+
+Esses comandos ajudam a ter uma visão inicial do conjunto de dados e são muito úteis em análises futuras.
+
+## Pontos interessantes
+
+Um dos aspectos interessantes é perceber que funções simples podem fornecer informações importantes sobre os dados. Compreender a estrutura de um banco de dados constitui a etapa inicial de qualquer análise, sendo indispensável antes da aplicação de métodos estatísticos ou da realização de interpretações.
+
+Em muitos casos, erros nas análises decorrem justamente da falta dessa exploração inicial. Quando os dados não são devidamente conhecidos, aumentam as chances de equívocos durante as etapas seguintes.
+
+## Conclusão
+
+![](./atividade1.png){fig-align="center" width="85%"}
