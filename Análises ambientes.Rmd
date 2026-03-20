@@ -1,0 +1,199 @@
+---
+title: "Relatório de Análise Visual - Pan African Trials"
+author: "Ana Matiussi, Paula Cardoso e Thiago Ludwig"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+# Configurações de exibição: ocultar código (echo=FALSE) e mostrar resultados
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+library(ggplot2)
+
+# Caminho do arquivo - Verifique se o nome é exatamente data.csv
+caminho <- "C:/Users/paula.cardoso/OneDrive - Centro de Tecnologia Canavieira SA/Área de Trabalho/data.csv"
+
+dat <- read.csv(caminho, sep = ';')
+dat_sub <- subset(dat, env =="E032")
+
+dat_sub$ord <- 1:nrow(dat_sub)
+```
+# Análises para o E032
+Análises feitas em relação a produtividade de grãos (GY - Grain Yield) para o ambiente 32. 
+```{r}
+ggplot(data = dat_sub, aes(x = GY)) + 
+  geom_histogram(bins = 25, color = 'black', fill="#10342d",
+                 aes(y=after_stat(density))) + 
+  geom_density(fill = "#10342d", alpha = .4, color = "black")+
+  theme_bw() + 
+  theme(text = element_text(size = 18)) + 
+  labs(y = "Density", x = "GY (kg/ha)")
+```
+
+Histograma e densidade de GY no ambiente E032. A distribuição apresenta simetria entre média ($2258$) e mediana ($2208$), indicando uma tendência à normalidade na produtividade observada.
+Já no gráfico boxplot a seguir observamos a variabilidade experimental intra-bloco, mantendo medianas consistentes entre as três repetições, com uma leve tendência de maior produtividade média observada na repetição 3.
+
+```{r}
+ggplot(data = dat_sub, aes(x = as.factor(rep), y = GY)) +
+  geom_boxplot(fill = "#10342d", color = "black", alpha = .6) +
+  geom_jitter(width = .2, size = 2, alpha = .75, color = "black") +
+  theme_bw() + 
+  theme(text = element_text(size = 18)) + 
+  labs(x = "Replicates", y = "GY (kg/ha)")
+```
+
+```{r}
+ggplot(data = dat_sub, aes(x = as.factor(gen), y = GY)) +
+  geom_boxplot(fill = "#10342d", color = "black", alpha = .6) +
+  geom_jitter(width = .2, size = 2, alpha = .75, color = "black") +
+  theme_bw() + 
+  theme(text = element_text(size = 18), 
+        axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1)) + 
+  labs(x = "Genotypes", y = "GY")
+ggplot(data = dat_sub, aes(x = as.factor(gen), y = GY)) +
+  geom_boxplot(aes(fill = as.factor(check)), color = "black", alpha = .6) +
+  geom_jitter(width = .2, size = 2, alpha = .75, color = "black") +
+  theme_bw() + 
+  theme(text = element_text(size = 18), legend.position = 'top', 
+        legend.title = element_blank(),
+        axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1)) + 
+  scale_fill_manual(labels = c("0" = "Treatment", "1" = "Check"),
+                    values = c("0" = "#10342d", "1" = "#b2bc63"))+
+  labs(x = "Genotypes", y = "GY (kg/ha)")
+ggplot(data = dat_sub, aes(x = as.factor(gen), y = GY)) +
+  geom_boxplot(aes(fill = as.factor(COMPANY)), color = "black", alpha = .6) +
+  geom_jitter(width = .2, size = 2, alpha = .75, color = "black") +
+  theme_bw() + 
+  theme(text = element_text(size = 18), legend.position = 'top', 
+        legend.title = element_blank(),
+        axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1)) + 
+  scale_fill_manual(values = c("#10342d", "#b2bc63"))+
+  labs(x = "Genotypes", y = "GY (kg/ha)")
+# Criando a coluna 'ord' com a sequência das linhas
+dat_sub$ord = 1:nrow(dat_sub)
+ggplot(data = dat_sub, aes(x = ord, y = GY)) +
+  geom_point(size = 2.5, alpha = .75, color = "black") + 
+  facet_wrap(.~rep, scales = 'free_x')+
+  theme_bw() + 
+  theme(text = element_text(size = 18)) + 
+  labs(x = "Experimental units", y = "GY (kg/ha)")
+```
+
+Análises feitas em relação a altura das plantas (PH - Plant Height PH)
+
+```{r}
+ggplot(data = dat_sub, aes(x = PH_R8)) + 
+  geom_histogram(bins = 25, color = 'black', fill="#10342d",
+                 aes(y=after_stat(density))) + 
+  geom_density(fill = "#10342d", alpha = .4, color = "black")+
+  theme_bw() + 
+  theme(text = element_text(size = 18)) + 
+  labs(y = "Density", x = "Plant height (cm)")
+ggplot(data = dat_sub, aes(x = as.factor(rep), y = PH_R8)) +
+  geom_boxplot(fill = "#10342d", color = "black", alpha = .6) +
+  geom_jitter(width = .2, size = 2, alpha = .75, color = "black") +
+  theme_bw() + 
+  theme(text = element_text(size = 18)) + 
+  labs(x = "Replicates", y = "Plant height (cm)")
+ggplot(data = dat_sub, aes(x = as.factor(gen), y = PH_R8)) +
+  geom_boxplot(fill = "#10342d", color = "black", alpha = .6) +
+  geom_jitter(width = .2, size = 2, alpha = .75, color = "black") +
+  theme_bw() + 
+  theme(text = element_text(size = 18), 
+        axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1)) + 
+  labs(x = "Genotypes", y = "Plant height (cm)")
+ggplot(data = dat_sub, aes(x = as.factor(gen), y = PH_R8)) +
+  geom_boxplot(aes(fill = as.factor(check)), color = "black", alpha = .6) +
+  geom_jitter(width = .2, size = 2, alpha = .75, color = "black") +
+  theme_bw() + 
+  theme(text = element_text(size = 18), legend.position = 'top', 
+        legend.title = element_blank(),
+        axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1)) + 
+  scale_fill_manual(labels = c("0" = "Treatment", "1" = "Check"),
+                    values = c("0" = "#10342d", "1" = "#b2bc63"))+
+  labs(x = "Genotypes", y = "Plant height (cm)")
+ggplot(data = dat_sub, aes(x = as.factor(gen), y = PH_R8)) +
+  geom_boxplot(aes(fill = as.factor(COMPANY)), color = "black", alpha = .6) +
+  geom_jitter(width = .2, size = 2, alpha = .75, color = "black") +
+  theme_bw() + 
+  theme(text = element_text(size = 18), legend.position = 'top', 
+        legend.title = element_blank(),
+        axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1)) + 
+  scale_fill_manual(values = c("#10342d", "#b2bc63"))+
+  labs(x = "Genotypes", y = "Plant height (cm)")
+ggplot(data = dat_sub, aes(x = ord, y = PH_R8)) +
+  geom_point(size = 2.5, alpha = .75, color = "black") + 
+  facet_wrap(.~rep, scales = 'free_x')+
+  theme_bw() + 
+  theme(text = element_text(size = 18)) + 
+  labs(x = "Experimental units", y = "Plant height (cm)")
+ggplot(data = dat_sub, aes(x = GY, y = PH_R8)) +
+  geom_point(size = 2.5, alpha = .75, color = "black")+
+  theme_bw() + 
+  theme(text = element_text(size = 18)) + 
+  labs(x = "GY (kg/ha)", y = "Plant height (cm)",
+       caption = paste("Correlation: ",
+                       round(cor(dat_sub$GY, dat_sub$PH_R8, use = "na.or.complete"), 2)))
+ggplot(data = dat_sub, aes(x = NDM)) + 
+  geom_histogram(bins = 25, color = 'black', fill="#10342d",
+                 aes(y = after_stat(density))) + 
+  geom_density(fill = "#10342d", alpha = .4, color = "black")+
+  theme_bw() + 
+  theme(text = element_text(size = 18)) + 
+  labs(y = "Density", x = "Days to maturity (NDM)")
+ggplot(data = dat_sub, aes(x = as.factor(rep), y = NDM)) +
+  geom_boxplot(fill = "#10342d", color = "black", alpha = .6) +
+  geom_jitter(width = .2, size = 2, alpha = .75, color = "black") +
+  theme_bw() + 
+  theme(text = element_text(size = 18)) + 
+  labs(x = "Replicates", y = "Days to maturity (NDM)")
+ggplot(data = dat_sub, aes(x = as.factor(gen), y = NDM)) + 
+  geom_boxplot(fill = "#10342d", color = "black", alpha = .6) +
+  geom_jitter(width = .2, size = 2, alpha = .75, color = "black") +
+  theme_bw() + 
+  theme(text = element_text(size = 18), 
+        axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1)) + 
+  labs(x = "Genotypes", y = "Days to maturity (NDM)") 
+ggplot(data = dat_sub, aes(x = as.factor(gen), y = NDM)) + 
+  geom_boxplot(aes(fill = as.factor(check)), color = "black", alpha = .6) +
+  geom_jitter(width = .2, size = 2, alpha = .75, color = "black") +
+  theme_bw() + 
+  theme(text = element_text(size = 18), legend.position = 'top', 
+        legend.title = element_blank(),
+        axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1)) + 
+  scale_fill_manual(labels = c("0" = "Treatment", "1" = "Check"),
+                    values = c("0" = "#10342d", "1" = "#b2bc63")) +
+  labs(x = "Genotypes", y = "Days to maturity (NDM)") 
+ggplot(data = dat_sub, aes(x = as.factor(gen), y = NDM)) + 
+  geom_boxplot(aes(fill = as.factor(COMPANY)), color = "black", alpha = .6) +
+  geom_jitter(width = .2, size = 2, alpha = .75, color = "black") +
+  theme_bw() + 
+  theme(text = element_text(size = 18), legend.position = 'top', 
+        legend.title = element_blank(),
+        axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1)) + 
+  scale_fill_manual(values = c("#10342d", "#b2bc63")) +
+  labs(x = "Genotypes", y = "Days to maturity (NDM)")
+ggplot(data = dat_sub, aes(x = ord, y = NDM)) +
+  geom_point(size = 2.5, alpha = .75, color = "black") + 
+  facet_wrap(.~rep, scales = 'free_x')+
+  theme_bw() + 
+  theme(text = element_text(size = 18)) + 
+  labs(x = "Experimental units", y = "Days to maturity (NDM)") 
+ggplot(data = dat_sub, aes(x = GY, y = NDM)) + 
+  geom_point(size = 2.5, alpha = .75, color = "black")+
+  theme_bw() + 
+  theme(text = element_text(size = 18)) + 
+  labs(x = "GY (kg/ha)", y = "Days to maturity (NDM)", 
+       caption = paste("Correlation: ", 
+                       round(cor(dat_sub$GY, dat_sub$NDM, use = "na.or.complete"), 2))) 
+ggplot(data = dat_sub, aes(x = PH_R8, y = NDM)) + 
+  geom_point(size = 2.5, alpha = .75, color = "black")+
+  theme_bw() + 
+  theme(text = element_text(size = 18)) + 
+  labs(x = "Plant height (cm)", y = "Days to maturity (NDM)", 
+       caption = paste("Correlation: ", 
+                       round(cor(dat_sub$PH_R8, dat_sub$NDM, use = "na.or.complete"), 2))) 
+
+```
