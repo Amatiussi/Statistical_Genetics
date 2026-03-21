@@ -1,0 +1,311 @@
+---
+title: "Análise exploratória de dados - Capítulo 10"
+subtitle: Livro - R para Ciência de Dados (2ª edição)
+author: "Ana Matiussi"
+format:
+  html:
+    output-dir: docs
+    theme: cosmo
+    page-layout: article
+    toc: true
+    code-link: true
+    self-contained: true
+    number-sections: false
+    grid:
+      sidebar-width: 250px
+      body-width: 800px
+      margin-width: 250px
+      gutter-width: 1.5em
+editor: visual
+---
+
+Este relatório apresenta a resolução dos exercícios propostos no Capítulo 10 do livro [*R for Data Science*](https://r4ds.hadley.nz/EDA.html). A atividade teve como objetivo aprofundar a compreensão dos principais conceitos de análise exploratória de dados, com foco na interpretação de distribuições, identificação de padrões, comparação entre variáveis e uso de diferentes visualizações gráficas no R. Ao longo das questões, foram aplicadas ferramentas do pacote **tidyverse** para explorar conjuntos de dados e discutir como escolhas gráficas e analíticas influenciam a interpretação dos resultados.
+
+### Pacotes
+
+```{r, warning=FALSE, message=FALSE}
+#install.packages("lvplot"); #install.packages("ggbeeswarm"); #install.packages("nycflights13")
+
+library(tidyverse); library(nycflights13); library(lvplot); library(ggbeeswarm)
+
+smaller <- diamonds |> 
+  filter(carat < 3)
+```
+
+### **10.3.3 Exercises**
+
+1.  **Explore the distribution of each of the `x`, `y`, and `z` variables in `diamonds`. What do you learn? Think about a diamond and how you might decide which dimension is the length, width, and depth.**
+
+```{r, warning=FALSE, message=FALSE}
+diamonds |>
+  pivot_longer(c(x, y, z), names_to = "dim", values_to = "value") |>
+  ggplot(aes(x = value)) +
+  geom_histogram(binwidth = 0.1) +
+  facet_wrap(~dim, scales = "free_x")
+
+results = diamonds |>
+  summarise(
+    x_zero = sum(x == 0),
+    y_zero = sum(y == 0),
+    z_zero = sum(z == 0),
+    x_max = max(x),
+    y_max = max(y),
+    z_max = max(z)
+  )
+
+knitr::kable(
+  (round(results, 3)))
+```
+
+**Resposta:** As distribuições de x e y são muito parecidas, então elas provavelmente representam comprimento e largura. Já z apresenta valores menores e faz mais sentido como profundidade. Também aparecem valores iguais a zero e alguns valores extremamente altos, o que indica observações inconsistentes ou possíveis erros de registro.
+
+2.  **Explore the distribution of `price`. Do you discover anything unusual or surprising? (Hint: Carefully think about the `binwidth` and make sure you try a wide range of values.)**
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(diamonds, aes(x = price)) +
+  geom_histogram(binwidth = 500)
+
+ggplot(diamonds, aes(x = price)) +
+  geom_histogram(binwidth = 100)
+
+ggplot(diamonds, aes(x = price)) +
+  geom_histogram(binwidth = 10)
+```
+
+**Resposta:** A variável "price" apresenta forte assimetria à direita, com muitos diamantes em faixas menores de preço e poucos em valores muito altos. Quando usamos "binwidth" menor, surgem picos em preços específicos, mostrando que os valores não se distribuem de forma totalmente suave.
+
+3.  **How many diamonds are 0.99 carat? How many are 1 carat? What do you think is the cause of the difference?**
+
+```{r, warning=FALSE, message=FALSE}
+results = diamonds |>
+  summarise(
+    n_099 = sum(carat == 0.99),
+    n_100 = sum(carat == 1.00)
+  )
+
+knitr::kable(
+  (round(results, 4)))
+```
+
+**Resposta:** Há muito mais diamantes com 1.00 quilate do que com 0.99 quilate. Isso provavelmente acontece porque 1 quilate é um valor de referência comercial importante, então há interesse em lapidar e classificar as pedras exatamente nesse ponto.
+
+4.  **Compare and contrast [`coord_cartesian()`](https://ggplot2.tidyverse.org/reference/coord_cartesian.html) vs. [`xlim()`](https://ggplot2.tidyverse.org/reference/lims.html) or [`ylim()`](https://ggplot2.tidyverse.org/reference/lims.html) when zooming in on a histogram. What happens if you leave `binwidth` unset? What happens if you try and zoom so only half a bar shows?**
+
+```{r, warning=FALSE, message=FALSE}
+p = ggplot(diamonds, aes(x = y)) +
+  geom_histogram(binwidth = 0.5)
+
+p + coord_cartesian(xlim = c(0, 10))
+p + xlim(0, 10)
+```
+
+**Resposta:** "coord_cartesian()" apenas dá zoom na região do gráfico, sem remover observações. Já "xlim()" e "ylim()" excluem os valores fora do intervalo antes da construção do histograma, o que pode alterar as barras e até a interpretação visual. Se o "binwidth" não for definido, essa diferença pode ficar ainda mais evidente.
+
+### 10.4.1 Exercises
+
+1.  **What happens to missing values in a histogram? What happens to missing values in a bar chart? Why is there a difference in how missing values are handled in histograms and bar charts?**
+
+**Resposta:** Em histogramas, os valores ausentes são removidos porque não é possível posicioná-los em uma escala numérica contínua. Já em gráficos de barras, os valores faltantes podem aparecer como uma categoria própria, pois o eixo é discreto.
+
+2.  **What does `na.rm = TRUE` do in [`mean()`](https://rdrr.io/r/base/mean.html) and [`sum()`](https://rdrr.io/r/base/sum.html)?**
+
+```{r, warning=FALSE, message=FALSE}
+x <- c(1, 2, NA, 4)
+
+mean(x)              
+mean(x, na.rm = TRUE) 
+
+sum(x)               
+sum(x, na.rm = TRUE)  
+```
+
+**Resposta:** O argumento "na.rm = TRUE" faz com que os valores ausentes sejam ignorados no cálculo. Sem ele, a presença de NA pode fazer com que o resultado final também seja NA.
+
+3.  **Recreate the frequency plot of `scheduled_dep_time` colored by whether the flight was cancelled or not. Also facet by the `cancelled` variable. Experiment with different values of the `scales` variable in the faceting function to mitigate the effect of more non-cancelled flights than cancelled flights.**
+
+```{r, warning=FALSE, message=FALSE}
+flights |>
+  mutate(
+    cancelled = is.na(dep_time),
+    sched_hour = sched_dep_time %/% 100,
+    sched_min  = sched_dep_time %% 100,
+    sched_dep_time = sched_hour + sched_min / 60
+  ) |>
+  ggplot(aes(x = sched_dep_time, color = cancelled)) +
+  geom_freqpoly(binwidth = 1/4, linewidth = 0.7) +
+  facet_wrap(~cancelled, scales = "free_y")
+```
+
+**Resposta:** Ao refazer o gráfico e facetar pela variável de cancelamento, fica mais fácil comparar os padrões entre voos cancelados e não cancelados. Como há muito mais voos não cancelados, o uso de facets ou escalas ajustadas melhora bastante a visualização.
+
+### 10.5.1.1 Exercises
+
+1.  **Use what you’ve learned to improve the visualization of the departure times of cancelled vs. non-cancelled flights.**
+
+```{r, warning=FALSE, message=FALSE}
+flights |>
+  mutate(
+    cancelled = is.na(dep_time),
+    sched_hour = sched_dep_time %/% 100,
+    sched_min  = sched_dep_time %% 100,
+    sched_dep_time = sched_hour + sched_min / 60
+  ) |>
+  ggplot(aes(x = sched_dep_time, y = after_stat(density), color = cancelled)) +
+  geom_freqpoly(binwidth = 1/4, linewidth = 0.8)
+```
+
+**Resposta:** Uma boa melhoria é comparar as distribuições em termos de densidade, e não de contagem absoluta, porque os grupos têm tamanhos muito diferentes. Assim, o formato da distribuição fica mais fácil de comparar entre voos cancelados e não cancelados.
+
+2.  **Based on EDA, what variable in the diamonds dataset appears to be most important for predicting the price of a diamond? How is that variable correlated with cut? Why does the combination of those two relationships lead to lower quality diamonds being more expensive?**
+
+```{r, warning=FALSE, message=FALSE}
+diamonds |>
+  group_by(cut) |>
+  summarise(
+    media_carat = mean(carat),
+    media_price = mean(price),
+    mediana_price = median(price)
+  )
+```
+
+**Resposta:** A variável mais importante para prever o preço parece ser "carat", porque o preço aumenta fortemente com o tamanho da pedra. Como diamantes de cortes piores tendem, em média, a ter mais quilates, isso pode fazer com que pareçam mais caros quando olhamos apenas o preço bruto, mesmo tendo qualidade inferior de corte.
+
+3.  **Instead of exchanging the x and y variables, add [`coord_flip()`](https://ggplot2.tidyverse.org/reference/coord_flip.html) as a new layer to the vertical boxplot to create a horizontal one. How does this compare to exchanging the variables?**
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(mpg, aes(x = class, y = hwy)) +
+  geom_boxplot()
+
+ggplot(mpg, aes(x = class, y = hwy)) +
+  geom_boxplot() +
+  coord_flip()
+
+ggplot(mpg, aes(x = hwy, y = class)) +
+  geom_boxplot()
+```
+
+**Resposta:** Na prática, os dois métodos produzem gráficos muito semelhantes. A diferença é que "coord_flip()" apenas inverte a orientação do gráfico, enquanto trocar x e y altera diretamente o mapeamento das variáveis.
+
+4.  **One problem with boxplots is that they were developed in an era of much smaller datasets and tend to display a prohibitively large number of “outlying values”. One approach to remedy this problem is the letter value plot. Install the lvplot package, and try using `geom_lv()` to display the distribution of price vs.cut. What do you learn? How do you interpret the plots?**
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(diamonds, aes(x = cut, y = price)) +
+  geom_lv()
+```
+
+**Resposta:** O "geom_lv()" é útil porque resume melhor distribuições grandes, mostrando mais informação sobre as caudas sem destacar tantos pontos extremos quanto um boxplot tradicional. No caso de "price" por "cut", ele ajuda a visualizar melhor a assimetria e a dispersão dos preços em cada categoria.
+
+5.  **Create a visualization of diamond prices vs.a categorical variable from the `diamonds` dataset using [`geom_violin()`](https://ggplot2.tidyverse.org/reference/geom_violin.html), then a faceted [`geom_histogram()`](https://ggplot2.tidyverse.org/reference/geom_histogram.html), then a colored [`geom_freqpoly()`](https://ggplot2.tidyverse.org/reference/geom_histogram.html), and then a colored [`geom_density()`](https://ggplot2.tidyverse.org/reference/geom_density.html). Compare and contrast the four plots. What are the pros and cons of each method of visualizing the distribution of a numerical variable based on the levels of a categorical variable?**
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(diamonds, aes(x = cut, y = price)) +
+  geom_violin()
+
+ggplot(diamonds, aes(x = price)) +
+  geom_histogram(binwidth = 500) +
+  facet_wrap(~cut)
+
+ggplot(diamonds, aes(x = price, color = cut)) +
+  geom_freqpoly(binwidth = 500)
+
+ggplot(diamonds, aes(x = price, color = cut)) +
+  geom_density()
+```
+
+**Resposta:** Cada gráfico destaca um aspecto diferente da distribuição. O violin mostra melhor o formato geral, o histograma evidencia a contagem em classes, o freqpoly facilita comparar categorias no mesmo painel e a curva de densidade dá uma visão mais suave do comportamento dos dados.
+
+6.  **If you have a small dataset, it’s sometimes useful to use [`geom_jitter()`](https://ggplot2.tidyverse.org/reference/geom_jitter.html) to avoid overplotting to more easily see the relationship between a continuous and categorical variable. The ggbeeswarm package provides a number of methods similar to [`geom_jitter()`](https://ggplot2.tidyverse.org/reference/geom_jitter.html). List them and briefly describe what each one does.**
+
+**Resposta:** Os principais métodos são "geom_beeswarm()", que reorganiza os pontos para evitar sobreposição, e "geom_quasirandom()", que espalha os pontos de forma quase aleatória seguindo a densidade dos dados. Ambos ajudam a visualizar melhor relações entre variáveis categóricas e contínuas em conjuntos pequenos ou moderados.
+
+### 10.5.2.1 Exercises
+
+1.  **How could you rescale the count dataset above to more clearly show the distribution of cut within color, or color within cut?**
+
+```{r, warning=FALSE, message=FALSE}
+count_df <- diamonds |>
+  count(color, cut)
+
+# cut dentro de color
+tab1 = count_df |>
+  group_by(color) |>
+  mutate(prop = n / sum(n))
+
+# color dentro de cut
+tab2 = count_df |>
+  group_by(cut) |>
+  mutate(prop = n / sum(n))
+
+
+knitr::kable(tab1); knitr::kable(tab2)
+```
+
+**Resposta:** Para analisar "cut" dentro de "color", o ideal é transformar as contagens em proporções dentro de cada grupo de cor. Da mesma forma, para analisar "color" dentro de "cut", as proporções devem ser calculadas dentro de cada tipo de corte. Isso torna a comparação mais justa entre grupos de tamanhos diferentes.
+
+2.  **What different data insights do you get with a segmented bar chart if color is mapped to the `x` aesthetic and `cut` is mapped to the `fill` aesthetic? Calculate the counts that fall into each of the segments.**
+
+```{r, warning=FALSE, message=FALSE}
+lw = diamonds |>
+  count(color, cut)
+
+knitr::kable(lw)
+
+ggplot(lw, aes(x = color, fill = cut)) +
+  geom_bar()
+```
+
+**Resposta:** Nesse caso, o gráfico passa a mostrar como os tipos de corte se distribuem dentro de cada categoria de cor. Assim, em vez de focar apenas no total de diamantes por corte, passamos a enxergar a composição de cortes dentro de cada nível de cor.
+
+3.  **Use [`geom_tile()`](https://ggplot2.tidyverse.org/reference/geom_tile.html) together with dplyr to explore how average flight departure delays vary by destination and month of year. What makes the plot difficult to read? How could you improve it?**
+
+```{r, warning=FALSE, message=FALSE}
+flights |>
+  group_by(dest, month) |>
+  summarise(
+    media_dep_delay = mean(dep_delay, na.rm = TRUE),
+    n = n(),
+    .groups = "drop"
+  ) |>
+  ggplot(aes(x = month, y = dest, fill = media_dep_delay)) +
+  geom_tile()
+```
+
+**Resposta:** O gráfico de calor permite visualizar padrões sazonais de atraso de forma compacta, mas pode ficar difícil de interpretar quando há muitos destinos. A leitura melhora se filtrarmos aeroportos com mais voos ou ordenarmos os destinos segundo algum critério.
+
+### 10.5.3.1 Exercises
+
+1.  **Instead of summarizing the conditional distribution with a boxplot, you could use a frequency polygon. What do you need to consider when using [`cut_width()`](https://ggplot2.tidyverse.org/reference/cut_interval.html) vs.[`cut_number()`](https://ggplot2.tidyverse.org/reference/cut_interval.html)? How does that impact a visualization of the 2d distribution of `carat` and `price`?**
+
+**Resposta:** "cut_width()" cria grupos com a mesma largura de intervalo, enquanto "cut_number()" cria grupos com aproximadamente o mesmo número de observações. O primeiro preserva melhor a escala original da variável, enquanto o segundo melhora o equilíbrio entre grupos, mas pode dificultar a interpretação dos intervalos.
+
+2.  **Visualize the distribution of `carat`, partitioned by `price`.**
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_point(alpha = 0.1) +
+  theme_gray()
+```
+
+**Resposta:** Quando particionamos "carat" por faixas de preço, observamos que diamantes mais caros tendem a apresentar valores maiores de quilate. Ou seja, o aumento do preço está associado, em geral, ao aumento do tamanho da pedra.
+
+3.  **How does the price distribution of very large diamonds compare to small diamonds? Is it as you expect, or does it surprise you?**
+
+**Resposta:** Diamantes pequenos concentram-se em preços baixos, enquanto os muito grandes aparecem em faixas de preço bem mais elevadas. Isso é esperado, já que o tamanho da pedra é um dos principais fatores que influenciam o valor final.
+
+4.  **Combine two of the techniques you’ve learned to visualize the combined distribution of cut, carat, and price.**
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_bin2d() +
+  facet_wrap(~cut)
+```
+
+**Resposta:** Uma boa estratégia é usar um gráfico bidimensional para "carat" e "price", como "geom_bin2d()", e facetar por "cut". Dessa forma, é possível observar simultaneamente a relação entre tamanho e preço e como ela varia entre as categorias de corte.
+
+5.  **Two dimensional plots reveal outliers that are not visible in one dimensional plots. For example, some points in the following plot have an unusual combination of`x`and`y`values, which makes the points outliers even though their`x`and`y`values appear normal when examined separately. Why is a scatterplot a better display than a binned plot for this case?**
+
+**Resposta:** O "scatterplot" é melhor porque preserva os pontos individuais e permite identificar combinações incomuns entre duas variáveis. Já o gráfico binado agrupa observações em células e pode esconder esses casos atípicos.
+
+6.  **Instead of creating boxes of equal width with[`cut_width()`](https://ggplot2.tidyverse.org/reference/cut_interval.html), we could create boxes that contain roughly equal number of points with[`cut_number()`](https://ggplot2.tidyverse.org/reference/cut_interval.html). What are the advantages and disadvantages of this approach?**
+
+**Resposta:** A principal vantagem é gerar grupos com quantidades semelhantes de observações, o que torna as comparações mais estáveis. A desvantagem é que os intervalos deixam de ter a mesma largura, o que reduz a interpretação direta da escala original da variável.
