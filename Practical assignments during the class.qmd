@@ -1,0 +1,295 @@
+---
+title: "Simulação de Valores Fenotípicos"
+author: "Ana Matiussi"
+format:
+  html:
+    output-dir: docs
+    theme: cosmo
+    page-layout: article
+    toc: true
+    code-link: true
+    number-sections: true
+    grid:
+      sidebar-width: 250px
+      body-width: 800px
+      margin-width: 250px
+      gutter-width: 1.5em
+editor: visual
+---
+
+# Exercício
+
+Using your USP number as seed, simulate **phenotypic values** (don’t forget, P=G+E) using the normal distribution (`rnorm`). Then, compute the mean and the variance of P, G and E, and build a histogram, a density plot, a box plot and a scatter plot depicting the relationship between P and G. Do it for three different sample sizes: 10, 100 and 1000.
+
+```{r, warning=FALSE, message=FALSE}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+```
+
+```{r, warning=FALSE, message=FALSE}
+# -----------------------------
+# 1) Parâmetros da simulação
+# -----------------------------
+set.seed(12130193)
+
+sample_sizes = c(10, 100, 1000)  # tamanhos de amostra (n = 10, n = 100, n = 1000)
+
+mu_G = 50  # valor médio esperado de G
+sd_G = 10  # desvio-padrão de G
+
+mu_E = 0  # valor médio esperado de E
+sd_E = 5  # desvio-padrão de E
+```
+
+```{r, warning=FALSE, message=FALSE}
+# -----------------------------
+# 2) Função para simular dados
+# -----------------------------
+simulate = function(n, mu_G, sd_G, mu_E, sd_E) {
+  data.frame(
+    ID = 1:n,
+    G = rnorm(n, mean = mu_G, sd = sd_G),  # simula os valores genéticos com distribuição normal
+    E = rnorm(n, mean = mu_E, sd = sd_E)  # simula os valores ambientais com distribuição normal
+  ) %>%
+    mutate(
+      P = G + E,  # constrói o fenótipo
+      SampleSize = n
+    )
+}
+```
+
+```{r, warning=FALSE, message=FALSE}
+# -----------------------------
+# 3) Simular para todos os n
+# -----------------------------
+all_data = bind_rows(
+  lapply(sample_sizes, simulate,
+         mu_G = mu_G, sd_G = sd_G,
+         mu_E = mu_E, sd_E = sd_E)
+)
+```
+
+```{r, warning=FALSE, message=FALSE}
+# -----------------------------
+# 4) Tabela com médias e variâncias
+# -----------------------------
+results = all_data %>%
+  group_by(SampleSize) %>%
+  summarise(
+    Mean_G = mean(G),
+    Variance_G = var(G),
+    Mean_E = mean(E),
+    Variance_E = var(E),
+    Mean_P = mean(P),
+    Variance_P = var(P),
+    .groups = "drop"
+  )
+
+knitr::kable(
+  (round(results, 3)))
+```
+
+## Tamanho da amostra = 10
+
+```{r, warning=FALSE, message=FALSE}
+
+df_10 = all_data %>% filter(SampleSize == 10)
+
+df_10_long <- df_10 %>%
+  select(P, G, E) %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = "Component",
+    values_to = "Value"
+  )
+```
+
+### Histograma
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(df_10, aes(x = P)) +
+  geom_histogram(bins = 15, color = "black", fill = "purple4") +
+  theme_grey() +
+  labs(
+    title = "Histograma dos valores fenotípicos (n = 10)",
+    x = "Valores fenotípicos (P)",
+    y = "Frequência"
+  )
+```
+
+### Gráfico de densidade
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(df_10_long, aes(x = Value, fill = Component, color = Component)) +
+  geom_density(alpha = 0.25, linewidth = 1) +
+  theme_grey() +
+  labs(
+    title = "Gráfico de densidade de P, G e E (n = 10)",
+    x = "Valor",
+    y = "Densidade"
+  )
+```
+
+### Boxplot
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(df_10_long, aes(x = Component, y = Value, fill = Component)) +
+  geom_boxplot(alpha = 0.8) +
+  theme_grey() +
+  labs(
+    title = "Boxplot de P, G e E (n = 10)",
+    x = "Componente",
+    y = "Valor"
+  )
+```
+
+### Gráfico de dispersão
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(df_10, aes(x = G, y = P)) +
+  geom_point(size = 2, alpha = 0.8) +
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1) +
+  theme_grey() +
+  labs(
+    title = "Gráfico de dispersão entre P e G (n = 10)",
+    x = "Valores genotípicos (G)",
+    y = "Valores fenotípicos (P)"
+  )
+```
+
+## Tamanho da amostra = 100
+
+```{r, warning=FALSE, message=FALSE}
+
+df_100 = all_data %>% filter(SampleSize == 100)
+
+df_100_long = df_100 %>%
+  select(P, G, E) %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = "Component",
+    values_to = "Value"
+  )
+```
+
+### Histograma
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(df_100, aes(x = P)) +
+  geom_histogram(bins = 15, color = "black", fill = "purple4") +
+  theme_grey() +
+  labs(
+    title = "Histograma dos valores fenotípicos (n = 100)",
+    x = "Valores fenotípicos (P)",
+    y = "Frequência"
+  )
+```
+
+### Gráfico de densidade
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(df_100_long, aes(x = Value, fill = Component, color = Component)) +
+  geom_density(alpha = 0.25, linewidth = 1) +
+  theme_grey() +
+  labs(
+    title = "Gráfico de densidade de P, G e E (n = 100)",
+    x = "Valor",
+    y = "Densidade"
+  )
+```
+
+### Boxplot
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(df_100_long, aes(x = Component, y = Value, fill = Component)) +
+  geom_boxplot(alpha = 0.8) +
+  theme_grey() +
+  labs(
+    title = "Boxplot de P, G e E (n = 100)",
+    x = "Componente",
+    y = "Valor"
+  )
+```
+
+### Gráfico de dispersão
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(df_100, aes(x = G, y = P)) +
+  geom_point(size = 2, alpha = 0.8) +
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1) +
+  theme_grey() +
+  labs(
+    title = "Gráfico de dispersão entre P e G (n = 100)",
+    x = "Valores genotípicos (G)",
+    y = "Valores fenotípicos (P)"
+  )
+```
+
+## Tamanho da amostra = 1000
+
+```{r, warning=FALSE, message=FALSE}
+
+df_1000 = all_data %>% filter(SampleSize == 1000)
+
+df_1000_long = df_1000 %>%
+  select(P, G, E) %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = "Component",
+    values_to = "Value"
+  )
+```
+
+### Histograma
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(df_1000, aes(x = P)) +
+  geom_histogram(bins = 15, color = "black", fill = "purple4") +
+  theme_grey() +
+  labs(
+    title = "Histograma dos valores fenotípicos (n = 1000)",
+    x = "Valores fenotípicos (P)",
+    y = "Frequência"
+  )
+```
+
+### Gráfico de densidade
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(df_1000_long, aes(x = Value, fill = Component, color = Component)) +
+  geom_density(alpha = 0.25, linewidth = 1) +
+  theme_grey() +
+  labs(
+    title = "Gráfico de densidade de P, G e E (n = 1000)",
+    x = "Valor",
+    y = "Densidade"
+  )
+```
+
+### Boxplot
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(df_1000_long, aes(x = Component, y = Value, fill = Component)) +
+  geom_boxplot(alpha = 0.8) +
+  theme_grey() +
+  labs(
+    title = "Boxplot de P, G e E (n = 1000)",
+    x = "Componente",
+    y = "Valor"
+  )
+```
+
+### Gráfico de dispersão
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(df_1000, aes(x = G, y = P)) +
+  geom_point(size = 2, alpha = 0.8) +
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1) +
+  theme_grey() +
+  labs(
+    title = "Gráfico de dispersão entre P e G (n = 1000)",
+    x = "Valores genotípicos (G)",
+    y = "Valores fenotípicos (P)"
+  )
+```
