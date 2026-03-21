@@ -8,6 +8,7 @@ format:
     page-layout: article
     toc: true
     code-link: true
+    self-contained: true
     number-sections: true
     grid:
       sidebar-width: 250px
