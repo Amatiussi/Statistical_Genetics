@@ -1,0 +1,368 @@
+---
+title: "Exploratory Data Analysis Across Trials"
+author: "Ana Matiussi, Paula Cardoso e Thiago Ludwig"
+date: last-modified
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    self-contained: true
+    number-sections: true
+    theme: cosmo
+    code-fold: true
+execute:
+  echo: true
+  warning: false
+  message: false
+editor: visual
+---
+
+```{=html}
+<style>
+  p {
+    text-align: justify;
+    text-justify: inter-word;
+    text-indent: 1.25cm;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+</style>
+```
+
+# Introdução
+
+Este relatório apresenta uma análise exploratória de dados (Exploratory Data Analysis, EDA) utilizando o conjunto **Pan African Trials**, disponibilizado no artigo [*High-resolution soybean trial data supporting the expansion of agriculture in Africa*](https://doi.org/10.1038/s41597-025-06190-3). O objetivo foi explorar a estrutura dos dados e descrever o comportamento das variáveis selecionadas, por meio da avaliação da variabilidade, identificação de possíveis outliers e inconsistências, análise das distribuições e investigação da relação entre as características.
+
+# Instalação e carregamentos dos pacotes
+
+Nesta etapa, carregamos as bibliotecas necessárias e o conjunto de dados bruto.
+
+```{r}
+#install.packages("dplyr"); #install.packages("tidyverse"); #install.packages("janitor"); #install.packages("GGally"); #install.packages("knitr"); #install.packages("readxl"); #install.packages("lvplot"); #install.packages("modelr")
+
+library(tidyverse); library(janitor); library(GGally); library(knitr); library(readxl); library(lvplot); library(modelr); library(ggplot2)
+```
+
+# Análise exploratória
+
+## Carregamento dos dados
+
+```{r}
+dat = read.csv("https://raw.githubusercontent.com/mauricioaraujj/Pan_African_Trials_Network/refs/heads/main/data/data.csv", sep = ';')
+```
+
+## Seleção das características e preparação dos dados
+
+A seleção dos ambientes baseou-se na estrutura experimental e na completude dos dados, priorizando aqueles com maior número de observações, genótipos e repetições, além de menor proporção de dados ausentes. Foram selecionados quatro ambientes com estrutura experimental semelhante. A completude dos dados foi elevada em todos os ambientes para as características **W100G** (100-seed weight, peso de 100 grãos, em g), **PH_R8** (plant height at maturity, altura de planta na maturidade, em cm), **FLW_DAYS** (days to flowering, dias até o florescimento) e **NDM** (number of days to maturity, número de dias até a maturidade). Os ambientes **E0137**, **E0138**, **E0139** e **E0140** apresentaram estrutura balanceada, com 150 observações, 50 genótipos e 3 repetições, além de alta completude das variáveis, em torno de 98-100%, sendo, portanto, selecionados para a análise exploratória. A variável **GY** corresponde à produtividade de grãos (grain yield), geralmente expressa em kg ha⁻¹ ([Araújo et al., 2025](https://doi.org/10.1038/s41597-025-06190-3)).
+
+```{r}
+# Traits
+traits <- c("GY", "W100G", "PH_R8", "FLW_DAYS", "NDM")
+
+# Limpeza inicial e seleção de colunas
+eda_base <- dat |>
+  select(env, gen, rep, check, all_of(traits)) |>
+  mutate(across(all_of(traits), as.numeric))
+```
+
+## Seleção dos ambientes
+
+### Verificar quantas observações, genótipos e repetições cada ambiente possui
+
+```{r}
+
+amb_resumo <- dat |>
+  group_by(env) |>
+  summarise(
+    n_obs = n(),
+    n_gen = n_distinct(gen),
+    n_rep = n_distinct(rep),
+    .groups = "drop"
+  ) |>
+  arrange(desc(n_obs))
+
+knitr::kable(
+  amb_resumo |> slice(1:10)) # 10 primeiras linhas
+```
+
+### Porcentagem preenchida por ambiente para cada trait
+
+```{r}
+comp_traits <- dat |>
+  group_by(env) |>
+  summarise(
+    across(
+      all_of(traits),
+      ~ mean(!is.na(.)) * 100,
+      .names = "{.col}"
+    ),
+    .groups = "drop"
+  )
+
+knitr::kable(
+  comp_traits |> slice(1:10)) # 10 primeiras linhas
+```
+
+### Caracterização dos ambientes quanto à estrutura experimental e à disponibilidade de dados
+
+```{r}
+ranking_amb <- dat |>
+  group_by(env) |>
+  summarise(
+    n_obs = n(),
+    n_gen = n_distinct(gen),
+    n_rep = n_distinct(rep),
+    across(
+      all_of(traits),
+      ~ mean(!is.na(.)) * 100,
+      .names = "comp_{.col}"
+    ),
+    .groups = "drop"
+  ) |>
+  arrange(desc(n_obs))
+
+# Mostrar só os 10 primeiros na tabela
+knitr::kable(
+  ranking_amb |> slice(1:10),
+  caption = "Resumo dos 10 ambientes com maior número de observações e completude das características avaliadas."
+)
+```
+
+```{r}
+# Identificação dos 4 ambientes (trials) com mais dados
+trial_counts <- eda_base |>
+  filter(if_all(all_of(traits), ~ !is.na(.))) |>
+  count(env, sort = TRUE)
+
+selected_trials <- trial_counts |>
+  slice(1:4) |>
+  pull(env)
+
+# Dataset final para análise
+eda_dat <- eda_base |>
+  filter(env %in% selected_trials)
+
+kable(head(trial_counts, 4), caption = "Ambientes selecionados para a análise")
+```
+
+## Estatísticas descritivas
+
+```{r}
+desc_stats <- eda_dat |>
+  pivot_longer(cols = all_of(traits), names_to = "trait", values_to = "value") |>
+  group_by(env, trait) |>
+  summarise(
+    n = sum(!is.na(value)),
+    mean = mean(value, na.rm = TRUE),
+    median = median(value, na.rm = TRUE),
+    sd = sd(value, na.rm = TRUE),
+    cv = 100 * sd / mean,
+    min = min(value, na.rm = TRUE),
+    max = max(value, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+kable(desc_stats, digits = 2, caption = "Estatísticas descritivas por ambiente e característica")
+
+#| fig-width: 14
+#| fig-height: 8
+#| dpi: 300
+```
+
+Com base na análise da base de dados de quatro ambientes (E0137 a E0140) para as cinco características agronômicas citadas, observou-se ampla variabilidade fenotípica entre os ambientes. Para a produtividade de grãos (GY), observou-se que o ambiente E0139 apresentou valores consistentemente mais elevados, enquanto o ambiente E0140 apresentou os valores mais baixos, sugerindo condições menos favoráveis ao desempenho produtivo. O ambiente E0138 destacou-se pela maior dispersão dos dados, refletindo elevada variabilidade entre os genótipos, enquanto E0137 apresentou comportamento intermediário.
+
+Em relação aos ciclos de desenvolvimento (FLW_DAYS e NDM), verificou-se a formação de dois grupos distintos de ambientes. Nos ambientes E0137 e E0138, o florescimento ocorreu, em média, entre 50 e 51 dias, caracterizando ciclos mais curtos. Por outro lado, nos ambientes E0139 e E0140, o florescimento foi significativamente mais tardio, variando entre 73 e 78 dias.
+
+A altura de plantas (PH_R8) apresentou comportamento consistente com o padrão observado ao longo do ciclo. Ambientes com desenvolvimento mais tardio (E0139 e E0140) apresentaram plantas mais altas, com médias de 70,55 cm e 67,64 cm, respectivamente, enquanto os ambientes de ciclo mais curto (E0137 e E0138) apresentaram alturas médias inferiores, em torno de 52 a 53 cm.
+
+Por fim, o peso de 100 grãos (W100G) mostrou estabilidade relativa nos ambientes E0137, E0138 e E0139, com valores próximos de 19 g, enquanto o ambiente E0140 apresentou o menor valor, de 15,23 g.
+
+## Distribuição das características
+
+### Distribuição das características por genótipo em cada ambiente
+
+```{r}
+for (tr in traits) {
+  p <- eda_dat |>
+    ggplot(aes(x = reorder(gen, .data[[tr]], median, na.rm = TRUE),
+               y = .data[[tr]])) +
+    geom_boxplot(outlier.shape = NA, fill = "lightblue", alpha = 0.6) +
+    geom_jitter(width = 0.2, alpha = 0.3, size = 0.8) +
+    facet_wrap(~ env, scales = "free_x") +
+    labs(
+      title = paste("Distribuição de", tr, "por Genótipo em cada ambiente"),
+      x = "Genótipo",
+      y = tr
+    ) +
+    theme_gray(base_size = 12) +
+    theme(
+      axis.text.x = element_text(angle = 90, hjust = 1, size = 6),
+      strip.text = element_text(face = "bold")
+    )
+  print(p)
+}
+```
+
+Para a produtividade de grãos (GY), a comparação do desempenho dos mesmos genótipos entre os ambientes evidencia padrões distintos. Por exemplo, no ambiente E0138, o genótipo G092 apresentou desempenho superior, com patamar próximo de 6000 kg/ha; em contrapartida, no ambiente E0140, esse mesmo genótipo exibiu uma queda acentuada em seu desempenho, com sua mediana recuando para valores inferiores a 3000 kg/ha. Ao analisar os ambientes separadamente, o ambiente E0138 apresentou boxplots mais alongados e maior dispersão dos dados. Em contraste, o ambiente E0140 apresentou boxplots mais compactos e mais concentrados em níveis inferiores de produtividade.
+
+Nos dias de florescimento (FLW_DAYS) e de maturidade (NDM), os ambientes E0139 e E0140 prolongaram nítidamente o ciclo. No E0137, o florescimento ocorre em torno dos 50 dias, com pouca variação entre os genótipos. Para o peso de 100 grãos, ele segue essa tendência de estabilidade, observada também nos ambientes E0138 e E0139, com a maioria dos genótipos concentrada entre 15 g e 25 g. Já o ambiente E0140 se mostra restritivo, apresentando uma redução geral nas médias e uma dispersão muito maior.
+
+A altura das plantas (PH_R8) apresenta um padrão de crescimento escalonado, em que os genótipos do final da lista (ex.: G117, G118) são consistentemente mais altos, ultrapassando 100 cm em ambientes favoráveis. Nota-se que, no ambiente E0138, apesar de ser produtivo para GY, a altura das plantas é ligeiramente menor e mais uniforme do que no ambiente E0137, indicando que maior altura nem sempre se correlaciona diretamente com o pico de produtividade observado anteriormente.
+
+### Distribuição de densidade entre ambientes
+
+```{r}
+#| fig-width: 12
+#| fig-height: 6
+
+eda_dat |>
+  pivot_longer(cols = all_of(traits), names_to = "trait", values_to = "value") |>
+  ggplot(aes(x = value, color = env)) +
+  geom_density(linewidth = 1, na.rm = TRUE) +
+  facet_wrap(~ trait, scales = "free") +
+  labs(title = "Distribuição de densidade entre ambientes", x = "Valor", y = "Densidade") +
+  theme_gray()
+```
+
+As curvas de densidade mostram que os ambientes diferem bastante no nível fenotípico das características, especialmente em FLW_DAYS, NDM e GY. Em FLW_DAYS, há uma separação muito clara entre os ensaios: E0137 e E0138 apresentam valores menores, enquanto E0139 e E0140 estão deslocados para a direita, indicando materiais mais tardios nesses dois ambientes. Em NDM, o mesmo padrão se repete, reforçando que a diferença entre os trials não se limita ao florescimento, mas se estende por todo o ciclo.
+
+Para GY, as densidades também diferem, mas com maior sobreposição. E0139 apresenta maior concentração em produtividades mais altas, enquanto E0140 está deslocado para valores mais baixos. E0138 chama a atenção por apresentar uma distribuição mais espalhada, o que sugere maior heterogeneidade entre as parcelas ou os genótipos. Em PH_R8, há um deslocamento geral de E0139 e E0140 para valores mais altos em relação a E0137 e E0138, indicando plantas mais altas nesses ambientes. Já em W100G, E0137, E0138 e E0139 têm distribuições relativamente próximas, mas E0140 está nitidamente deslocado para valores menores, o que sugere redução no peso de cem grãos nesse trial.
+
+Outro ponto importante é que algumas curvas, especialmente para FLW_DAYS, NDM e PH_R8, não são totalmente unimodais; elas apresentam mais de um pico. Isso pode indicar que, no mesmo ambiente, há subgrupos de materiais com comportamentos distintos ou uma estrutura de variação que não é totalmente homogênea. Como EDA, isso já sugere que os dados não são simplesmente “um bloco só”, mas sim um conjunto com bastante estrutura interna.
+
+### Histogramas por característica e ambiente
+
+```{r}
+#| fig-width: 14
+#| fig-height: 8
+#| dpi: 300
+
+eda_dat |>
+  pivot_longer(cols = all_of(traits), names_to = "trait", values_to = "value") |>
+  ggplot(aes(x = value, fill = env)) +
+  geom_histogram(bins = 25, color = "black", alpha = 0.7, na.rm = TRUE) +
+  facet_wrap(~ trait + env, scales = "free") +
+  labs(
+    title = "Histogramas das características por ambiente",
+    x = "Valor",
+    y = "Frequência"
+  ) +
+  theme_gray(base_size = 12) +
+  theme(
+    strip.text = element_text(face = "bold"),
+    legend.position = "none"
+  )
+```
+
+Os histogramas confirmam o que se observa nas densidades, mas deixam mais claro o formato das distribuições. Em FLW_DAYS, E0137 e E0138 concentram observações na faixa de aproximadamente 45-60 dias, enquanto E0139 e E0140 se concentram em torno de 70-85 dias. Isso mostra uma mudança significativa no comportamento do ciclo entre os ambientes. Em NDM, a separação é igualmente evidente: E0138 apresenta valores mais baixos, E0137 em posição intermediária e E0139/E0140 com tempos de maturidade mais elevados.
+
+Para GY, os histogramas mostram que E0139 concentra mais observações em níveis produtivos mais altos, enquanto E0140 apresenta maior frequência de valores mais baixos. E0138 parece ter maior amplitude, com observações bastante dispersas ao longo do eixo, o que reforça a ideia de maior variabilidade nesse ensaio. Em PH_R8, E0139 e E0140 voltam a apresentar distribuição mais deslocada para alturas mais elevadas, enquanto E0137 e E0138 ficam mais concentrados em faixas inferiores. Para W100G, a maior parte das observações está entre 18 e 22 em E0137, E0138 e E0139, mas E0140 se concentra em valores mais baixos, entre 13 e 17.
+
+Além disso, os histogramas mostram assimetrias e caudas em várias variáveis, o que indica que nem todas seguem um padrão aproximadamente normal. Isso é particularmente visível em GY, que apresenta uma grande dispersão e alguns valores bem extremos, e em PH_R8, que também apresenta valores muito baixos e muito altos. Então, só pelos histogramas, já dá para dizer que existe variação importante entre ambientes, mas também heterogeneidade dentro de cada ambiente.
+
+## Identificação de outliers e possíveis inconsistências
+
+```{r}
+outliers_tbl <- eda_dat |>
+  pivot_longer(cols = all_of(traits), names_to = "trait", values_to = "value") |>
+  group_by(env, trait) |>
+  mutate(
+    q1 = quantile(value, 0.25, na.rm = TRUE),
+    q3 = quantile(value, 0.75, na.rm = TRUE),
+    iqr = IQR(value, na.rm = TRUE),
+    lower = q1 - 1.5 * iqr,
+    upper = q3 + 1.5 * iqr,
+    outlier = value < lower | value > upper
+  ) |>
+  ungroup() |>
+  filter(outlier)
+
+kable(head(outliers_tbl, 15), digits = 2, caption = "Exemplos de possíveis outliers detectados")
+
+#| label: resumo-outliers
+#| message: false
+
+# 1. Calculamos os limites e marcamos quem é outlier
+outlier_summary <- eda_dat |>
+  pivot_longer(cols = all_of(traits), names_to = "trait", values_to = "value") |>
+  group_by(env, trait) |>
+  mutate(
+    q1 = quantile(value, 0.25, na.rm = TRUE),
+    q3 = quantile(value, 0.75, na.rm = TRUE),
+    iqr = IQR(value, na.rm = TRUE),
+    lower = q1 - 1.5 * iqr,
+    upper = q3 + 1.5 * iqr,
+    is_outlier = value < lower | value > upper
+  ) |>
+  
+  # 2. Agora agrupamos para CONTAR os resultados
+  summarise(
+    n_total = n(),
+    n_outliers = sum(is_outlier, na.rm = TRUE),
+    percent = (n_outliers / n_total) * 100,
+    .groups = "drop"
+  )
+
+# 3. Exibe a tabela final de contagem
+knitr::kable(
+  outlier_summary, 
+  digits = 2, 
+  caption = "Resumo quantitativo de Outliers por Ambiente e Variável"
+)
+```
+
+A detecção de outliers indicou que a ocorrência de valores extremos não foi homogênea entre os ambientes e as características. No ambiente E0137, a maior proporção de outliers foi observada em GY (6 observações; 4,0%), enquanto FLW_DAYS e NDM apresentaram apenas 1 observação discrepante cada (0,67%). Em E0138, destacaram-se FLW_DAYS (14,67%) e W100G (10,0%), indicando maior frequência de valores extremos nessas variáveis. No ambiente E0139, os maiores percentuais ocorreram em FLW_DAYS e W100G, ambos com 12,00%, além de NDM com 6,67%. Já em E0140, a principal concentração de outliers ocorreu em NDM (12,67%), seguida por GY (3,33%), PH_R8 (2,67%) e W100G (2,67%). Em contraste, PH_R8 em E0139 não apresentou outliers detectados pelo critério adotado.
+
+Os exemplos listados ajudam a distinguir melhor entre o que pode ser apenas um valor extremo e o que pode representar uma inconsistência do banco. Em W100G, foram detectados valores muito altos, como 34,0 em E0137 e 26,0 em E0138, bem como valores muito baixos, como 8,0 e até 0,0. Em FLW_DAYS e NDM, apareceram registros iguais a 0,0, o que chama bastante atenção, pois, biologicamente, não faz sentido uma planta apresentar 0 dias até o florescimento ou até a maturidade. Esses casos sugerem fortemente erro de digitação, falha de registro ou de codificação de dados ausentes como zero, sendo, portanto, candidatos prioritários para verificação.
+
+Para GY, os outliers identificados em E0137 incluem os valores 108, 175, 308, 359, 434 e 572, todos abaixo do limite inferior calculado para o ambiente. Embora sejam estatisticamente discrepantes, esses valores não devem ser classificados automaticamente como erro, pois podem refletir parcelas com desempenho muito baixo, perdas experimentais ou um forte efeito ambiental. O mesmo raciocínio vale para PH_R8: alturas acima de 100 cm, como 102,86, 104,92 e 110,72, foram classificadas como outliers em E0137, mas continuam sendo biologicamente plausíveis e podem representar apenas materiais mais vigorosos ou comportamentos extremos nesse ensaio.
+
+Assim, os resultados indicam dois tipos de situações. A primeira envolve outliers plausíveis, especialmente em GY e PH_R8, que podem representar variabilidade fenotípica real e, por isso, devem ser avaliados com cautela antes de qualquer remoção. A segunda envolve registros potencialmente inconsistentes, principalmente os valores iguais a zero em FLW_DAYS, NDM e W100G, que são pouco compatíveis com a natureza dessas variáveis e merecem verificação direta no banco de dados original.
+
+## Relação entre as características
+
+```{r}
+#| fig-width: 10
+#| fig-height: 10
+
+pair_dat <- eda_dat |>
+  select(env, all_of(traits)) |>
+  drop_na()
+
+ggpairs(pair_dat, columns = 2:6, aes(color = env, alpha = 0.4)) +
+  theme_gray()
+```
+
+O gráfico de pares mostra um padrão bem interessante. A associação mais forte é entre FLW_DAYS e NDM (r = 0,857), o que faz total sentido, já que ambas as variáveis descrevem a duração do ciclo. Isso indica que, no conjunto dos quatro ambientes, materiais que florescem mais tarde também tendem a maturar mais tarde. Além disso, essa correlação permanece forte em todos os ambientes, o que indica que ela é estável.
+
+Também há correlações positivas relativamente fortes entre PH_R8 e FLW_DAYS (r = 0,657) e entre PH_R8 e NDM (r = 0,677). Em termos práticos, isso sugere que materiais de ciclo mais longo tendem a apresentar plantas mais altas. Essa associação também aparece de forma consistente nos trials, embora com intensidades distintas. Então, altura e ciclo parecem andar juntos nesse subconjunto de dados.
+
+Já para GY, a história é mais interessante porque as associações são mais dependentes do ambiente. A correlação geral entre GY e W100G é positiva e moderada (r = 0,419), sugerindo que, em média, maior peso de grãos está associado a maior produtividade. Isso é especialmente forte em E0139 (r = 0,521) e também ocorre em E0137 e E0140. A relação entre GY e PH_R8 é positiva, mas mais fraca (r = 0,249), o que indica que plantas mais altas tendem a produzir mais apenas em parte dos casos.
+
+A relação entre GY e as variáveis de ciclo varia conforme o ambiente. No conjunto total, GY e FLW_DAYS praticamente não se relacionam (r = 0,009), mas quando se olha trial por trial, aparece um padrão diferente: a correlação é positiva em E0137, E0138 e E0139, e negativa em E0140. O mesmo acontece, em menor grau, com GY e NDM: a associação geral é fraca, mas em E0139 é bastante forte (r = 0,584), enquanto em E0140 praticamente desaparece. Isso mostra que a relação entre rendimento e ciclo não é estável entre os ambientes, o que já sugere interação entre as características e o contexto ambiental.
+
+Outro detalhe importante é que W100G não se relaciona de forma consistente com todas as demais variáveis. Por exemplo, com PH_R8 a correlação geral é praticamente nula (r = 0,006), e com NDM também é muito baixa no conjunto total. Isso sugere que o peso de cem grãos pode responder de forma mais específica ao ambiente ou a certos grupos de genótipos, e não linearmente ao restante dos traits.
+
+## Comparação entre ambientes
+
+```{r}
+eda_dat |>
+  pivot_longer(cols = all_of(traits), names_to = "trait", values_to = "value") |>
+  ggplot(aes(x = env, y = value, fill = env)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.7) +
+  geom_jitter(width = 0.2, alpha = 0.2, size = 0.6) +
+  facet_wrap(~ trait, scales = "free_y") +
+  labs(
+    title = "Distribution of traits across trials",
+    x = "Trial",
+    y = "Value"
+  ) +
+  theme_gray() +
+  theme(legend.position = "none")
+```
+
+Os boxplots finais resumem muito bem a diferença entre os quatro ensaios. Em FLW_DAYS, há uma separação nítida entre E0137/E0138, com medianas menores, e E0139/E0140, com medianas maiores. Isso indica que os dois primeiros ambientes foram mais precoces e os dois últimos mais tardios. Em NDM, o padrão é praticamente o mesmo, reforçando a ideia de que essa diferença se mantém ao longo do ciclo inteiro.
+
+Para GY, E0139 apresenta os maiores valores centrais, enquanto E0140 apresenta a menor mediana, com clara redução de produtividade em relação aos demais. E0137 e E0138 ocupam uma posição intermediária, mas E0138 parece mais disperso. Em PH_R8, E0139 e E0140 se destacam com plantas mais altas, enquanto E0137 e E0138 ficam em níveis menores. Para W100G, E0137, E0138 e E0139 são muito parecidos entre si, mas E0140 apresenta uma mediana bem menor, indicando grãos mais leves nesse ambiente.
+
+No conjunto, esses gráficos sugerem que os trials diferem fortemente entre si. E0139 parece apresentar maior produtividade, maior altura e um ciclo mais longo. E0140 também é tardio e apresenta plantas relativamente altas, mas combina isso com menor produtividade e menor peso de cem grãos. Já E0137 e E0138 são mais precoces e, em geral, menos altos do que E0139. Portanto, a principal interpretação across trials é que houve mudança consistente no comportamento das cinco características entre os ambientes, tanto no nível médio quanto na dispersão e na forma de distribuição.
