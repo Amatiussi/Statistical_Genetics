@@ -5,11 +5,19 @@ date: last-modified
 format:
   html:
     toc: true
+    code-links: repo    # adicionar link do GitHub
+    toc-location: left
     toc-depth: 3
+    fig-align: center
+    fig-width: 10
     self-contained: true
     number-sections: true
-    theme: cosmo
-    code-fold: true
+    theme: 
+      light: flatly
+      dark: darkly
+    code-fold: show      # esconder os código
+    code-overflow: wrap  # quebrar linhas de código 
+    code-tools: true
 execute:
   echo: true
   warning: false
