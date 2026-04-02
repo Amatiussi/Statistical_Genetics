@@ -1,0 +1,327 @@
+---
+title: "Segregation test in maize RIL population"
+subtitle: "Teste de segregação em população RIL de milho"
+author: "Ana Matiussi"
+format:
+  html:
+    toc: true
+    code-links: repo    # adicionar link do GitHub
+    toc-location: left
+    toc-depth: 4
+    fig-align: center
+    self-contained: true
+    number-sections: true
+    theme: 
+      light: flatly
+      dark: darkly
+    code-overflow: wrap  # quebrar linhas de código 
+    code-tools: true
+execute:
+  echo: true
+  warning: false
+  message: false
+editor: visual
+---
+
+```{=html}
+<style>
+  p {
+    text-align: justify;
+    text-justify: inter-word;
+    text-indent: 1.25cm;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+</style>
+```
+
+# Atividade
+
+Using the provided dataset, describe the hypothesis test and perform the segregation tests in each marker. Using five randomly picked markers, plot the theoretical distribution and the corresponding significance level and p-value.
+
+## Pacotes
+
+```{r}
+# install.packages("readr"); install.packages("dplyr")
+library(readr); library(dplyr); library(ggplot2); library(scales)
+```
+
+## Exploração dos dados (entender a população)
+
+Inicialmente, foi realizada uma exploração do conjunto de dados Z009 com o objetivo de compreender o padrão geral de segregação antes da aplicação dos testes estatísticos. O conjunto analisado foi composto por 189 indivíduos e 1011 marcadores. Em seguida, foram contabilizadas as frequências globais das classes genotípicas codificadas como 0, 1 e 2, correspondentes aos dois homozigotos e ao heterozigoto, respectivamente.
+
+```{r, warning=FALSE, message=FALSE}
+dat = read_csv("Z009.csv")
+# head(dat); tail(dat)
+# glimpse(dat)
+# print(dat, n = 20, width = Inf)
+
+knitr::kable(
+  dat |> slice(1:10)) # 10 primeiras linhas
+```
+
+```{r, warning=FALSE, message=FALSE}
+# Seleciona apenas as colunas de marcadores (nomes iniciados por PHM ou PZA)
+marker_names = names(dat)[grepl("^(PHM|PZA)", names(dat))]
+maize = dat[, marker_names]
+
+# Dimensões do conjunto de marcadores
+cat("Número de indivíduos :", nrow(maize), "\n")
+cat("Número de marcadores :", ncol(maize), "\n\n")
+```
+
+```{r, warning=FALSE, message=FALSE}
+# Distribuição global dos genótipos
+geno_all = unlist(maize, use.names = FALSE)
+geno_all = geno_all[!is.na(geno_all)]
+
+contagem_global = table(factor(geno_all, levels = c(0, 1, 2))); contagem_global
+proporcao_global = prop.table(contagem_global); (round(100 * proporcao_global, 2))
+```
+
+```{r, warning=FALSE, message=FALSE}
+# Tabela-resumo para visualização (1:2:1) e (1:1)
+df_global = data.frame(
+  Genotipo = factor(c("0", "1", "2"),
+                    levels = c("0", "1", "2"),
+                    labels = c("0 (Homozigoto P1)",
+                               "1 (Heterozigoto)",
+                               "2 (Homozigoto P2)")),
+  Contagem = as.numeric(contagem_global),
+  Proporcao = round(as.numeric(proporcao_global), 3),
+  Esperado_1_2_1 = c(0.25, 0.50, 0.25),
+  Esperado_1_1 = c(0.50, 0.00, 0.50))
+
+# names(df_global) = c("Genótipo", "Contagem", "Proporção observada", "Esperado (1:2:1)", "Esperado (1:1)"); df_global
+
+knitr::kable(df_global) 
+```
+
+```{r, warning=FALSE, message=FALSE}
+# Gráfico: distribuição observada vs proporções de referência
+
+p_global = ggplot(df_global, aes(x = Genotipo, y = Proporcao)) +
+  geom_col(fill = "purple3", alpha = 0.80, width = 0.58) +
+  geom_point(aes(y = Esperado_1_2_1),
+             color = "blue", size = 3) +
+  geom_point(aes(y = Esperado_1_1),
+             color = "red", size = 3) +
+  geom_hline(yintercept = c(0.25, 0.50),
+             linetype = "dashed", color = "black", linewidth = 0.5) +
+  scale_y_continuous(labels = percent_format(accuracy = 1),
+                     limits = c(0, 0.60)) +
+  labs(
+    title = "Distribuição global dos genótipos no conjunto Z009",
+    subtitle = "Barras roxas = observado | Bola azul = esperado para 1:2:1 | Bola vermelha = esperado para 1:1",
+    x = "Classe genotípica",
+    y = "Proporção"
+  ) +
+  theme_gray(base_size = 11) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    plot.subtitle = element_text(size = 9, color = "gray35")
+  ); p_global
+```
+
+A distribuição observada revelou 86.167 ocorrências da classe 0, 11.047 ocorrências da classe 1 e 91.404 ocorrências da classe 2, o que corresponde, em termos relativos, a 45,68%, 5,86% e 48,46%, respectivamente. Esse resultado já fornece uma indicação sobre a natureza da população estudada. Em uma população F2 (por exemplo), seria esperado um padrão de segregação mendeliana de $1:2:1$, isto é, aproximadamente 25% da classe 0, 50% da classe 1 e 25% da classe 2. No entanto, os dados observados mostraram uma frequência de heterozigotos muito inferior àquela esperada sob esse modelo.
+
+Por outro lado, a distribuição encontrada foi muito mais próxima daquela esperada para uma população de linhagens recombinantes endogâmicas (RILs) ou para uma população altamente avançada em direção à homozigose, na qual se espera predominância das classes homozigotas e baixa frequência de heterozigotos. Nesse contexto, o padrão aproximadamente equilibrado entre as classes 0 e 2, associado à escassez da classe 1, sugere que a população Z009 não apresenta comportamento compatível com uma população segregante, mas sim com uma população em estágio avançado de fixação.
+
+Embora ambas as hipóteses de segregação ($1:2:1$ e $1:1$) tenham sido testadas ao longo da atividade, a inspeção inicial dos dados já indica que a hipótese $1:1$, considerando apenas as classes homozigotas, seria mais plausível para descrever o comportamento geral da população.
+
+## Descrição do teste de hipótese
+
+O teste de hipótese é um procedimento estatístico utilizado para verificar se os dados observados são compatíveis com uma hipótese nula previamente estabelecida ou se fornecem evidências suficientes para rejeitá-la em favor de uma hipótese alternativa. Nesta atividade, o objetivo foi avaliar se, para cada marcador, as frequências genotípicas observadas seguiam uma proporção de segregação esperada. Para isso, foi utilizado o teste de qui‑quadrado de aderência, que compara frequências observadas e esperadas.
+
+A estatística do teste é dada por:
+
+$$
+\chi^2 = \sum_{i=1}^{k} \frac{(O_i - E_i)^2}{E_i}
+$$
+
+em que $O_i$ representa a frequência observada na classe $i$, $E_i$ representa a frequência esperada sob a hipótese nula e $k$ é o número de classes avaliadas. Sob a hipótese nula, a estatística $\chi^2$ segue aproximadamente uma distribuição qui-quadrado com $k-1$ graus de liberdade.
+
+Para a hipótese de segregação $1{:}2{:}1$, foram consideradas três classes genotípicas (0, 1 e 2). Assim, as hipóteses testadas para cada marcador foram:
+
+$$
+H_0: p_0 = 0.25,\; p_1 = 0.50,\; p_2 = 0.25
+$$
+
+$$
+H_1: \text{as frequências genotípicas não seguem a proporção } 1{:}2{:}1.
+$$ Para a hipótese de segregação $1{:}1$, os heterozigotos foram tratados como ausentes, de forma que apenas as classes 0 e 2 foram consideradas. Assim, as hipóteses testadas foram:
+
+$$
+H_0: p_0 = 0.50,\; p_2 = 0.50
+$$
+
+$$
+H_1: \text{as frequências das classes } 0 \text{ e } 2 \text{ não seguem a proporção } 1{:}1.
+$$
+
+Em ambos os testes, o p-valor foi utilizado como critério de decisão. Considerando um nível de significância de $\alpha = 0.05$, rejeitou-se $H_0$ quando $p \leq 0.05$ e não se rejeita $H_0$ quando $p > 0.05$. Assim, p-valores pequenos indicam que as diferenças entre frequências observadas e esperadas são grandes demais para serem atribuídas apenas ao acaso, sugerindo distorção de segregação.
+
+## Testes de segregação
+
+### Segregação 1:2:1
+
+```{r, warning=FALSE, message=FALSE}
+teste_121 = function(nome_col) {
+  
+  dados = maize[[nome_col]]
+  obs_tab = table(factor(dados, levels = c(0, 1, 2)))
+  n_total = sum(obs_tab)
+  prob_esp = c(0.25, 0.50, 0.25)
+  
+  teste = chisq.test(obs_tab, p = prob_esp)
+  
+  data.frame(
+    Marcador = nome_col,
+    n0 = as.numeric(obs_tab[1]),
+    n1 = as.numeric(obs_tab[2]),
+    n2 = as.numeric(obs_tab[3]),
+    p_valor = teste$p.value
+  )
+}
+
+result_121 = bind_rows(lapply(marker_names, teste_121))
+
+knitr::kable(result_121 |> slice(1:10)) # 10 primeiras linhas
+```
+
+#### Sorteio de 6 marcadores
+
+```{r, warning=FALSE, message=FALSE}
+set.seed(12130193)
+cols_sort = sample(marker_names, 6); cols_sort
+```
+
+#### Plot
+
+```{r, warning=FALSE, message=FALSE}
+plot_121 = function(nome_col) {
+  
+  dados = maize[[nome_col]]
+  obs_tab = table(factor(dados, levels = c(0, 1, 2)))
+  n_total = sum(obs_tab)
+  prob_esp = c(0.25, 0.50, 0.25)
+  
+  teste = chisq.test(obs_tab, p = prob_esp)
+  
+  data.frame(
+    Genotipo = factor(c(0, 1, 2), levels = c(0, 1, 2)),
+    Observado = as.numeric(obs_tab) / n_total,
+    Esperado = prob_esp,
+    Marcador = nome_col,
+    p_valor = teste$p.value
+  )
+}
+
+result_121_plot = bind_rows(lapply(cols_sort, plot_121))
+
+rotulos_121 = result_121_plot %>%
+  group_by(Marcador) %>%
+  summarise(p_valor = first(p_valor), .groups = "drop")
+
+ggplot(result_121_plot, aes(x = Genotipo)) +
+  geom_col(aes(y = Esperado, fill = "Esperado"),
+           alpha = 0.50, color = "black") +
+  geom_col(aes(y = Observado, fill = "Observado"),
+           alpha = 0.50, color = "black") +
+  facet_wrap(~ Marcador, scales = "free_y") +
+  geom_text(data = rotulos_121,
+            aes(x = 2, y = 0.58,
+                label = paste0("p = ", format(round(p_valor, 4), nsmall = 4))),
+            inherit.aes = FALSE, size = 3) +
+  scale_fill_manual(values = c("Observado" = "green3",
+                               "Esperado" = "purple3")) +
+  scale_y_continuous(limits = c(0, 0.65)) +
+  labs(title = "Segregação 1:2:1",
+       x = "Genótipo",
+       y = "Frequência",
+       fill = "") +
+  theme_gray() +
+  theme(
+    plot.title = element_text(hjust = 0.5))
+```
+
+Ao aplicar o teste de qui-quadrado assumindo segregação $1:2:1$, observou-se que os primeiros marcadores avaliados já apresentavam p-valores extremamente baixos, arredondados para zero na tabela resumida. Esse resultado indica forte discrepância entre as frequências observadas e aquelas esperadas sob uma população segregante. Portanto, as frequências das classes 0, 1 e 2 não se ajustaram ao padrão $0,25:0,50:0,25$, e, portanto, a hipótese nula de segregação $1:2:1$ deve ser rejeitada para os marcadores avaliados. Os gráficos produzidos para os marcadores sorteados reforçaram essa interpretação, pois mostraram visualmente que a frequência observada da classe 1 foi muito inferior à esperada, enquanto as classes 0 e 2 ocorreram em proporções mais elevadas que as previstas sob essa hipótese. Assim, os resultados sustentam que a segregação $1:2:1$ não descreve adequadamente o comportamento genotípico da população Z009.
+
+### Segregação 1:1
+
+```{r, warning=FALSE, message=FALSE}
+maize_11 = maize
+maize_11[maize_11 == 1] = NA
+
+teste_11 = function(nome_col) {
+  
+  dados = maize_11[[nome_col]]
+  obs_tab = table(factor(dados, levels = c(0, 2)))
+  n_total = sum(obs_tab)
+  prob_esp = c(0.50, 0.50)
+  
+  teste = chisq.test(obs_tab, p = prob_esp)
+  
+  data.frame(
+    Marcador = nome_col,
+    n0 = as.numeric(obs_tab[1]),
+    n2 = as.numeric(obs_tab[2]),
+    p_valor = teste$p.value
+  )
+}
+
+result_11 = bind_rows(lapply(marker_names, teste_11))
+
+knitr::kable(result_11 |> slice(1:10)) # 10 primeiras linhas
+```
+
+```{r, warning=FALSE, message=FALSE}
+plot_11 = function(nome_col) {
+  
+  dados = maize_11[[nome_col]]
+  obs_tab = table(factor(dados, levels = c(0, 2)))
+  n_total = sum(obs_tab)
+  prob_esp = c(0.50, 0.50)
+  
+  teste = chisq.test(obs_tab, p = prob_esp)
+  
+  data.frame(
+    Genotipo = factor(c(0, 2), levels = c(0, 2)),
+    Observado = as.numeric(obs_tab) / n_total,
+    Esperado = prob_esp,
+    Marcador = nome_col,
+    p_valor = teste$p.value
+  )
+}
+
+result_11_plot = bind_rows(lapply(cols_sort, plot_11))
+
+rotulos_11 <- result_11_plot %>%
+  group_by(Marcador) %>%
+  summarise(p_valor = first(p_valor), .groups = "drop")
+
+ggplot(result_11_plot, aes(x = Genotipo)) +
+  geom_col(aes(y = Esperado, fill = "Esperado"),
+           alpha = 0.50, color = "black") +
+  geom_col(aes(y = Observado, fill = "Observado"),
+           alpha = 0.50, color = "black") +
+  facet_wrap(~ Marcador, scales = "free_y") +
+  geom_text(data = rotulos_11,
+            aes(x = 1.5, y = 0.58,
+                label = ifelse(p_valor < 0.0001,
+                               "p < 0.0001",
+                               paste0("p = ", format(round(p_valor, 4), nsmall = 4)))),
+            inherit.aes = FALSE, size = 3) +
+  scale_fill_manual(values = c("Observado" = "green3",
+                               "Esperado" = "purple3")) +
+  scale_y_continuous(limits = c(0, 0.65)) +
+  labs(title = "Segregação 1:1",
+       x = "Genótipo",
+       y = "Frequência",
+       fill = "") +
+  theme_gray() +
+  theme(
+    plot.title = element_text(hjust = 0.5))
+```
+
+Quando os heterozigotos foram tratados como ausentes e o teste passou a considerar apenas as classes homozigotas 0 e 2, a adequação dos dados à proporção esperada aumentou consideravelmente. Vários marcadores apresentaram p-valores elevados, indicando que, nesses casos, as diferenças entre frequências observadas e esperadas podem ser atribuídas ao acaso amostral. Embora alguns marcadores ainda tenham apresentado p-valores baixos, sugerindo distorção de segregação em loci específicos, o padrão geral foi muito mais compatível com equilíbrio entre as duas classes homozigotas. Os gráficos dos marcadores sorteados também reforçaram esse resultado, pois mostraram maior concordância entre frequências observadas e esperadas sob a hipótese $1{:}1$. Assim, conclui-se que a segregação $1{:}1$ descreve melhor o comportamento da população Z009.
