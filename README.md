@@ -4,6 +4,7 @@ This repository contains the materials for the course `LGN5822 - Statistical Gen
 
 ## Contents
 ---
+| Aula | Data | Tema |
 |---|---|---|
 | 1 | 04/03 | Introduction to Statistical Genetics / Lecture on Mental Health |
 | 2 | 11/03 | First Steps in R |
