@@ -1,0 +1,71 @@
+---
+format:
+  revealjs:
+    center: false
+    incremental: true
+    theme: [default, custom.scss]
+    slide-number: c/t
+    show-slide-number: all
+    preview-links: true
+    embed-resources: true # # Incorpora todos os recursos no próprio HTML, evitando dependências externas
+    self-contained-math: true # Embute a biblioteca de fórmulas no HTML para exibir matemática sem dependências externas
+    width: 1200
+    height: 800
+    auto-stretch: false
+    code-line-numbers: false
+#editor: visual
+#knitr: pagedown::chrome_print  # Faz o Knit gerar o HTML e convertê-lo em PDF
+---
+
+##  {.capa background-gradient="linear-gradient(to right, #ffffff 0%, #ffffff 70%, #580002 68%, #580002 100%)"}
+
+::: capa-titulo
+**Uma investigação sobre a taxa de falsos positivos e a má interpretação dos valores P**
+:::
+
+::: capa-subtitulo
+[*An investigation of the false discovery rate and the misinterpretation of p-values*](https://doi.org/10.1098/rsos.140216)
+:::
+
+::: capa-autores
+**LGN 5822 - Statistical Genetics I: Foundations**
+
+**Discentes**: Ana Matiussi, Paula Cardoso e Thiago Ludwig
+
+**Docente**: Prof. Dr. Saulo Chaves
+:::
+
+::: logo
+![](logo1.png){.absolute top="85" left="980" width="190"} 
+![](logo2.png){.absolute top="650" left="980" width="220"}
+:::
+
+<!---- Slides ---->
+
+# .... {background-color="#580002"}
+
+## Alguma coisa 1
+
+O textinho vai aqui...
+
+> Bla Bla Bla
+
+# .... {background-color="#580002"}
+
+## Alguma coisa 2
+
+O textinho vai aqui...
+
+Outro textinho aqui... `texto marcado como código`!
+
+# .... {background-color="#580002"}
+
+## Alguma coisa 3
+
+O textinho vai aqui...
+
+
+
+
+
+
