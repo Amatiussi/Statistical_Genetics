@@ -1,6 +1,6 @@
 /*-- scss:defaults --*/
 
-// importing fonts
+// importing fonts 
 @import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inconsolata&family=Lato&display=swap');
 
@@ -11,7 +11,7 @@ $font-family-sans-serif: Arial!default;
 $presentation-heading-font: Arial!default;
 $presentation-heading-color: #580002 !default;
 $h1-font-size: 2em !default;
-$h2-font-size: 2em !default;
+$h2-font-size: 1.5em !default;
 $h3-font-size: 1.5em !default;
 
 // code
@@ -21,10 +21,20 @@ $font-family-monospace: 'Inconsolata', monospace !default;
 // general
 $body-bg: #ffffff;
 $link-color: #580002;
-$presentation-font-size-root: 28px;   // aumentar o texto do slide todo
+$presentation-font-size-root: 26px;   // aumentar o texto do slide todo
 $body-color: #000000;
 
 /*-- scss:rules --*/
+
+/* matemática inline */
+.reveal mjx-container[display="false"] {
+  font-size: 0.8em !important;
+}
+
+/* matemática destacada */
+.reveal mjx-container[display="true"] {
+  font-size: 0.8em !important;
+}
 
 .reveal h1 {
   margin-bottom: 1em;
