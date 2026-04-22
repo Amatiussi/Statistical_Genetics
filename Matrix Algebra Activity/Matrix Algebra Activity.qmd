@@ -1,0 +1,2910 @@
+---
+title: "**Atividade de Álgebra Matricial**"
+author: "Ana Matiussi"
+date: last-modified
+date-format: DD/MM/YYYY
+format:
+  html:
+    toc: true
+    toc-location: left
+    code-links: repo
+    # code-tools: true
+    embed-resources: true  # Usar esse comando para o html não abrir bugado em outro navegador
+    fig-align: center
+    fig-width: 10
+    # code-fold: show
+    code-overflow: wrap
+    include-before-body: header.html
+    css: styles.scss
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{=html}
+<style>
+  p {
+    text-align: justify;
+    text-justify: inter-word;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+</style>
+```
+
+::: {.meta-manual}
+<div class="meta-item">
+  <div class="meta-label">Author</div>
+  <div class="meta-value">Ana Matiussi</div>
+</div>
+
+<div class="meta-item">
+  <div class="meta-label">Published</div>
+  <div class="meta-value">22/04/2026</div>
+</div>
+:::
+
+## **Instruções**
+
+<!-- &nbsp; - cria um espaço no início de um parágrafo (HTML) -->
+
+&nbsp;&nbsp; Resolva as questões apresentando o desenvolvimento passo a passo dos cálculos matriciais. Não apresente apenas o resultado final. Em cada item, mostre as operações realizadas, de modo que seja possível acompanhar o raciocínio utilizado.
+
+&nbsp;&nbsp; Após a resolução manual, confira os resultados utilizando o R. Inclua no arquivo o código utilizado e também o resultado obtido no R, para que seja possível comparar a resolução analítica com a computacional. O relatório deverá ser elaborado em `R Markdown` ou `Quarto`. Para auxiliar na escrita das matrizes em LaTeX, pode ser utilizado o editor disponível em ["LaTeX editor"](https://latexeditor.lagrida.com/).
+
+## **Observação**
+&nbsp;&nbsp; Os resultados foram organizados em abas: uma destinada à **“resolução manual”** e outra à resolução **“utilizando o R”**, por meio de uma *fenced div* em Markdown com a classe `{.panel-tabset}` do Quarto. Para visualizar cada conjunto de resultados, basta alternar entre as abas.
+
+## **Exercício 1**
+Considere as matrizes A e B:
+
+$$
+A =
+\begin{bmatrix}
+10 & 20 & 30 & 40 \\
+5 & 8 & 15 & 5 \\
+5 & 5 & 25 & 35 \\
+1 & 2 & 3 & 12
+\end{bmatrix}
+\quad \text{e} \quad
+B =
+\begin{bmatrix}
+1 & 2 & 10 & 6 \\
+5 & 8 & 4 & 2 \\
+9 & 3 & 7 & 5
+\end{bmatrix}
+$$ 
+
+Com base nas definições de álgebra matricial, calcule:
+
+a) **AB**
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+&nbsp;&nbsp; A matriz $A_{4\times4}$ possui 4 colunas e a matriz $B_{3\times4}$ possui 3 linhas. 
+Como o número de colunas de $A$ é diferente do número de linhas de $B$, a operação $AB$ não é possível por falta de conformidade.
+
+### **Utilizando o R**
+
+```{r}
+#| error: true
+
+# Matriz A 
+A = matrix(c(10, 20, 30, 40,
+               5,  8, 15,  5,
+               5,  5, 25, 35,
+               1,  2,  3, 12), 
+            nrow = 4, ncol = 4, byrow = TRUE)
+
+# Matriz B 
+B = matrix(c(1, 2, 10, 6,
+              5, 8,  4, 2,
+              9, 3,  7, 5), 
+            nrow = 3, ncol = 4, byrow = TRUE)
+
+# A x B
+A%*%B
+```
+:::
+
+b) **BA**
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+$$
+B_{3 \times 4} \cdot A_{4 \times 4} = BA_{3 \times 4}
+$$
+$$
+C_1(B)A =
+\begin{bmatrix}
+(1\cdot10) + (2\cdot5) + (10\cdot5) + (6\cdot1) \\
+(5\cdot10) + (8\cdot5) + (4\cdot5) + (2\cdot1) \\
+(9\cdot10) + (3\cdot5) + (7\cdot5) + (5\cdot1)
+\end{bmatrix}
+=
+\begin{bmatrix} 76 \\ 112 \\ 145 \end{bmatrix}
+$$
+$$
+C_2(B)A =
+\begin{bmatrix}
+(1\cdot20) + (2\cdot8) + (10\cdot5) + (6\cdot2) \\
+(5\cdot20) + (8\cdot8) + (4\cdot5) + (2\cdot2) \\
+(9\cdot20) + (3\cdot8) + (7\cdot5) + (5\cdot2)
+\end{bmatrix}
+=
+\begin{bmatrix} 98 \\ 188 \\ 249 \end{bmatrix}
+$$
+$$
+C_3(B)A =
+\begin{bmatrix}
+(1\cdot30) + (2\cdot15) + (10\cdot25) + (6\cdot3) \\
+(5\cdot30) + (8\cdot15) + (4\cdot25) + (2\cdot3) \\
+(9\cdot30) + (3\cdot15) + (7\cdot25) + (5\cdot3)
+\end{bmatrix}
+=
+\begin{bmatrix} 328 \\ 376 \\ 505 \end{bmatrix}
+$$
+$$
+C_4(B)A =
+\begin{bmatrix}
+(1\cdot40) + (2\cdot5) + (10\cdot35) + (6\cdot12) \\
+(5\cdot40) + (8\cdot5) + (4\cdot35) + (2\cdot12) \\
+(9\cdot40) + (3\cdot5) + (7\cdot35) + (5\cdot12)
+\end{bmatrix}
+=
+\begin{bmatrix} 472 \\ 404 \\ 680 \end{bmatrix}
+$$
+Portanto: 
+
+$$
+BA=
+\begin{bmatrix}
+76 & 98 & 328 & 472\\
+112 & 188 & 376 & 404\\
+145 & 249 & 505 & 680
+\end{bmatrix}
+$$
+
+### **Utilizando o R**
+
+```{r}
+# B x A
+B%*%A
+```
+:::
+
+
+## **Exercício 2**
+Seja a matriz:
+
+$$
+X =
+\begin{bmatrix}
+1 & 1 & 0 \\
+1 & 1 & 0 \\
+1 & 0 & 1 \\
+1 & 0 & 1
+\end{bmatrix}
+$$
+
+a)  Determine a matriz transposta de **X**, denotada por **X'**.
+
+::: {.panel-tabset}
+### **Resolução manual**
+
+A matriz transposta é obtida trocando as linhas pelas colunas de uma matriz original. Se a matriz **X** é de ordem $m \times n$, sua transposta **X'** será de ordem $n \times m$, como:
+
+$$
+X'=
+\begin{bmatrix}
+1 & 1 & 1 & 1\\
+1 & 1 & 0 & 0\\
+0 & 0 & 1 & 1
+\end{bmatrix}
+$$
+
+### **Utilizando o R**
+
+```{r}
+X = matrix(c(1, 1, 0,
+             1, 1, 0,
+             1, 0, 1,
+             1, 0, 1), 
+            nrow = 4, ncol = 3, byrow = TRUE)
+Xl = t(X); Xl
+```
+:::
+
+
+b)  Calcule o produto matricial **X'X**.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+$$
+X'X=
+\begin{bmatrix}
+1 & 1 & 1 & 1\\
+1 & 1 & 0 & 0\\
+0 & 0 & 1 & 1
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+1 & 1 & 0\\
+1 & 1 & 0\\
+1 & 0 & 1\\
+1 & 0 & 1
+\end{bmatrix}
+$$
+
+$$
+C_1(X')X=
+\begin{bmatrix}
+(1\cdot1)+(1\cdot1)+(1\cdot1)+(1\cdot1) \\
+(1\cdot1)+(1\cdot1)+(1\cdot0)+(1\cdot0) \\
+(1\cdot0)+(1\cdot0)+(1\cdot1)+(1\cdot1)
+\end{bmatrix}
+= \begin{bmatrix} 4 \\ 2 \\ 2 \end{bmatrix}
+$$
+
+$$
+C_2(X')X=
+\begin{bmatrix}
+(1\cdot1)+(1\cdot1)+(0\cdot1)+(0\cdot1) \\
+(1\cdot1)+(1\cdot1)+(0\cdot0)+(0\cdot0) \\
+(1\cdot0)+(1\cdot0)+(0\cdot1)+(0\cdot1)
+\end{bmatrix}
+= \begin{bmatrix} 2 \\ 2 \\ 0 \end{bmatrix}
+$$
+
+$$
+C_3(X')X=
+\begin{bmatrix}
+(0\cdot1)+(0\cdot1)+(1\cdot1)+(1\cdot1) \\
+(0\cdot1)+(0\cdot1)+(1\cdot0)+(1\cdot0) \\
+(0\cdot0)+(0\cdot0)+(1\cdot1)+(1\cdot1)
+\end{bmatrix}
+= \begin{bmatrix} 2 \\ 0 \\ 2 \end{bmatrix}
+$$
+
+Logo:
+
+$$
+X'X=
+\begin{bmatrix}
+4 & 2 & 2\\
+2 & 2 & 0\\
+2 & 0 & 2
+\end{bmatrix}
+$$
+
+### **Utilizando o R**
+
+```{r}
+X = matrix(c(1, 1, 0,
+             1, 1, 0,
+             1, 0, 1,
+             1, 0, 1), 
+            nrow = 4, ncol = 3, byrow = TRUE)
+Xl = t(X)
+
+Xl%*%X
+```
+:::
+
+c)  Determine a dimensão de **X**.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+A matriz **X** apresenta dimenção $X_{4\times3}$ (4 linhas e 3 colunas).
+
+### **Utilizando o R**
+
+```{r}
+dim(X)
+```
+:::
+
+d)  Identifique as linhas e as colunas de **X**.
+
+::: {.panel-tabset}
+### **Resolução manual**
+
+Linhas:
+
+$$
+L_1=\begin{bmatrix} 1 & 1 & 0 \end{bmatrix},\quad
+L_2=\begin{bmatrix} 1 & 1 & 0 \end{bmatrix},\quad
+L_3=\begin{bmatrix} 1 & 0 & 1 \end{bmatrix},\quad
+L_4=\begin{bmatrix} 1 & 0 & 1 \end{bmatrix}
+$$
+
+Colunas:
+
+$$
+C_1 =
+\begin{bmatrix}
+1 \\
+1 \\
+1 \\
+1
+\end{bmatrix},
+\quad
+C_2 =
+\begin{bmatrix}
+1 \\
+1 \\
+0 \\
+0
+\end{bmatrix},
+\quad
+C_3 =
+\begin{bmatrix}
+0 \\
+0 \\
+1 \\
+1
+\end{bmatrix}
+$$
+
+### **Utilizando o R**
+
+```{r}
+# linhas
+X[1,] # linha 1
+X[2,] # linha 2
+X[3,] # linha 3
+X[4,] # linha 4
+
+# colunas
+X[,1] # coluna 1
+X[,2] # coluna 2
+X[,3] # coluna 3
+```
+:::
+
+e)  A matriz **X** é quadrada? Justifique.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+Não, porque, pela definição matemática, uma matriz quadrada exige que o número de linhas $m$ seja igual ao número de colunas $n$, ou seja, $m=n$. Nesse caso, temos $m \neq n$. Portanto, é uma matriz retangular.
+
+### **Utilizando o R**
+
+```{r}
+# Teste lógico
+nrow(X) == ncol(X)   # TRUE = quadrada; FALSE = retangular
+
+# Ou mais chique
+if (nrow(X) == ncol(X)) {
+  print("Matriz quadrada")
+} else {
+  print("Matriz retangular")
+}
+```
+:::
+
+f)  Existem linhas ou colunas repetidas? O que isso sugere sobre a matriz?
+
+::: {.panel-tabset}
+### **Resolução manual**
+
+Sim. As linhas 1 e 2 são iguais, assim como as linhas 3 e 4. Isso indica que as linhas são linearmente dependentes, ou seja, a matriz não possui posto completo. 
+
+### **Utilizando o R**
+
+```{r}
+# Calcular o posto da matriz
+rank_X = qr(X)$rank; rank_X
+```
+O posto é 2 e a matriz tem 4 linhas, isso significa que existem 2 linhas linearmente independentes (por exemplo, L1 e L3). As outras são combinações (L1 = L2 e L3 = L4).
+:::
+
+## **Exercício 3**
+Sejam:
+
+$$
+A =
+\begin{bmatrix}
+1 & 0 & 3 \\
+1 & 0 & 0 \\
+1 & 1 & 2 \\
+1 & 1 & -1
+\end{bmatrix}
+\quad \text{e} \quad
+b =
+\begin{bmatrix}
+10 \\
+3 \\
+-2
+\end{bmatrix}
+$$
+
+Calcule:
+
+a) **Ab**
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+$$
+Ab =
+\begin{bmatrix}
+1 & 0 & 3 \\
+1 & 0 & 0 \\
+1 & 1 & 2 \\
+1 & 1 & -1
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+10 \\
+3 \\
+-2
+\end{bmatrix}
+=
+\begin{bmatrix}
+(1\cdot10) + (0\cdot3) + (3\cdot-2) \\
+(1\cdot10) + (0\cdot3) + (0\cdot-2) \\
+(1\cdot10) + (1\cdot3) + (2\cdot-2) \\
+(1\cdot10) + (1\cdot3) + (-1\cdot-2)
+\end{bmatrix}
+=\begin{bmatrix} 4 \\ 10 \\ 9 \\ 15 \end{bmatrix}
+$$
+
+### **Utilizando o R**
+
+```{r}
+# Matriz A
+A = matrix(c(1, 0,  3,
+             1, 0,  0,
+             1, 1,  2,
+             1, 1, -1), 
+            nrow = 4, ncol = 3, byrow = TRUE)
+
+# Vetor b
+b = matrix(c(10, 
+             3, 
+            -2), 
+            nrow = 3, ncol = 1)
+
+A%*%b
+```
+:::
+
+b) **b'b**
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+$$
+b'b =
+\begin{bmatrix}
+10 & 3 & -2
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+10 \\
+3 \\
+-2
+\end{bmatrix}
+$$
+
+$$
+b'b = 
+\begin{bmatrix} (10\cdot10) + (3\cdot3) + (-2\cdot-2) \end{bmatrix} = 
+\begin{bmatrix}
+113
+\end{bmatrix} 
+$$
+
+### **Utilizando o R**
+
+```{r}
+t(b)%*%b
+```
+:::
+
+c) **bb'**
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+$$
+bb' =
+\begin{bmatrix}
+10 \\
+3 \\
+-2
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+10 & 3 & -2
+\end{bmatrix}
+=
+\begin{bmatrix}
+(10\cdot10) & (10\cdot3) & (10\cdot-2) \\
+(3\cdot10) & (3\cdot3) & (3\cdot-2) \\
+(-2\cdot10) & (-2\cdot3) & (-2\cdot-2)
+\end{bmatrix}
+=
+\begin{bmatrix}
+100 & 30 & -20 \\
+30 & 9 & -6 \\
+-20 & -6 & 4
+\end{bmatrix}
+$$
+
+### **Utilizando o R**
+
+```{r}
+b %*% t(b)
+```
+:::
+
+## **Exercício 4**
+Sejam:
+
+$$
+A =
+\begin{bmatrix}
+1 & 0 \\
+2 & -1
+\end{bmatrix}
+\quad \text{e} \quad
+B =
+\begin{bmatrix}
+3 & -2 \\
+0 & 1
+\end{bmatrix}
+$$
+
+a) Calcule **A + B** e **B + A**. O que você observa?
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+$$
+A+B =
+\begin{bmatrix}
+1+3 & 0+(-2) \\
+2+0 & -1+1
+\end{bmatrix}
+=
+\begin{bmatrix}
+4 & -2 \\
+2 & 0
+\end{bmatrix}
+$$
+
+$$
+B+A =
+\begin{bmatrix}
+3+1 & -2+0 \\
+0+2 & 1+(-1)
+\end{bmatrix}
+=
+\begin{bmatrix}
+4 & -2 \\
+2 & 0
+\end{bmatrix}
+$$
+
+Portanto:
+
+$$
+A+B = B+A
+$$
+Isso significa que a adição de matrizes é comutativa, ou seja, a ordem da soma não altera o resultado final (a operação só é possível para matrizes da mesma ordem $m \times n$).
+
+### **Utilizando o R**
+
+```{r}
+# Matriz A
+A = matrix(c(1,  0,
+             2, -1), 
+            nrow = 2, ncol = 2, byrow = TRUE)
+
+# Matriz B
+B = matrix(c(3, -2,
+             0,  1), 
+            nrow = 2, ncol = 2, byrow = TRUE)
+
+A+B; B+A
+```
+:::
+
+
+b) Calcule **(A + B)'**.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+Nesse caso, primeiro faz a soma e depois a transposição. O cálculo de **A + B** é igual a questão a), logo:
+$$
+A+B =
+\begin{bmatrix}
+4 & -2 \\ 
+2 & 0
+\end{bmatrix}
+$$
+Agora fazendo a transposição, temos:
+$$
+(A+B)' =
+\begin{bmatrix}
+4 & 2 \\ 
+-2 & 0
+\end{bmatrix}
+$$
+Ao aplicar a transposição, os elementos da primeira linha da matriz original passam a ocupar a primeira coluna da matriz transposta, e os elementos da segunda linha passam a ocupar a segunda coluna.
+
+### **Utilizando o R**
+
+```{r}
+t(A) + t(B)
+```
+:::
+
+
+c) Calcule **A' + B'**.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+Agora nesse outro caso, primeiro faz a transposição e depois a soma. O cálculo de **A' + B'** fica:
+$$
+A' =
+\begin{bmatrix} 
+1 & 2 \\
+0 & -1 
+\end{bmatrix}
+\quad , \quad
+B' =
+\begin{bmatrix} 
+3 & 0 \\
+-2 & 1 
+\end{bmatrix}
+$$
+Agora fazendo a soma, temos:
+$$
+A' + B' =
+\begin{bmatrix}
+1 + 3 & 2 + 0 \\
+0 + (-2) & (-1) + 1 
+\end{bmatrix} =
+\begin{bmatrix}
+4 & 2 \\ 
+-2 & 0
+\end{bmatrix}
+$$
+
+### **Utilizando o R**
+
+```{r}
+t(A) + t(B)
+```
+:::
+
+
+d) Compare os resultados obtidos. É possível identificar algum padrão?
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+Não há diferença nos resultados. A única diferença prática é a ordem das operações, como visto em b) e c). Portanto:
+$$
+(A+B)' = A' + B'
+$$
+
+### **Utilizando o R**
+
+```{r}
+# TRUE porque a adição de matrizes é comutativa
+all(A + B == B + A) 
+
+# TRUE porque a transposição da soma é igual à soma das transpostas
+all(t(A + B) == t(A) + t(B)) 
+```
+:::
+
+
+e) Com base nos resultados, escreva uma propriedade que relacione as operações realizadas.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+A transposta da soma de duas matrizes é igual à soma das transpostas dessas matrizes. Essa propriedade foi verificada nas questões b) e c) do exercício 4, onde os resultados de **(A+B)'** e **A' + B'** se mostraram iguais.
+:::
+
+f) Calcule o produto de Kronecker **$A \otimes B$**.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+$$
+A = \begin{bmatrix} 1 & 0 \\ 2 & -1 \end{bmatrix}, \quad
+B = \begin{bmatrix} 3 & -2 \\ 0 & 1 \end{bmatrix}
+$$
+O produto de Kronecker é definido por:
+$$
+A \otimes B = \begin{bmatrix}
+a_{11}B & a_{12}B \\
+a_{21}B & a_{22}B
+\end{bmatrix}
+=
+\begin{bmatrix}
+1\cdot B & 0\cdot B \\
+2\cdot B & -1\cdot B
+\end{bmatrix}
+$$
+Calculando cada bloco:
+
+$$
+a_{11}B = 1 \cdot B
+= 
+\begin{bmatrix} 
+3 & -2 \\ 
+0 & 1 
+\end{bmatrix}
+$$
+$$
+a_{12}B = 0 \cdot B
+= 
+\begin{bmatrix} 
+0 & 0 \\ 
+0 & 0 
+\end{bmatrix}
+$$
+
+$$
+a_{21}B = 2 \cdot B
+= 
+\begin{bmatrix} 
+6 & -4 \\ 
+0 & 2 
+\end{bmatrix}
+$$
+
+$$
+a_{22}B = (-1) \cdot B
+= 
+\begin{bmatrix} 
+-3 & 2 \\ 
+0 & -1 
+\end{bmatrix}
+$$
+
+Logo, temos:
+$$
+A \otimes B =
+\left[\begin{array}{cc|cc}
+3 & -2 & 0 & 0 \\
+0 & 1 & 0 & 0 \\
+\hline
+6 & -4 & -3 & 2 \\
+0 & 2 & 0 & -1
+\end{array}\right]
+$$
+
+### **Utilizando o R**
+
+```{r}
+kronecker(A, B)
+```
+:::
+
+
+## **Exercício 5**
+Seja:
+
+$$
+A =
+\begin{bmatrix}
+7 & -3 & 2 \\
+4 & 9 & 5
+\end{bmatrix}
+$$
+
+a) Calcule **A'**.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+A transposta é:
+$$
+A' =
+\begin{bmatrix}
+7 & 4 \\
+-3 & 9 \\
+2 & 5
+\end{bmatrix}
+$$
+
+### **Utilizando o R**
+
+```{r}
+A = matrix(c(7, -3, 2,
+             4,  9, 5), 
+            nrow = 2, ncol = 3, byrow = TRUE)
+
+t(A)
+```
+:::
+
+
+b) Calcule **(A')'**. O que você observa em relação à matriz original **A**?
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+Com base no resultado de a), a dupla transposição é:
+$$
+(A')' =
+\begin{bmatrix}
+7 & -3 & 2 \\
+4 & 9 & 5
+\end{bmatrix}
+= A
+$$
+Ou seja, a transposta da transposta de uma matriz é a própria matriz original.
+
+### **Utilizando o R**
+
+```{r}
+t(t(A))
+```
+:::
+
+
+c) Calcule **A'A** e **AA'**. Compare os resultados quanto à dimensão e aos valores.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+$$
+A'A = 
+\begin{bmatrix}
+7 & 4 \\
+-3 & 9 \\
+2 & 5
+\end{bmatrix} 
+\cdot
+\begin{bmatrix}
+7 & -3 & 2 \\
+4 & 9 & 5 
+\end{bmatrix} = 
+$$
+$$
+\begin{bmatrix} 
+(7\cdot 7) + (4\cdot4) & (7\cdot-3) + (4\cdot9) & (7\cdot2) + (4\cdot5) \\
+(-3\cdot7) + (9\cdot4) & (-3\cdot-3) + (9\cdot9) & (-3\cdot2) + (9\cdot5) \\
+(2\cdot7) + (5\cdot4) & (2\cdot-3) + (5\cdot9) & (2\cdot2) + (5\cdot5)
+\end{bmatrix} = 
+\begin{bmatrix} 
+65 & 15 & 34 \\
+15 & 90 & 39 \\
+34 & 39 & 29 
+\end{bmatrix}
+$$
+
+$$
+AA'= 
+\begin{bmatrix} 
+7 & -3 & 2 \\
+4 & 9 & 5 
+\end{bmatrix}
+\cdot
+\begin{bmatrix} 
+7 & 4 \\
+-3 & 9 \\
+2 & 5
+\end{bmatrix} = 
+$$
+$$
+\begin{bmatrix} 
+(7\cdot7) + (-3\cdot-3) + (2\cdot2) & (7\cdot4) + (-3\cdot9) + (2\cdot5) \\
+(4\cdot7) + (9\cdot-3) + (5\cdot2) & (4\cdot4) + (9\cdot9) + (5\cdot5) 
+\end{bmatrix} = 
+\begin{bmatrix} 
+62 & 11 \\
+11 & 122 
+\end{bmatrix}
+$$
+As matrizes **A'A** e **AA'** possuem dimensões diferentes (3×3 e 2×2), mas ambas são simétricas. Além disso, seus valores não são iguais, mostrando que a ordem da multiplicação influencia o resultado. Isso ocorre porque, em geral, a multiplicação de matrizes não é comutativa, ou seja, $A'A \neq AA'$.
+
+### **Utilizando o R**
+
+```{r}
+A = matrix(c(7, -3, 2,
+             4,  9, 5), 
+            nrow = 2, ncol = 3, byrow = TRUE)
+
+t(A)%*%A; dim(t(A)%*%A)
+A%*%t(A); dim(A%*%t(A))
+```
+:::
+
+d) Com base nos resultados, descreva as relações observadas entre as operações realizadas.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+Com base nos resultados anteriores (a, b e c), é possível observar que a transposição aplicada duas vezes recupera a matriz original, ou seja, a transposição é uma operação involutiva. Além disso, observa-se também que os produtos A'A e AA' não são iguais, apresentando dimensões e valores diferentes, o que mostra que a ordem da multiplicação interfere no resultado.
+:::
+
+## **Exercício 6**
+Sejam:
+
+$$
+A =
+\begin{bmatrix}
+1 & 3 \\
+5 & -7
+\end{bmatrix},
+\quad
+B =
+\begin{bmatrix}
+3 & -2 \\
+6 & 9
+\end{bmatrix}
+\quad \text{e} \quad
+C =
+\begin{bmatrix}
+1 & 3 \\
+2 & 4
+\end{bmatrix}
+$$
+
+Verifique, por meio de cálculos, a validade da lei distributiva da multiplicação de matrizes em relação à soma:
+
+$$
+A(B + C) = AB + AC
+$$
+
+a) Calcule **B + C**.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+$$
+B+C=
+\begin{bmatrix}
+3+1 & -2+3\\
+6+2 & 9+4
+\end{bmatrix}
+=
+\begin{bmatrix}
+4 & 1\\
+8 & 13
+\end{bmatrix}
+$$
+
+### **Utilizando o R**
+
+```{r}
+# Matriz A
+A = matrix(c(1,  3,
+             5, -7), 
+            nrow = 2, ncol = 2, byrow = TRUE)
+
+# Matriz B 
+B = matrix(c(3, -2,
+             6,  9), 
+            nrow = 2, ncol = 2, byrow = TRUE)
+
+
+# Matriz C 
+C = matrix(c(1, 3,
+             2, 4), 
+            nrow = 2, ncol = 2, byrow = TRUE)
+B+C
+```
+:::
+
+b) Calcule **A(B + C)**.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+$$
+A(B + C) =  
+\begin{bmatrix} 
+(1\cdot4) + (3\cdot8) & (1\cdot1) + (3\cdot13) \\ 
+(5\cdot4) + (-7\cdot8) & (5\cdot1) + (-7\cdot13) 
+\end{bmatrix} = 
+\begin{bmatrix} 
+28 & 40 \\ 
+-36 & -86 
+\end{bmatrix}
+$$
+
+### **Utilizando o R**
+
+```{r}
+A%*%(B+C)
+```
+:::
+
+c) Calcule **AB** e **AC**.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+$$
+AB = 
+\begin{bmatrix} 
+(1\cdot3) + (3\cdot6) & (1\cdot-2) + (3\cdot9) \\
+(5\cdot3) + (-7\cdot6) & (5\cdot-2) + (-7\cdot9)
+\end{bmatrix} = 
+\begin{bmatrix} 
+21 & 25 \\
+-27 & -73
+\end{bmatrix}
+$$
+
+$$
+AC =
+\begin{bmatrix}
+(1\cdot1) + (3\cdot2) & (1\cdot3) + (3\cdot4) \\
+(5\cdot1) + (-7\cdot2) & (5\cdot3) + (-7\cdot4) 
+\end{bmatrix} = 
+\begin{bmatrix}
+7 & 15 \\
+-9 & -13 
+\end{bmatrix}
+$$
+
+### **Utilizando o R**
+
+```{r}
+# AB
+A%*%B
+# AC
+A%*%C
+```
+:::
+
+d) Calcule **AB + AC**.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+$$
+AB + AC =
+\begin{bmatrix} 
+21 + 7 & 25 + 15 \\
+-27 + (-9) & -73 + (-13)
+\end{bmatrix} = 
+\begin{bmatrix}
+28 & 40 \\
+-36 & -86 
+\end{bmatrix}
+$$
+
+### **Utilizando o R**
+
+```{r}
+A%*%B + A%*%C
+```
+:::
+
+e) Compare os resultados obtidos e conclua sobre a validade da lei distributiva.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+Com base nos resultados anteriores, é possível confirmar a validade da lei distributiva da multiplicação de matrizes em relação à adição:
+
+$$
+A(B + C) = AB + AC
+$$
+:::
+
+## **Exercício 7**
+Sejam:
+
+$$
+A =
+\begin{bmatrix}
+8 & 3 & 7 \\
+-2 & 5 & -3
+\end{bmatrix},
+\quad
+B =
+\begin{bmatrix}
+-2 & 5 \\
+3 & 7 \\
+6 & -4
+\end{bmatrix},
+\quad
+C =
+\begin{bmatrix}
+1 & 2 \\
+-3 & 1 \\
+2 & 4
+\end{bmatrix}
+$$
+
+a) Calcule **AB** e **BA**.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+$$
+AB =
+\begin{bmatrix}
+(8\cdot-2) + (3\cdot3) + (7\cdot6) & (8\cdot5) + (3\cdot7) + (7\cdot-4) \\
+(-2\cdot-2) + (5\cdot3) + (-3\cdot6) & (-2\cdot5) + (5\cdot7) + (-3)\cdot-4)
+\end{bmatrix}
+=
+\begin{bmatrix}
+35 & 33 \\
+1 & 37
+\end{bmatrix}
+$$
+$$
+BA =
+\begin{bmatrix}
+(-2\cdot8) + (5\cdot-2) & (-2\cdot3) + (5\cdot5) & (-2\cdot7) + (5\cdot-3) \\
+(3\cdot8) + (7\cdot-2) & (3\cdot3) + (7\cdot5) & (3\cdot7) + (7\cdot-3) \\
+(6\cdot8) + (-4\cdot-2) & (6\cdot3) + (-4\cdot5) & (6\cdot7) + (-4\cdot-3)
+\end{bmatrix}
+=
+\begin{bmatrix}
+-26 & 19 & -29 \\
+10 & 44 & 0 \\
+56 & -2 & 54
+\end{bmatrix}
+$$
+
+### **Utilizando o R**
+
+```{r}
+# Matriz A
+A = matrix(c(8, 3,  7,
+            -2, 5, -3), 
+           nrow = 2, byrow = TRUE)
+
+# Matriz B
+B = matrix(c(-2,  5,
+             3,  7,
+             6, -4), 
+           nrow = 3, byrow = TRUE)
+
+# Matriz C
+C = matrix(c(1, 2,
+            -3, 1,
+             2, 4), 
+           nrow = 3, byrow = TRUE)
+
+A %*% B
+B %*% A
+```
+:::
+
+
+b) Calcule **B + C**, **AC** e **A(B + C)**. Em seguida, compare **A(B + C)** com **AB + AC**.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+Calculando B + C:
+$$
+B + C =
+\begin{bmatrix}
+-2+1 & 5+2 \\
+3+(-3) & 7+1 \\
+6+2 & -4+4
+\end{bmatrix}
+=
+\begin{bmatrix}
+-1 & 7 \\
+0 & 8 \\
+8 & 0
+\end{bmatrix}
+$$
+Calculando AC:
+$$
+AC =
+\begin{bmatrix}
+(8\cdot1) + (3\cdot-3) + (7\cdot2) & (8\cdot2) + (3\cdot1) + (7\cdot4) \\
+(-2\cdot1) + (5\cdot-3) + (-3\cdot2) & (-2\cdot2) + (5\cdot1) + (-3\cdot4)
+\end{bmatrix}
+=
+\begin{bmatrix}
+13 & 47 \\
+-23 & -11
+\end{bmatrix}
+$$
+
+Calculando A(B+C):
+$$
+A(B+C) =
+\begin{bmatrix}
+(8\cdot-1) + (3\cdot0) + (7\cdot8) & (8\cdot7) + (3\cdot8) + (7\cdot0) \\
+(-2\cdot-1) + (5\cdot0) + (-3\cdot8) & (-2\cdot7) + (5\cdot8) + (-3\cdot0)
+\end{bmatrix}
+=
+\begin{bmatrix}
+48 & 80 \\
+-22 & 26
+\end{bmatrix}
+$$
+Calculando AB + AC:
+$$
+AB + AC =
+\begin{bmatrix}
+35+13 & 33+47 \\
+1+(-23) & 37+(-11)
+\end{bmatrix}
+=
+\begin{bmatrix}
+48 & 80 \\
+-22 & 26
+\end{bmatrix}
+$$
+Logo:
+
+$$
+A(B+C) = AB + AC
+$$
+
+### **Utilizando o R**
+
+```{r}
+B + C
+A %*% C
+A %*% (B + C)
+A %*% B + A %*% C
+```
+:::
+
+
+c) Calcule **(AB)'** e **B'A'**. Compare os resultados obtidos.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+A partir do resultado da matriz AB obtido na questão a), aplicamos a transposição:
+
+$$
+(AB)' =
+\begin{bmatrix}
+35 & 1 \\
+33 & 37
+\end{bmatrix}
+$$
+
+Agora a transposta de B' e A':
+
+$$
+B' =
+\begin{bmatrix}
+-2 & 3 & 6 \\
+5 & 7 & -4
+\end{bmatrix},
+\qquad
+A' =
+\begin{bmatrix}
+8 & -2 \\
+3 & 5 \\
+7 & -3
+\end{bmatrix}
+$$
+Calculando B'A': 
+
+$$
+B'A' = 
+\begin{bmatrix}
+(-2\cdot8) + (3\cdot3) + (6\cdot7) & (-2\cdot-2) + (3\cdot5) + (6\cdot-3) \\
+(5\cdot8) + (7\cdot3) + (-4\cdot7) & (5\cdot-2) + (7\cdot5) + (-4\cdot-3)
+\end{bmatrix}
+= \begin{bmatrix} 35 & 1 \\ 33 & 37 \end{bmatrix}
+$$
+Portanto:
+
+$$
+(AB)' = B'A'
+$$
+
+### **Utilizando o R**
+
+```{r}
+AB = A %*% B
+t(AB)
+t(B) %*% t(A)
+```
+:::
+
+
+d) Compare $\operatorname{tr}(AB)$ com $\operatorname{tr}(BA)$.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+Da questão a), temos as matrizes:
+$$
+AB =
+\begin{bmatrix}
+35 & 33 \\
+1 & 37
+\end{bmatrix},
+\qquad
+BA =
+\begin{bmatrix}
+-26 & 19 & -29 \\
+10 & 44 & 0 \\
+56 & -2 & 54
+\end{bmatrix}
+$$
+Calculando os traços (soma de seus principais elementos diagonais), temos:
+
+$$
+tr(AB) = 35 + 37 = 72
+\qquad
+tr(BA) = -26 + 44 + 54 = 72
+$$
+Logo: 
+$$
+tr(AB) = tr(BA)
+$$
+
+### **Utilizando o R**
+
+```{r}
+sum(diag(A %*% B))
+sum(diag(B %*% A))
+```
+:::
+
+
+e) Sejam $a_1'$ e $a_2'$ as duas linhas de **A**. Calcule
+
+$$
+\begin{bmatrix}
+a_1'B \\
+a_2'B
+\end{bmatrix}
+$$
+
+e compare o resultado com **AB**.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+As linhas de A são:
+$$
+a_1' =
+\begin{bmatrix}
+8 & 3 & 7
+\end{bmatrix},
+\qquad
+a_2' =
+\begin{bmatrix}
+-2 & 5 & -3
+\end{bmatrix}
+$$
+
+Multiplicando $a_1' \cdot B$:
+$$
+a_1'B =
+\begin{bmatrix}
+8 & 3 & 7
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+-2 & 5 \\
+3 & 7 \\
+6 & -4
+\end{bmatrix}
+$$
+Calculando:
+$$
+a_1'B =
+\begin{bmatrix}
+(8\cdot-2) + (3\cdot3) + (7\cdot6) & (8\cdot5) + (3\cdot7) + (7\cdot-4)
+\end{bmatrix}
+=
+\begin{bmatrix}
+35 & 33
+\end{bmatrix}
+$$
+Multiplicando $a_2' \cdot B$:
+$$
+a_2'B =
+\begin{bmatrix}
+-2 & 5 & -3
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+-2 & 5 \\
+3 & 7 \\
+6 & -4
+\end{bmatrix}
+$$
+Calculando:
+$$
+a_2'B =
+\begin{bmatrix}
+(-2\cdot-2) + (5\cdot3) + (-3\cdot6) & (-2\cdot5) + (5\cdot7) + (-3\cdot-4)
+\end{bmatrix}=
+\begin{bmatrix}
+1 & 37
+\end{bmatrix}
+$$
+Portanto:
+$$
+\begin{bmatrix}
+a_1'B \\
+a_2'B
+\end{bmatrix}
+=
+\begin{bmatrix}
+35 & 33 \\
+1 & 37
+\end{bmatrix}
+=
+AB
+$$
+
+### **Utilizando o R**
+
+```{r}
+a1 = A[1, , drop = FALSE]
+a2 = A[2, , drop = FALSE]
+
+rbind(a1 %*% B, a2 %*% B)
+A %*% B
+```
+:::
+
+
+f) Sejam $b_1$ e $b_2$ as duas colunas de **B**. Calcule $(Ab_1, Ab_2)$ e compare o resultado com **AB**.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+As colunas de B são:
+$$
+b_1 =
+\begin{bmatrix}
+-2 \\
+3 \\
+6
+\end{bmatrix},
+\qquad
+b_2 =
+\begin{bmatrix}
+5 \\
+7 \\
+-4
+\end{bmatrix}
+$$
+
+Multiplicando $A \cdot b_1$:
+$$
+Ab_1 =
+\begin{bmatrix}
+8 & 3 & 7 \\
+-2 & 5 & -3
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+-2 \\
+3 \\
+6
+\end{bmatrix}
+$$
+Calculando:
+$$
+Ab_1 =
+\begin{bmatrix}
+(8\cdot-2) + (3\cdot3) + (7\cdot6) \\
+(-2\cdot-2) + (5\cdot3) + (-3\cdot6)
+\end{bmatrix}
+=
+\begin{bmatrix}
+35 \\
+1
+\end{bmatrix}
+$$
+Multiplicando $A \cdot b_2$:
+$$
+Ab_2 =
+\begin{bmatrix}
+8 & 3 & 7 \\
+-2 & 5 & -3
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+5 \\
+7 \\
+-4
+\end{bmatrix}
+$$
+
+Calculando:
+$$
+Ab_2 =
+\begin{bmatrix}
+(8\cdot5) + (3\cdot7) + (7\cdot-4) \\
+(-2\cdot5) + (5\cdot7) + (-3\cdot-4)
+\end{bmatrix}
+=
+\begin{bmatrix}
+33 \\
+37
+\end{bmatrix}
+$$
+
+Logo:
+$$
+(Ab_1, Ab_2) =
+\begin{bmatrix}
+35 & 33 \\
+1 & 37
+\end{bmatrix}
+=
+AB
+$$
+
+### **Utilizando o R**
+
+```{r}
+b1 = B[, 1, drop = FALSE]
+b2 = B[, 2, drop = FALSE]
+
+cbind(A %*% b1, A %*% b2)
+A %*% B
+```
+:::
+
+## **Exercício 8**
+Sejam:
+
+$$
+A =
+\begin{bmatrix}
+3 & 2 & 1 \\
+6 & 4 & 2 \\
+12 & 8 & 4
+\end{bmatrix}
+\quad \text{e} \quad
+B =
+\begin{bmatrix}
+1 & -1 & 2 \\
+-1 & 1 & -2 \\
+-1 & 1 & -2
+\end{bmatrix}
+$$
+
+Considere **0** a matriz nula (matriz cujos elementos são todos iguais a zero) de dimensão apropriada.
+
+a) Mostre que **AB = 0**.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+Multiplicando  A e B, temos:
+$$
+AB =
+\begin{bmatrix}
+3 & 2 & 1 \\
+6 & 4 & 2 \\
+12 & 8 & 4
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+1 & -1 & 2 \\
+-1 & 1 & -2 \\
+-1 & 1 & -2
+\end{bmatrix}
+$$
+
+Calculando:
+$$
+AB =
+\begin{bmatrix}
+(3\cdot1) + (2\cdot-1) + (1\cdot-1) & (3\cdot-1) + (2\cdot1) + (1\cdot1) & (3\cdot2) + (2\cdot-2) + (1\cdot-2) \\
+(6\cdot1) + (4\cdot-1) + (2\cdot-1) & (6\cdot-1) + (4\cdot1) + (2\cdot1) & (6\cdot2) + (4\cdot-2) + (2\cdot-2) \\
+(12\cdot1) + (8\cdot-1) + (4\cdot-1) & (12\cdot-1) + (8\cdot1) + (4\cdot1) & (12\cdot2) + (8\cdot-2) + (4\cdot-2)
+\end{bmatrix}
+$$
+Portanto:
+$$
+AB =
+\begin{bmatrix}
+0 & 0 & 0 \\
+0 & 0 & 0 \\
+0 & 0 & 0
+\end{bmatrix}
+= 0
+$$
+
+
+### **Utilizando o R**
+
+```{r}
+A = matrix(c(3, 2, 1,
+             6, 4, 2,
+             12, 8, 4), nrow = 3, byrow = TRUE)
+
+B = matrix(c(1, -1,  2,
+             -1,  1, -2,
+             -1,  1, -2), nrow = 3, byrow = TRUE)
+
+A %*% B
+```
+:::
+
+
+b) Encontre um vetor **x** tal que **Ax = 0**.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+Um exemplo de vetor em coluna:
+
+$$
+x =
+\begin{bmatrix}
+-2 \\
+3 \\
+0
+\end{bmatrix}
+$$
+Multiplicando o vetor x com a matriz A:
+
+$$
+Ax =
+\begin{bmatrix}
+3 & 2 & 1 \\
+6 & 4 & 2 \\
+12 & 8 & 4
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+-2 \\
+3 \\
+0
+\end{bmatrix}
+$$
+Calculando:
+$$
+Ax =
+\begin{bmatrix}
+(3\cdot-2) + (2\cdot3) + (1\cdot0) \\
+(6\cdot-2) + (4\cdot3) + (2\cdot0) \\
+(12\cdot-2) + (8\cdot3) + (4\cdot0)
+\end{bmatrix}
+=
+\begin{bmatrix}
+0 \\
+0 \\
+0
+\end{bmatrix}
+$$
+
+### **Utilizando o R**
+
+```{r}
+x = matrix(c(-2, 3, 0), ncol = 1)
+A %*% x
+```
+:::
+
+c) Determine o posto de **A** e o posto de **B**.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+Como as linhas de $A$ são múltiplas entre si, temos:
+
+$$
+posto(A) = 1
+$$
+
+Como as linhas de $B$ também são múltiplas entre si, temos:
+
+$$
+posto(B) = 1
+$$
+
+### **Utilizando o R**
+
+```{r}
+qr(A)$rank
+qr(B)$rank
+```
+:::
+
+
+## **Exercício 9**
+Sejam:
+
+$$
+A =
+\begin{bmatrix}
+1 & 2 \\
+3 & 4
+\end{bmatrix},
+\quad
+B =
+\begin{bmatrix}
+5 & 6 \\
+7 & 8
+\end{bmatrix},
+\quad
+C =
+\begin{bmatrix}
+2 & 0 \\
+1 & 3
+\end{bmatrix}
+$$
+
+a) Usando a propriedade da transposta do produto de duas matrizes, desenvolva **(ABC)'**.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+$$
+(ABC)' = C'B'A'
+$$
+:::
+
+b) Escreva o resultado obtido em função de **A'**, **B'** e **C'**.
+
+
+c) Calcule numericamente **(ABC)'** e **C'B'A'**.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+Calculando para AB:
+$$
+AB =
+\begin{bmatrix}
+1 & 2 \\
+3 & 4
+\end{bmatrix}
+\begin{bmatrix}
+5 & 6 \\
+7 & 8
+\end{bmatrix}
+=
+\begin{bmatrix}
+(1\cdot5) + (2\cdot7) & (1\cdot6) + (2\cdot8) \\
+(3\cdot5) + (4\cdot7) & (3\cdot6) + (4\cdot8)
+\end{bmatrix}
+=
+\begin{bmatrix}
+19 & 22 \\
+43 & 50
+\end{bmatrix}
+$$
+Calculando para ABC:
+$$
+ABC =
+\begin{bmatrix}
+19 & 22 \\
+43 & 50
+\end{bmatrix}
+\begin{bmatrix}
+2 & 0 \\
+1 & 3
+\end{bmatrix}
+=
+\begin{bmatrix}
+(19\cdot2) + (22\cdot1) & (19\cdot0) + (22\cdot3) \\
+(43\cdot2) + (50\cdot1) & (43\cdot0) + (50\cdot3)
+\end{bmatrix}
+=
+\begin{bmatrix}
+60 & 66 \\
+136 & 150
+\end{bmatrix}
+$$
+Logo:
+$$
+(ABC)' =
+\begin{bmatrix}
+60 & 136 \\
+66 & 150
+\end{bmatrix}
+$$
+Calculando para C', B', A':
+$$
+C'B'A' =
+\begin{bmatrix}
+2 & 1 \\
+0 & 3
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+5 & 7 \\
+6 & 8
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+1 & 3 \\
+2 & 4
+\end{bmatrix}
+$$
+Primeiro, calculamos:
+
+$$
+C'B' =
+\begin{bmatrix}
+2 & 1 \\
+0 & 3
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+5 & 7 \\
+6 & 8
+\end{bmatrix}
+$$
+
+$$
+C'B' =
+\begin{bmatrix}
+(2\cdot5) + (1\cdot6) & (2\cdot7) + (1\cdot8) \\
+(0\cdot5) + (3\cdot6) & (0\cdot7) + (3\cdot8)
+\end{bmatrix}
+$$
+
+$$
+C'B' =
+\begin{bmatrix}
+16 & 22 \\
+18 & 24
+\end{bmatrix}
+$$
+
+Agora:
+
+$$
+C'B'A' =
+\begin{bmatrix}
+16 & 22 \\
+18 & 24
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+1 & 3 \\
+2 & 4
+\end{bmatrix}
+$$
+
+$$
+C'B'A' =
+\begin{bmatrix}
+(16\cdot1) + (22\cdot2) & (16\cdot3) + (22\cdot4) \\
+(18\cdot1) + (24\cdot2) & (18\cdot3) + (24\cdot4)
+\end{bmatrix}
+$$
+Portanto:
+$$
+C'B'A' =
+\begin{bmatrix}
+60 & 136 \\
+66 & 150
+\end{bmatrix}
+$$
+
+### **Utilizando o R**
+
+```{r}
+A = matrix(c(1, 2, 3, 4), nrow = 2, byrow = TRUE)
+B = matrix(c(5, 6, 7, 8), nrow = 2, byrow = TRUE)
+C = matrix(c(2, 0, 1, 3), nrow = 2, byrow = TRUE)
+
+ABC = A %*% B %*% C
+t(ABC)
+t(C) %*% t(B) %*% t(A)
+```
+:::
+
+
+d) Compare os resultados e conclua.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+Os resultados obtidos são iguais, confirmando a propriedade:
+
+$$
+(ABC)' = C'B'A'
+$$
+:::
+
+## **Exercício 10**
+Sejam A e B definidas e particionadas como:
+
+$$
+A =
+\left(
+\begin{array}{cc|c}
+2 & 1 & 2 \\
+3 & 2 & 0 \\
+\hline
+1 & 0 & 1
+\end{array}
+\right)
+\quad \text{e} \quad
+B =
+\left(
+\begin{array}{ccc|c}
+1 & 1 & 1 & 0 \\
+2 & 1 & 1 & 2 \\
+\hline
+2 & 3 & 1 & 2
+\end{array}
+\right)
+$$
+
+a) Encontre **AB** utilizando a partição indicada, mostrando o passo a passo.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+Usando a partição indicada, temos:
+$$
+A_{11} =
+\begin{bmatrix}
+2 & 1 \\
+3 & 2
+\end{bmatrix},
+\quad
+A_{12} =
+\begin{bmatrix}
+2 \\
+0
+\end{bmatrix},
+\quad
+A_{21} =
+\begin{bmatrix}
+1 & 0
+\end{bmatrix},
+\quad
+A_{22} =
+\begin{bmatrix}
+1
+\end{bmatrix}
+$$
+
+$$
+B_{11} =
+\begin{bmatrix}
+1 & 1 & 1 \\
+2 & 1 & 1
+\end{bmatrix},
+\quad
+B_{12} =
+\begin{bmatrix}
+0 \\
+2
+\end{bmatrix},
+\quad
+B_{21} =
+\begin{bmatrix}
+2 & 3 & 1
+\end{bmatrix},
+\quad
+B_{22} =
+\begin{bmatrix}
+2
+\end{bmatrix}
+$$
+
+Pela multiplicação em blocos:
+$$
+AB =
+\begin{bmatrix}
+A_{11}B_{11} + A_{12}B_{21} & A_{11}B_{12} + A_{12}B_{22} \\
+A_{21}B_{11} + A_{22}B_{21} & A_{21}B_{12} + A_{22}B_{22}
+\end{bmatrix}
+$$
+
+Calculando para $A_{11}B_{11}$ e $A_{12}B_{21}$:
+$$
+A_{11}B_{11} =
+\begin{bmatrix}
+2 & 1 \\
+3 & 2 
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+1 & 1 & 1 \\
+2 & 1 & 1
+\end{bmatrix}
+=
+\begin{bmatrix} 
+(2\cdot1) + (1\cdot2) & (2\cdot1) + (1\cdot1) & (2\cdot1) + (1\cdot1) \\ 
+(3\cdot1) + (2\cdot2) & (3\cdot1) + (2\cdot1) & (3\cdot1) + (2\cdot1) 
+\end{bmatrix}
+=
+\begin{bmatrix}
+4 & 3 & 3 \\
+7 & 5 & 5
+\end{bmatrix}
+$$
+
+$$
+A_{12}B_{21} =
+\begin{bmatrix}
+2 \\
+0 
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+2 & 3 & 1 \\
+\end{bmatrix}
+=
+\begin{bmatrix} 
+(2\cdot2) & (2\cdot3) & (2\cdot1) \\ 
+(0\cdot2) & (0\cdot3) & (0\cdot1) 
+\end{bmatrix}
+=
+\begin{bmatrix}
+4 & 6 & 2 \\
+0 & 0 & 0
+\end{bmatrix}
+$$
+
+Logo, temos:
+$$
+A_{11}B_{11} + A_{12}B_{21} =
+\begin{bmatrix}
+8 & 9 & 5 \\
+7 & 5 & 5
+\end{bmatrix}
+$$
+
+Calculando para $A_{11}B_{12}$ e $A_{12}B_{22}$:
+$$
+A_{11}B_{12} =
+\begin{bmatrix}
+2 & 1\\
+3 & 2
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+0\\
+2
+\end{bmatrix}
+=
+\begin{bmatrix}
+2 \\
+4
+\end{bmatrix}
+$$
+
+$$
+A_{12}B_{22} =
+\begin{bmatrix}
+2\\
+0
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+2 \\
+\end{bmatrix}
+=
+\begin{bmatrix}
+4 \\
+0
+\end{bmatrix}
+$$
+
+Portanto, temos:
+$$
+A_{11}B_{12} + A_{12}B_{22} =
+\begin{bmatrix}
+6 \\
+4
+\end{bmatrix}
+$$
+
+Mesma lógica para o bloco inferior esquerdo ($A_{21}B_{11}$ e $A_{22}B_{21}$):
+$$
+A_{21}B_{11} =
+\begin{bmatrix}
+1 & 0\\
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+1 & 1 & 1\\
+2 & 1 & 1
+\end{bmatrix}
+=
+\begin{bmatrix}
+1 & 1 & 1
+\end{bmatrix}
+$$
+
+$$
+A_{22}B_{21} =
+\begin{bmatrix}
+1 \\
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+2 & 3 & 1\\
+\end{bmatrix}
+=
+\begin{bmatrix}
+2 & 3 & 1
+\end{bmatrix}
+$$
+
+Logo, temos:
+$$
+A_{21}B_{11} + A_{22}B_{21} =
+\begin{bmatrix}
+3 & 4 & 2
+\end{bmatrix}
+$$
+
+Agora para $A_{21}B_{12}$ e $A_{22}B_{22}$:
+$$
+A_{21}B_{12} =
+\begin{bmatrix}
+1 & 0\\
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+0 \\
+2
+\end{bmatrix}
+=
+\begin{bmatrix}
+0
+\end{bmatrix},
+$$
+
+$$
+A_{22}B_{22} =
+\begin{bmatrix}
+1 \\
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+2 \\
+\end{bmatrix}
+=
+\begin{bmatrix}
+2
+\end{bmatrix}
+$$
+
+Finalmente:
+$$
+A_{21}B_{12} + A_{22}B_{22} =
+\begin{bmatrix}
+2
+\end{bmatrix}
+$$
+
+Resultado final:
+$$
+AB =
+\begin{bmatrix}
+8 & 9 & 5 & 6 \\
+7 & 5 & 5 & 4 \\
+3 & 4 & 2 & 2
+\end{bmatrix}
+$$
+
+
+### **Utilizando o R**
+
+```{r}
+A = matrix(c(2, 1, 2,
+             3, 2, 0,
+             1, 0, 1
+             ), nrow = 3, byrow = TRUE)
+
+B = matrix(c(1, 1, 1, 0,
+             2, 1, 1, 2,
+             2, 3, 1, 2
+             ), nrow = 3, byrow = TRUE)
+
+A %*% B
+```
+:::
+
+
+b) Encontre **AB** pela forma usual.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+$$
+AB =
+\begin{bmatrix}
+2 & 1 & 2 \\
+3 & 2 & 0 \\
+1 & 0 & 1
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+1 & 1 & 1 & 0 \\
+2 & 1 & 1 & 2 \\
+2 & 3 & 1 & 2
+\end{bmatrix}
+$$
+
+$$
+=
+\begin{bmatrix}
+(2\cdot1) + (1\cdot2) + (2\cdot2) & (2\cdot1) + (1\cdot1) + (2\cdot3) & (2\cdot1) + (1\cdot1) + (2\cdot1) & (2\cdot0) + (1\cdot2) + (2\cdot2) \\
+(3\cdot1) + (2\cdot2) + (0\cdot2) & (3\cdot1) + (2\cdot1) + (0\cdot) & (3\cdot1) + (2\cdot1) + (0\cdot1) & (3\cdot0) + (2\cdot2) + (0\cdot2) \\
+(1\cdot1) + (0\cdot2) + (1\cdot2) & (1\cdot1) + (0\cdot1) + (1\cdot3) & (1\cdot1) + (0\cdot1) + (1\cdot1) & (1\cdot0) + (0\cdot2) + (1\cdot2)
+\end{bmatrix}
+$$
+
+$$
+=
+\begin{bmatrix}
+8 & 9 & 5 & 6 \\
+7 & 5 & 5 & 4 \\
+3 & 4 & 2 & 2
+\end{bmatrix}
+$$
+
+### **Utilizando o R**
+
+```{r}
+A %*% B
+```
+:::
+
+c) Compare os resultados obtidos.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+Os dois métodos produziram exatamente a mesma matriz. Portanto, a multiplicação por blocos ou particionada é igual com a multiplicação usual, apenas muda a forma de execução.
+
+:::
+
+## **Exercício 11**
+Particione as matrizes A e B do problema anterior como:
+
+$$
+A = \left( \begin{array}{c|cc} 
+2 & 1 & 2 \\ 
+3 & 2 & 0 \\ 
+1 & 0 & 1 
+\end{array} \right) = (\mathbf{a}_1, \mathbf{A}_2) 
+\quad \text{e} \quad 
+B = \left( \begin{array}{cccc} 
+1 & 1 & 1 & 0 \\ \hline 
+2 & 1 & 1 & 2 \\ 
+2 & 3 & 1 & 2 
+\end{array} \right) = \begin{pmatrix} \mathbf{b}_1' \\ \mathbf{B}_2 \end{pmatrix}
+$$
+
+a) Identifique os blocos $a_1$, $A_2$, $b_1'$ e $B_2$.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+Bloco $a_1$ e $A_2$
+$$
+a_1 =
+\begin{bmatrix}
+2 \\
+3 \\
+1
+\end{bmatrix},
+\qquad
+A_2 =
+\begin{bmatrix}
+1 & 2 \\
+2 & 0 \\
+0 & 1
+\end{bmatrix}
+$$
+Bloco $b_1'$ e $B_2$
+$$
+b_1' =
+\begin{bmatrix}
+1 & 1 & 1 & 0
+\end{bmatrix},
+\qquad
+B_2 =
+\begin{bmatrix}
+2 & 1 & 1 & 2 \\
+2 & 3 & 1 & 2
+\end{bmatrix}
+$$
+:::
+
+b) Escreva as dimensões de cada bloco.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+- O Bloco $a_1$: É um vetor coluna de dimensão $3 \times 1$
+
+- O Bloco $A_2$: É uma matriz de dimensão $3 \times 2$
+
+- O Bloco $b_1'$: É um vetor linha de dimensão $1 \times 4$
+
+- O Bloco $B_2$: É uma matriz de dimensão $2 \times 4$
+
+:::
+
+c) Reescreva o produto **AB** em termos dessa partição.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+Partição:
+$$
+A = [a_1, A_2], 
+\quad 
+B = 
+\begin{bmatrix} 
+b_1' \\ 
+B_2 
+\end{bmatrix}
+$$ 
+Cálculo:
+$$
+a_1b_1' + A_2B_2
+$$
+
+Termo 1:
+$$
+a_1b_1'=  
+\begin{bmatrix} 
+2 \\ 3 \\ 1 
+\end{bmatrix}  
+\cdot
+\begin{bmatrix} 
+1 & 1 & 1 & 0 
+\end{bmatrix}  =  
+\begin{bmatrix} 
+2 & 2 & 2 & 0 \\ 
+3 & 3 & 3 & 0 \\ 
+1 & 1 & 1 & 0 
+\end{bmatrix}
+$$
+
+Termo 2:
+$$
+A_2B_2 =
+\begin{bmatrix} 
+1 & 2 \\ 
+2 & 0 \\ 
+0 & 1 
+\end{bmatrix}
+\cdot
+\begin{bmatrix} 
+2 & 1 & 1 & 2 \\ 
+2 & 3 & 1 & 2 
+\end{bmatrix} =  
+\begin{bmatrix} 
+6 & 7 & 3 & 6 \\ 
+4 & 2 & 2 & 4 \\ 
+2 & 3 & 1 & 2 
+\end{bmatrix}
+$$
+
+Resultado:
+$$
+AB = 
+\begin{bmatrix} 
+2 & 2 & 2 & 0 \\ 
+3 & 3 & 3 & 0 \\ 
+1 & 1 & 1 & 0 
+\end{bmatrix}  
++ 
+\begin{bmatrix} 
+6 & 7 & 3 & 6 \\ 
+4 & 2 & 2 & 4 \\ 
+2 & 3 & 1 & 2 
+\end{bmatrix}  =  
+\begin{bmatrix} 
+8 & 9 & 5 & 6 \\ 
+7 & 5 & 5 & 4 \\ 
+3 & 4 & 2 & 2 
+\end{bmatrix}
+$$
+
+### **Utilizando o R**
+
+```{r}
+A = matrix(c(2, 1, 2,
+             3, 2, 0,
+             1, 0, 1
+             ), nrow = 3, byrow = TRUE)
+
+B = matrix(c(1, 1, 1, 0,
+             2, 1, 1, 2,
+             2, 3, 1, 2
+             ), nrow = 3, byrow = TRUE)
+
+a1 = A[, 1, drop = FALSE]
+A2 = A[, 2:3, drop = FALSE]
+b1t = B[1, , drop = FALSE]
+B2 = B[2:3, , drop = FALSE]
+
+a1 %*% b1t + A2 %*% B2
+```
+:::
+
+
+## **Exercício 12**
+Considere as seguintes matrizes:
+
+$$
+A =
+\begin{bmatrix}
+1 & 0 & 0 \\
+0 & 2 & 0 \\
+0 & 0 & 3
+\end{bmatrix},
+\quad
+B =
+\begin{bmatrix}
+1 & 2 & 3 \\
+0 & 4 & 5 \\
+0 & 0 & 6
+\end{bmatrix},
+\quad
+C =
+\begin{bmatrix}
+1 & 2 \\
+2 & 1
+\end{bmatrix},
+$$
+
+$$
+D =
+\begin{bmatrix}
+1 & 0 & 0 \\
+0 & 1 & 0 \\
+0 & 0 & 1
+\end{bmatrix},
+\quad
+E =
+\begin{bmatrix}
+1 & 1 \\
+1 & 1
+\end{bmatrix},
+\quad
+F =
+\begin{bmatrix}
+1 & 0 \\
+0 & 0
+\end{bmatrix}
+$$
+
+a) Classifique cada matriz quanto ao tipo (por exemplo: quadrada, diagonal, identidade, triangular superior, triangular inferior, simétrica, etc.).
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+- $A$: quadrada, diagonal, triangular superior, triangular inferior e simétrica.
+- $B$: quadrada e triangular superior.
+- $C$: quadrada e simétrica.
+- $D$: quadrada, identidade, diagonal, triangular superior, triangular inferior e simétrica.
+- $E$: quadrada e simétrica.
+- $F$: quadrada, diagonal, triangular superior, triangular inferior e simétrica.
+
+:::
+
+b) Identifique qual(is) matriz(es) são idempotentes.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+Uma matriz idempotente é uma matriz quadrada que, ao ser multiplicada por si mesma, resulta na própria matriz origina. Testando essa afirmação:
+
+
+Matriz A:
+$$
+AA =
+\begin{bmatrix}
+1 & 0 & 0 \\
+0 & 2 & 0 \\
+0 & 0 & 3
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+1 & 0 & 0 \\
+0 & 2 & 0 \\
+0 & 0 & 3
+\end{bmatrix}
+$$
+
+$$
+=
+\begin{bmatrix}
+(1\cdot1) + (0\cdot0) + (0\cdot0) & (1\cdot0) + (0\cdot2) + (0\cdot0) & (1\cdot0) + (0\cdot0) + (0\cdot3) \\
+(0\cdot1) + (2\cdot0) + (0\cdot0) & (0\cdot0) + (2\cdot2) + (0\cdot0) & (0\cdot0) + (2\cdot0) + (0\cdot3) \\
+(0\cdot1) + (0\cdot0) + (3\cdot0) & (0\cdot0) + (0\cdot2) + (3\cdot0) & (0\cdot0) + (0\cdot0) + (3\cdot3)
+\end{bmatrix}
+$$
+
+$$
+=
+\begin{bmatrix}
+1 & 0 & 0 \\
+0 & 4 & 0 \\
+0 & 0 & 9
+\end{bmatrix}
+$$
+
+Logo, a matriz $A$ não é idempotente.
+
+
+Matriz B:
+$$
+BB =
+\begin{bmatrix}
+1 & 2 & 3 \\
+0 & 4 & 5 \\
+0 & 0 & 6
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+1 & 2 & 3 \\
+0 & 4 & 5 \\
+0 & 0 & 6
+\end{bmatrix}
+$$
+
+$$
+=
+\begin{bmatrix}
+(1\cdot1) + (2\cdot0) + (3\cdot0) & (1\cdot2) + (2\cdot4) + (3\cdot0) & (1\cdot3) + (2\cdot5) + (3\cdot6) \\
+(0\cdot1) + (4\cdot0) + (5\cdot0) & (0\cdot2) + (4\cdot4) + (5\cdot0) & (0\cdot3) + (4\cdot5) + (5\cdot6) \\
+(0\cdot1) + (0\cdot0) + (6\cdot0) & (0\cdot2) + (0\cdot4) + (6\cdot0) & (0\cdot3) + (0\cdot5) + (6\cdot6)
+\end{bmatrix}
+$$
+
+$$
+=
+\begin{bmatrix}
+1 & 10 & 31 \\
+0 & 16 & 50 \\
+0 & 0 & 36
+\end{bmatrix}
+$$
+
+Portanto, a matriz $B$ não é idempotente.
+
+
+Matriz C:
+$$
+CC=
+\begin{bmatrix}
+1 & 2 \\
+2 & 1
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+1 & 2 \\
+2 & 1
+\end{bmatrix}
+=
+\begin{bmatrix}
+(1\cdot1) + (2\cdot2) & (1\cdot2) + (2\cdot1) \\
+(2\cdot1) + (1\cdot2) & (2\cdot2) + (1\cdot1)
+\end{bmatrix}
+$$
+
+$$
+=
+\begin{bmatrix}
+5 & 4 \\
+4 & 5
+\end{bmatrix}
+$$
+
+Logo, a matriz $C$ não é idempotente.
+
+
+Matriz D:
+$$
+DD =
+\begin{bmatrix}
+1 & 0 & 0 \\
+0 & 1 & 0 \\
+0 & 0 & 1
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+1 & 0 & 0 \\
+0 & 1 & 0 \\
+0 & 0 & 1
+\end{bmatrix}
+$$
+$$
+\begin{bmatrix} 
+(1\cdot1) + (0\cdot0) + (0\cdot0) & (1\cdot0) + (0\cdot1) + (0\cdot0) & (1\cdot0) + (0\cdot0) + (0\cdot1) \\ 
+(0\cdot1) + (1\cdot0) + (0\cdot0) & (0\cdot0) + (1\cdot1) + (0\cdot0) & (0\cdot0) + (1)(0) + (0)(1) \\ 
+(0\cdot1) + (0\cdot0) + (1\cdot0) & (0\cdot0) + (0\cdot1) + (1\cdot0) & (0\cdot0) + (0\cdot0) + (1\cdot1) \end{bmatrix} =
+$$
+
+$$
+=
+\begin{bmatrix}
+1 & 0 & 0 \\
+0 & 1 & 0 \\
+0 & 0 & 1
+\end{bmatrix}
+$$
+
+Portanto, a matriz $D$ é idempotente.
+
+
+Matriz E:
+$$
+EE =
+\begin{bmatrix}
+1 & 1 \\
+1 & 1
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+1 & 1 \\
+1 & 1
+\end{bmatrix}
+=
+\begin{bmatrix}
+(1\cdot1) + (1\cdot1) & (1\cdot1) + (1\cdot1) \\
+(1\cdot1) + (1\cdot1) & (1\cdot1) + (1\cdot1)
+\end{bmatrix}
+$$
+
+$$
+=
+\begin{bmatrix}
+2 & 2 \\
+2 & 2
+\end{bmatrix}
+$$
+
+Logo, a matriz $E$ não é idempotente.
+
+
+Matriz F:
+$$
+FF =
+\begin{bmatrix}
+1 & 0 \\
+0 & 0
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+1 & 0 \\
+0 & 0
+\end{bmatrix}
+=
+\begin{bmatrix}
+(1\cdot1) + (0\cdot0) & (1\cdot0) + (0\cdot0) \\
+(0\cdot1) + (0\cdot0) & (0\cdot0) + (0\cdot0)
+\end{bmatrix}
+$$
+
+$$
+=
+\begin{bmatrix}
+1 & 0 \\
+0 & 0
+\end{bmatrix}
+$$
+
+Portanto, a matriz $F$ é idempotente.
+
+**As únicas matrizes idempotentes são:**
+$$
+D \text{ e } F
+$$
+
+### **Utilizando o R**
+
+```{r}
+A = diag(c(1, 2, 3))
+B = matrix(c(1, 2, 3,
+             0, 4, 5,
+             0, 0, 6), nrow = 3, byrow = TRUE)
+C = matrix(c(1, 2, 2, 1), nrow = 2, byrow = TRUE)
+D = diag(3)
+E = matrix(c(1, 1, 1, 1), nrow = 2, byrow = TRUE)
+F = matrix(c(1, 0, 0, 0), nrow = 2, byrow = TRUE)
+
+A %*% A
+B %*% B
+C %*% C
+D %*% D
+E %*% E
+F %*% F
+
+all(A %*% A == A)
+all(B %*% B == B)
+all(C %*% C == C)
+all(D %*% D == D)
+all(E %*% E == E)
+all(F %*% F == F)
+```
+:::
+
+
+c) Seja *1* um vetor coluna cujos elementos são todos iguais a **1**. Calcule o produto **11'** e descreva a matriz obtida.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+$$
+11' =
+\begin{bmatrix}
+1 \\
+1 \\
+\vdots \\
+1
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+1 & 1 & \cdots & 1
+\end{bmatrix}
+=
+\begin{bmatrix}
+1 & 1 & \cdots & 1 \\
+1 & 1 & \cdots & 1 \\
+\vdots & \vdots & \ddots & \vdots \\
+1 & 1 & \cdots & 1
+\end{bmatrix}
+$$
+
+A matriz obtida é formada apenas por 1's.
+
+:::
+
+d) Determine o posto (rank) de cada matriz.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+Em resumo, o posto (ou rank) de uma matriz é o número máximo de linhas ou colunas linearmente independentes, representando a dimensão do espaço vetorial gerado por elas, sendo, portanto:
+
+$$
+posto(A) = 3, \qquad posto(B) = 3, \qquad posto(C) = 2
+$$
+
+$$
+posto(D) = 3, \qquad posto(E) = 1, \qquad posto(F) = 1
+$$
+
+### **Utilizando o R**
+
+```{r}
+A = diag(c(1, 2, 3))
+B = matrix(c(1, 2, 3,
+             0, 4, 5,
+             0, 0, 6), nrow = 3, byrow = TRUE)
+C = matrix(c(1, 2, 2, 1), nrow = 2, byrow = TRUE)
+D = diag(3)
+E = matrix(c(1, 1, 1, 1), nrow = 2, byrow = TRUE)
+F = matrix(c(1, 0, 0, 0), nrow = 2, byrow = TRUE)
+
+det(A)
+det(B)
+det(C)
+det(D)
+det(E)
+det(F)
+
+qr(A)$rank
+qr(B)$rank
+qr(C)$rank
+qr(D)$rank
+qr(E)$rank
+qr(F)$rank
+```
+:::
+
+
+e) Justifique brevemente cada uma das classificações realizadas.
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+As questões já foram justificadas, acredito que não há necessidade de redundância. 
+
+:::
+
+## **Exercício 13**
+Construa uma matriz A que satisfaça simultaneamente as seguintes propriedades:
+
+a) seja simétrica;
+
+b) não seja diagonal;
+
+c) tenha posto igual a 1.
+
+
+::: {.panel-tabset}
+### **Resolução manual** 
+
+Um exemplo de matriz é:
+
+$$
+A =
+\begin{bmatrix}
+1 & 2 & 0 \\
+2 & 4 & 0 \\
+0 & 0 & 0
+\end{bmatrix}
+$$
+
+- **Verificação da simetrica**
+
+Uma matriz é simétrica quando $A' = A$. Neste caso:
+
+$$
+A' =
+\begin{bmatrix}
+1 & 2 & 0 \\
+2 & 4 & 0 \\
+0 & 0 & 0
+\end{bmatrix}
+=
+A
+$$
+
+Logo, a matriz é simétrica.
+
+- **Verificação de que não é diagonal**
+
+Uma matriz diagonal deve ter todos os elementos fora da diagonal principal iguais a zero. Porém:
+
+$$
+a_{12} = 2
+\qquad \text{e} \qquad
+a_{21} = 2
+$$
+
+Como esses elementos são diferentes de zero, a matriz não é diagonal.
+
+- **Verificação do posto**
+
+Observando as linhas:
+
+$$
+L_1 = (1,2,0), \qquad
+L_2 = (2,4,0) = 2L_1, \qquad
+L_3 = (0,0,0)
+$$
+Ou seja, somente a primeira linha é linearmente independente. A segunda é múltipla da primeira e a terceira é nula. Portanto, existe apenas uma linha linearmente independente, então:
+
+$$
+posto(A) = 1
+$$
+
+Portanto, a matriz A é simétrica, não é diagonal e tem posto igual a 1.
+
+### **Utilizando o R**
+
+```{r}
+A = matrix(c(1, 2, 0,
+             2, 4, 0,
+             0, 0, 0), nrow = 3, byrow = TRUE); A
+t(A)
+all(A == t(A))
+qr(A)$rank
+```
+
+::: 
+
+
+
+
