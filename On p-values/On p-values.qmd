@@ -1,0 +1,148 @@
+---
+format:
+  revealjs:
+    center: false
+    incremental: false # se for True: alguns elementos vão aparecendo um por vez
+    theme: [default, custom.scss]
+    slide-number: c/t
+    show-slide-number: all
+    preview-links: true
+    embed-resources: true # Incorpora todos os recursos no próprio HTML, evitando dependências externas
+    self-contained-math: true # Embute a biblioteca de fórmulas no HTML para exibir matemática sem dependências externas
+    width: 1200
+    height: 800
+    auto-stretch: false
+    code-line-numbers: false
+#editor: visual
+---
+
+##  {.capa background-gradient="linear-gradient(to right, #ffffff 0%, #ffffff 70%, #580002 68%, #580002 100%)"}
+
+::: capa-titulo
+**Uma investigação sobre a taxa de falsos positivos e a má interpretação dos valores P**
+:::
+
+::: capa-subtitulo
+[*An investigation of the false discovery rate and the misinterpretation of p-values*](https://doi.org/10.1098/rsos.140216)
+:::
+
+::: capa-autores
+**LGN 5822 - Statistical Genetics I: Foundations**
+
+**Discentes**: Ana Matiussi, Paula Cardoso e Thiago Ludwig
+
+**Docente**: Prof. Dr. Saulo Chaves
+:::
+
+::: logo
+![](logo1.png){.absolute top="85" left="999" width="190"} 
+![](logo2.png){.absolute top="650" left="999" width="220"}
+:::
+
+<!----------- Slides ----------->
+
+<!---- 1 ---->
+
+# O Problema Central {background-color="#580002"}
+
+## O Problema Central
+
+::: {style="font-size: 0.98em;"}
+- **`Crise de reprodutibilidade na ciência`**: muitos resultados publicados não consegue ser replicado por outros pesquisadores.
+
+- **`Causas principais`**: Erro na interpretação do p-valor e, consequentemente, a alta taxa de **`falsas descobertas`**. 
+
+<br>
+
+::: {.callout-note appearance="simple" .caixa-frase style="font-size: 1.5em; line-height: 1.35; width: 95%;"}
+Ao definir "estatisticamente significativo" como qualquer coisa abaixo de $\small p=0,05$, tem pelo menos 30% de estar errado (Colquhoun, 2014).
+:::
+:::
+
+<!---- 2 ---->
+
+# Analogia: Teste de Triagem {background-color="#580002"}
+
+## Ex: teste de rastreamento de comprometimento cognitivo leve (CCL)
+
+::: {style="font-size: 0.91em;"}
+- Das 100 pessoas que com a CCL, 80 (80%) serão detectadas e 20 não. Então, no total, 495 + 80 = 575 pessoas terão teste positivo, das quais 495 são falsos positivos.
+
+![`Diagrama de árvore para ilustrar a taxa de falsos positivos em testes de triagem.`](analogia.jpeg){fig-align="center" width=43%}
+
+- **`Conclusão`**: Um teste de triagem pode parecer confiável no papel, mas quando aplicado a uma população onde a doença é rara, a maioria dos resultados positivos será falsa.
+:::
+
+<!---- 3 ---->
+
+# O problema do teste de significância {background-color="#580002"}
+
+## Mesma lógica se aplica aos Testes de Significância
+
+::: {style="font-size: 0.91em;"}
+- Se apenas 10% das hipóteses testadas são verdadeiras (prevalência real de efeito = 10%) e o poder do teste é 80%, então, entre os resultados significativos, a proporção de falsos positivos é de 36% (muito acima dos 5% que muitos supõem).
+
+![`Diagrama de árvore para ilustrar a taxa de falsos positivos em testes de significância.`](sig.jpeg){fig-align="center" width=43%}
+
+- **`Conclusão`**: Declarar uma descoberta com base em $\small p = 0,05$ parece seguro, mas mesmo em um **`cenário idealizado`** (ex: condições estatísticas respeitadas, $\small \varepsilon \sim \mathcal{N}(0,\sigma^2)$, aleatorização sem viés, etc), a taxa de falsos positivos ainda é alta.
+
+:::
+
+
+<!---- 4 ---->
+# O efeito da inflação {background-color="#580002"}
+
+## Efeito do baixo poder estatístico
+
+::: {style="font-size: 0.91em;"}
+- **`Problema`**: Quando um estudo tem baixo poder estatístico, ele não só tem dificuldade em detectar efeitos reais, como também, nas raras vezes em que detecta, exagera o tamanho do efeito encontrado.
+
+![`A diferença média entre as médias para todos os testes que apresentaram p ≤ 0,05.`](efeito.jpeg){fig-align="center" width=40%}
+
+- **`Conclusão`**: Quanto menor o poder, maior o erro e maior o exagero do efeito. Um poder ideal é geralmente considerado 80%. 
+:::
+
+<!---- 5 ---->
+# Regra dos três sigmas {background-color="#580002"}
+
+## Regra dos três sigmas ($3\sigma$) 
+
+::: {style="font-size: 0.89em;"}
+
+- Solução proposta pelo autor para evitar o problema dos 30% de erros $\rightarrow$ vem da estatística e se baseia na distância em relação à média de uma distribuição normal.
+
+::: {.callout-note title="Dois sigmas" style="font-size: 1.2em; min-height: 6em;"}
+- equivale a $\small p = 0,05$;
+- corresponde ao critério tradicional;
+- pode levar a cerca de 30% de erros.
+:::
+
+::: {.callout-note title="Três sigmas" style="font-size: 1.2em; min-height: 6em;"}
+- equivale a $\small p \approx 0,001$;
+- é um critério mais rigoroso;
+- reduz a taxa de falsas descobertas para 1,84%.
+:::
+
+- **`Conclusão`**: A regra dos três sigmas é simplesmente trocar o $\small p=0,05$ pelo $\small p \approx 0,001$, sendo um critério mais rigoroso para reduzir os falsos positivos.
+
+:::
+
+<!---- 6 ---->
+# Conclusão {background-color="#580002"}
+
+## Conclusão
+
+::: {style="font-size: 0.89em;"}
+
+::: {.callout-note appearance="simple" style="font-size: 1.5em;"}
+- **`O uso do`** $\small p = 0,05$ como critério de descoberta científica é falho e contribui para a crise de reprodutibilidade na ciência. 
+
+- **`Independentemente do método`**, a matemática mostra que pelo menos 30% dos resultados publicados como descobertas são simplesmente falsos; 
+
+- **`A solução`** é adotar critérios mais rigorosos, como $\small p < 0,001$;
+
+- **`Evitar`** "significativo" ou "não significativo", pois é enganosa.
+:::
+:::
+
+# Obrigada! {background-color="#580002"}

@@ -1,0 +1,28 @@
+---
+title: "Resumo"
+author: "Ana Matiussi"
+format:
+  pdf:
+    include-in-header:
+      text: |
+        \usepackage{indentfirst}
+        \setlength{\parindent}{1.25cm}
+        \setlength{\parskip}{0pt}
+editor: visual
+---
+
+De acordo com o artigo ["An investigation of the false discovery rate and the misinterpretation of p-values"](https://doi.org/10.1098/rsos.140216), a ciência enfrenta uma séria crise de reprodutibilidade, em que muitos resultados publicados não podem ser reproduzidos por outros pesquisadores. Entre as principais causas desse problema, Colquhoun (2014) destaca o uso inadequado e a interpretação equivocada dos testes de significância estatística, especialmente do critério de $p=0.05$, a qual é amplamente usado na literatura. Nesse contexto, a discussão parte justamente do problema da reprodutibilidade para mostrar que muitos achados classificados como “estatisticamente significativos” podem, na realidade, não corresponder a efeitos verdadeiros. O argumento central é que o uso convencional de $p=0,05$ como critério de descoberta produz uma falsa sensação de segurança, uma vez que esse valor não expressa a probabilidade de o resultado ser verdadeiro, nem indica, por si só, uma baixa chance de erro.
+
+Para tornar essa ideia mais intuitiva, o artigo estabelece uma analogia com testes diagnósticos de triagem. Mesmo quando um teste apresenta boa sensibilidade e boa especificidade, seu desempenho pode ser insatisfatório se aplicado a uma condição rara (doença rara, por exemplo). No exemplo discutido, um teste com 80% de sensibilidade, 95% de especificidade e prevalência de 1% produz uma taxa de falsas descobertas de aproximadamente 86% entre os resultados positivos. Nesse caso, embora o teste pareça tecnicamente adequado, a maior parte dos resultados positivos estaria incorreta. Assim, essa analogia serve para evidenciar que, em estatística inferencial, não basta considerar apenas o erro sob a hipótese nula; é igualmente necessário levar em conta a frequência com que hipóteses verdadeiras realmente ocorrem.
+
+A partir dessa mesma lógica, o autor aplica o raciocínio aos testes de significância estatística. Em um cenário no qual apenas 10% dos experimentos investigam efeitos reais, com poder estatístico de 80% e nível de significância de 5%, a proporção de resultados significativos que, na verdade, correspondem a falsos positivos alcança 36%. Isso significa que, mesmo em uma situação relativamente favorável, mais de um terço dos resultados classificados como “significativos” pode estar incorreto. Desse modo, fica evidente que o risco de erro associado a um achado significativo pode ser muito maior do que os 5% sugeridos por uma leitura simplificada do valor de p.
+
+Além disso, o artigo reforça suas conclusões por meio de simulações repetidas de testes t, conduzidas em condições ideais. Quando não há efeito real, os valores de p apresentam distribuição uniforme, demonstrando que valores aparentemente “bons” podem surgir apenas ao acaso. Por outro lado, quando existe um efeito verdadeiro e o estudo possui poder adequado, parte considerável desses efeitos é detectada corretamente. Ainda assim, surge um problema adicional, entre os experimentos que atingem $p≤0,05$, o tamanho de efeito estimado tende a ser superestimado. No exemplo apresentado, um efeito verdadeiro de magnitude 1 foi estimado, em média, como 1,14 entre os resultados significativos. Isso ocorre porque os experimentos que, por acaso, produzem estimativas mais elevadas têm maior probabilidade de ultrapassar o limiar de significância.
+
+Diante desse cenário, o autor propõe como alternativa o uso da regra dos três sigmas: em vez de utilizar $p=0,05$ como critério de descoberta, seria mais adequado exigir $p≤0,001$, reduzindo a taxa mínima de falsas descobertas para menos de 2%. Além disso, são apresentadas outras recomendações: como abandonar definitivamente o uso da palavra “significativo”, sempre relatar o tamanho do efeito e os intervalos de confiança, garantir poder estatístico adequado no planejamento dos estudos e publicar todos os resultados obtidos, inclusive os negativos.
+
+Portanto, o artigo demonstra que a interpretação usual de $p=0,05$ como evidência é inadequada. A confiabilidade de um resultado significativo depende não apenas do p-valor, mas também do poder do teste e da proporção de hipóteses realmente verdadeiras entre as que são investigadas. Como consequência, defende-se maior rigor na interpretação dos resultados e a adoção de critérios mais exigentes/rigorosos, como $p≤0,001$, para reduzir a taxa de falsas descobertas e melhorar a robustez da evidência científica.
+
+# Referência
+
+COLQUHOUN, David. An investigation of the false discovery rate and the misinterpretation of p-values. Royal Society open science, v. 1, n. 3, 2014.
