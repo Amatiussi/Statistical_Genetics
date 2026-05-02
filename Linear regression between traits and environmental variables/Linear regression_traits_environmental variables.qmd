@@ -1,0 +1,1120 @@
+---
+title: "Regressão linear entre traits e variáveis ambientais"
+subtitle: "Análise de Regressão linear com foco no Zimbábue"
+author: "Ana Matiussi, Paula Cardoso e Thiago Ludwig"
+date: today
+lang: pt
+format:
+  html:
+    code-fold: true
+    toc: true
+    toc-depth: 3
+    toc-title: "Sumário"
+    number-sections: true
+    theme: flatly
+    code-tools: true
+    code-overflow: wrap
+    embed-resources: true
+    fig-width: 8
+    fig-height: 5
+    highlight-style: github
+    df-print: paged
+execute:
+  warning: false
+  message: false
+---
+
+## Objetivo
+
+Este documento apresenta uma análise de regressões lineares com os dados do projeto, com foco nas observações do Zimbábue. O objetivo é investigar relações entre caracteres agronômicos (*traits*) e entre *traits* e variáveis ambientais/bioclimáticas, buscando padrões biologicamente interpretáveis.
+
+As regressões foram ajustadas de duas formas:
+
+1. manualmente, a partir das fórmulas de mínimos quadrados;
+2. com a função `lm()` e funções auxiliares para diagnóstico, resumo e predição.
+
+Também foram explorados modelos mais flexíveis, incluindo termos quadráticos, interações e regularização Ridge, além de uma análise de componentes principais (PCA) para caracterização dos genótipos.
+
+---
+
+## Configuração do ambiente
+
+### Pacotes e opções globais
+
+```{r setup}
+library(tidyverse)
+library(broom)
+library(knitr)
+library(kableExtra)
+library(patchwork)
+library(scales)
+library(ggrepel)
+
+pais_alvo <- "Zimbabwe"
+
+tema <- theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(color = "grey40", size = 11),
+    axis.title = element_text(color = "grey30"),
+    panel.grid.minor = element_blank(),
+    legend.position = "bottom"
+  )
+
+theme_set(tema)
+
+janela_tabela <- function(tab, altura = "420px") {
+  scroll_box(tab, width = "100%", height = altura)
+}
+```
+
+### Caminhos dos arquivos
+
+
+```{r paths}
+### Caminhos dos arquivos
+
+path_traits <- "https://raw.githubusercontent.com/mauricioaraujj/Pan_African_Trials_Network/refs/heads/main/data/data.csv"
+
+path_bioclim <- "https://raw.githubusercontent.com/mauricioaraujj/Pan_African_Trials_Network/refs/heads/main/data/bioclimatic.csv"
+```
+
+### Leitura dos dados brutos
+
+```{r read-data}
+traits_raw <- read_delim(
+  path_traits,
+  delim = ";",
+  na = c("NA", "", "NaN"),
+  show_col_types = FALSE
+)
+
+bioclim_raw <- read_delim(
+  path_bioclim,
+  delim = ";",
+  na = c("NA", "", "NaN"),
+  show_col_types = FALSE
+)
+
+glimpse(traits_raw)
+glimpse(bioclim_raw)
+```
+
+---
+
+## Preparação dos dados
+
+### Limpeza e filtragem por país
+
+Alguns caracteres apresentam valor zero em situações biologicamente implausíveis. Por exemplo, dias até o florescimento, dias até a maturidade, altura de planta, massa de 100 grãos e produtividade negativa. Nesta etapa de limpeza, esses valores foram tratados como ausentes quando o zero ou valores negativos indicam, provavelmente, falha de avaliação ou perda de parcela.
+
+As variáveis bioclimáticas foram renomeadas com nomes mais curtos e interpretáveis.
+
+```{r clean-data}
+bioclim <- bioclim_raw %>%
+  rename(
+    bio1_annual_temp = `wc2.1_30s_bio_1`,
+    bio10_warmest_quarter_temp = `wc2.1_30s_bio_10`,
+    bio11_coldest_quarter_temp = `wc2.1_30s_bio_11`,
+    bio12_annual_precip = `wc2.1_30s_bio_12`,
+    bio13_wettest_month_precip = `wc2.1_30s_bio_13`,
+    bio14_driest_month_precip = `wc2.1_30s_bio_14`,
+    bio15_precip_seasonality = `wc2.1_30s_bio_15`,
+    bio16_wettest_quarter_precip = `wc2.1_30s_bio_16`,
+    bio17_driest_quarter_precip = `wc2.1_30s_bio_17`,
+    bio18_warmest_quarter_precip = `wc2.1_30s_bio_18`,
+    bio19_coldest_quarter_precip = `wc2.1_30s_bio_19`,
+    bio2_mean_diurnal_range = `wc2.1_30s_bio_2`,
+    bio3_isothermality = `wc2.1_30s_bio_3`,
+    bio4_temp_seasonality = `wc2.1_30s_bio_4`,
+    bio5_max_temp_warmest_month = `wc2.1_30s_bio_5`,
+    bio6_min_temp_coldest_month = `wc2.1_30s_bio_6`,
+    bio7_temp_annual_range = `wc2.1_30s_bio_7`,
+    bio8_wettest_quarter_temp = `wc2.1_30s_bio_8`,
+    bio9_driest_quarter_temp = `wc2.1_30s_bio_9`
+  ) %>%
+  group_by(env) %>%
+  summarise(
+    across(where(is.numeric), ~ mean(.x, na.rm = TRUE)),
+    .groups = "drop"
+  ) %>%
+  mutate(across(where(is.numeric), ~ if_else(is.nan(.x), NA_real_, .x)))
+
+bioclim_raw %>%
+  count(env, name = "n_linhas_bioclim") %>%
+  filter(n_linhas_bioclim > 1) %>%
+  arrange(desc(n_linhas_bioclim)) %>%
+  slice_head(n = 10) %>%
+  kable(caption = "Ambientes com mais de uma linha no arquivo bioclimático") %>%
+  kable_styling(full_width = FALSE)
+
+traits <- traits_raw %>%
+  filter(COUNTRY == pais_alvo) %>%
+  mutate(
+    across(
+      any_of(c(
+        "GY", "NDM", "PH_R8", "W100G", "FLW_DAYS", "PROT", "OIL",
+        "LOD", "PODDING_MAT", "Pod_Shattering", "ELEV", "LAT", "LON"
+      )),
+      as.numeric
+    ),
+    GY = if_else(GY <= 0, NA_real_, GY),
+    NDM = if_else(NDM <= 0, NA_real_, NDM),
+    PH_R8 = if_else(PH_R8 <= 0, NA_real_, PH_R8),
+    W100G = if_else(W100G <= 0 | W100G > 100, NA_real_, W100G),
+    FLW_DAYS = if_else(FLW_DAYS <= 0, NA_real_, FLW_DAYS)
+  )
+
+dat <- traits %>%
+  left_join(bioclim, by = "env")
+
+traits_focus <- c(
+  "GY", "NDM", "PH_R8", "W100G", "FLW_DAYS", "PROT", "OIL",
+  "LOD", "Pod_Shattering", "PODDING_MAT"
+)
+traits_focus <- intersect(traits_focus, names(dat))
+
+env_focus <- c(
+  "bio1_annual_temp",
+  "bio12_annual_precip",
+  "bio4_temp_seasonality",
+  "bio15_precip_seasonality",
+  "bio5_max_temp_warmest_month",
+  "bio6_min_temp_coldest_month"
+)
+env_focus <- intersect(env_focus, names(dat))
+env_all <- setdiff(names(bioclim), "env")
+
+bio_labels <- c(
+  bio1_annual_temp = "BIO1 (Tmedia)",
+  bio12_annual_precip = "BIO12 (Prec. anual)",
+  bio4_temp_seasonality = "BIO4 (Saz. temp.)",
+  bio15_precip_seasonality = "BIO15 (Saz. prec.)",
+  bio5_max_temp_warmest_month = "BIO5 (Tmax)",
+  bio6_min_temp_coldest_month = "BIO6 (Tmin)"
+)
+
+dat %>%
+  summarise(
+    n_linhas = n(),
+    n_ambientes = n_distinct(env),
+    n_genotipos = n_distinct(gen),
+    pais = first(pais_alvo),
+    n_paises = n_distinct(COUNTRY)
+  ) %>%
+  kable(caption = "Resumo geral do conjunto de dados") %>%
+  kable_styling(full_width = FALSE)
+```
+
+### Disponibilidade de observações por trait
+
+```{r missing-summary}
+dat %>%
+  summarise(across(all_of(traits_focus), ~ sum(!is.na(.x)))) %>%
+  pivot_longer(everything(), names_to = "trait", values_to = "n_observacoes") %>%
+  arrange(desc(n_observacoes)) %>%
+  kable(caption = "Número de observações disponíveis por trait") %>%
+  kable_styling(full_width = FALSE)
+```
+
+---
+
+## Exploração inicial dos dados
+
+### Distribuição dos traits fenotípicos
+
+```{r trait-distributions}
+dat %>%
+  select(all_of(traits_focus)) %>%
+  pivot_longer(everything(), names_to = "trait", values_to = "valor") %>%
+  filter(!is.na(valor)) %>%
+  ggplot(aes(x = valor, fill = trait)) +
+  geom_histogram(bins = 35, color = "white", alpha = 0.85) +
+  facet_wrap(~ trait, scales = "free", ncol = 3) +
+  scale_fill_brewer(palette = "Set3", guide = "none") +
+  labs(
+    title = "Distribuição dos traits fenotípicos",
+    subtitle = paste("Dados filtrados para", pais_alvo),
+    x = NULL,
+    y = "Frequência"
+  )
+```
+
+**Interpretação.** Os histogramas indicam que a maioria dos traits apresenta distribuição aproximadamente unimodal, com variações na assimetria e dispersão. As variáveis relacionadas ao ciclo, como `FLW_DAYS` e `NDM`, apresentam distribuição relativamente concentrada, sugerindo menor variabilidade entre os genótipos. Já a produtividade (`GY`) apresenta distribuição assimétrica à direita, com presença de valores extremos elevados, indicando alta variabilidade produtiva. O conteúdo de óleo (`OIL`) e proteína (`PROT`) exibem distribuição aproximadamente normal, com dispersão moderada, sugerindo maior estabilidade desses atributos na população avaliada.
+A variável PODDING_MAT não apresentou variação ou possui quantidade insuficiente de dados válidos após o processo de filtragem, impossibilitando a avaliação de sua distribuição. Dessa forma, esse trait não foi considerado nas análises subsequentes.
+### Variação da produtividade ao longo dos anos
+
+```{r boxplot-gy-ano}
+dat %>%
+  filter(!is.na(GY), !is.na(YEAR)) %>%
+  mutate(YEAR = factor(YEAR)) %>%
+  ggplot(aes(x = YEAR, y = GY, fill = YEAR, color = YEAR)) +
+  geom_violin(alpha = 0.15, linewidth = 0.3, width = 0.9) +
+  geom_boxplot(alpha = 0.85, width = 0.25, outlier.shape = 21,
+               outlier.size = 1.5, outlier.alpha = 0.4, linewidth = 0.5) +
+  stat_summary(fun = mean, geom = "point", shape = 23,
+               size = 2.5, fill = "white", color = "grey30") +
+  scale_fill_brewer(palette = "Set2", guide = "none") +
+  scale_color_brewer(palette = "Set2", guide = "none") +
+  labs(
+    title = "Produtividade de grãos por ano",
+    subtitle = "Violino = distribuição | Caixa = mediana e IQR | Losango = média",
+    x = "Ano",
+    y = "Produtividade de grãos (GY)"
+  )
+```
+
+**Interpretação.** O gráfico combina violino e boxplot para mostrar tanto a forma da distribuição quanto os quartis de cada ano. O losango branco indica a média anual. Variações na largura do violino revelam concentração diferente de observações ao longo dos anos, enquanto diferenças na posição das caixas indicam variação no desempenho médio entre safras.
+
+---
+
+## Análise de correlações
+
+### Mapa de calor: traits × variáveis bioclimáticas
+
+O mapa de calor abaixo permite identificar, de forma visual e rápida, quais *traits* e variáveis ambientais se comportam de forma semelhante, auxiliando na seleção de relações candidatas para as regressões detalhadas.
+
+```{r correlation-heatmap, fig.width=10, fig.height=8, fig.cap="Mapa de calor das correlações entre traits e variáveis ambientais selecionadas"}
+vars_cor <- c(traits_focus, env_focus)
+
+cor_data <- dat %>%
+  select(all_of(vars_cor)) %>%
+  mutate(across(everything(), as.numeric)) %>%
+  select(where(~ sum(!is.na(.x)) > 30)) %>%
+  select(where(~ var(.x, na.rm = TRUE) > 1e-6)) %>%
+  select(where(~ n_distinct(na.omit(.x)) > 5))
+
+cor_mat <- cor(cor_data, use = "pairwise.complete.obs")
+
+pretty_names <- colnames(cor_mat)
+pretty_names <- ifelse(
+  pretty_names %in% names(bio_labels),
+  unname(bio_labels[pretty_names]),
+  pretty_names
+)
+
+rownames(cor_mat) <- colnames(cor_mat) <- pretty_names
+
+cor_df <- as.data.frame(as.table(cor_mat)) %>%
+  rename(var1 = Var1, var2 = Var2, correlacao = Freq)
+
+ggplot(cor_df, aes(x = var1, y = var2, fill = correlacao)) +
+  geom_tile(color = "white", linewidth = 0.35) +
+  geom_text(
+    aes(label = round(correlacao, 2), color = abs(correlacao) > 0.5),
+    size = 2.8
+  ) +
+  scale_fill_gradient2(
+    low = "#2166ac",
+    mid = "white",
+    high = "#d6604d",
+    midpoint = 0,
+    limits = c(-1, 1),
+    name = "r de Pearson"
+  ) +
+  scale_color_manual(values = c("black", "white"), guide = "none") +
+  labs(
+    title = "Matriz de correlação",
+    subtitle = "Traits fenotípicos × variáveis bioclimáticas selecionadas",
+    x = NULL,
+    y = NULL
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 9),
+    axis.text.y = element_text(size = 9),
+    panel.grid = element_blank()
+  )
+```
+
+**Interpretação.** Correlações fortes (`|r| > 0,5`) aparecem com texto branco. Essa visualização é útil para identificar relações com sinal biológico antes de ajustar modelos formais.
+
+### Tabela de correlações entre traits
+
+```{r trait-correlations}
+cor_traits <- dat %>%
+  select(all_of(traits_focus)) %>%
+  cor(use = "pairwise.complete.obs")
+
+cor_traits %>%
+  round(2) %>%
+  kable(caption = "Correlações de Pearson entre traits") %>%
+  kable_styling(full_width = FALSE)
+```
+
+---
+
+## Regressão simples entre traits
+
+### Estimação manual: produtividade em função da altura de planta
+
+A primeira regressão usa produtividade de grãos (`GY`) como variável resposta e altura de planta no estádio R8 (`PH_R8`) como preditora. A pergunta biológica é direta: parcelas com plantas mais altas tendem a apresentar maior produtividade?
+
+O modelo linear simples é:
+
+$$
+GY_i = \beta_0 + \beta_1 PH\_R8_i + \varepsilon_i
+$$
+
+Na estimação manual, os coeficientes são calculados por:
+
+$$
+\hat{\beta}_1 = \frac{\sum (x_i - \bar{x})(y_i - \bar{y})}{\sum (x_i - \bar{x})^2}
+\qquad
+\hat{\beta}_0 = \bar{y} - \hat{\beta}_1\bar{x}
+$$
+
+::: {.panel-tabset}
+
+#### Cálculo manual
+
+```{r manual-regression}
+manual_df <- dat %>%
+  select(GY, PH_R8) %>%
+  drop_na()
+
+x <- manual_df$PH_R8
+y <- manual_df$GY
+n <- length(y)
+
+beta1 <- sum((x - mean(x)) * (y - mean(y))) / sum((x - mean(x))^2)
+beta0 <- mean(y) - beta1 * mean(x)
+y_hat <- beta0 + beta1 * x
+resid <- y - y_hat
+
+sse <- sum(resid^2)
+sst <- sum((y - mean(y))^2)
+r2 <- 1 - sse / sst
+sigma2 <- sse / (n - 2)
+se_beta1 <- sqrt(sigma2 / sum((x - mean(x))^2))
+t_beta1 <- beta1 / se_beta1
+p_beta1 <- 2 * pt(abs(t_beta1), df = n - 2, lower.tail = FALSE)
+
+manual_results <- tibble(
+  parametro = c("Intercepto", "Inclinacao_PH_R8", "R2", "p_valor_inclinacao"),
+  estimativa = c(beta0, beta1, r2, p_beta1)
+)
+
+manual_results %>%
+  mutate(estimativa = round(estimativa, 5)) %>%
+  kable(caption = "Regressão manual: GY ~ PH_R8") %>%
+  kable_styling(full_width = FALSE)
+```
+
+#### Comparação com `lm()`
+
+```{r lm-gy-ph}
+mod_gy_ph <- lm(GY ~ PH_R8, data = dat)
+
+tidy(mod_gy_ph, conf.int = TRUE) %>%
+  mutate(across(where(is.numeric), ~ round(.x, 4))) %>%
+  kable(caption = "Resultado com lm(): GY ~ PH_R8") %>%
+  kable_styling(full_width = FALSE)
+
+glance(mod_gy_ph) %>%
+  select(r.squared, adj.r.squared, sigma, statistic, p.value, df, nobs) %>%
+  mutate(across(where(is.numeric), ~ round(.x, 4))) %>%
+  kable(caption = "Medidas gerais do modelo") %>%
+  kable_styling(full_width = FALSE)
+```
+
+```{r plot-gy-ph}
+augment(mod_gy_ph) %>%
+  ggplot(aes(x = PH_R8, y = GY)) +
+  geom_point(alpha = 0.25, color = "#2f4858") +
+  geom_smooth(method = "lm", se = TRUE, color = "#c44e52") +
+  labs(
+    x = "Altura de planta em R8 (PH_R8)",
+    y = "Produtividade de grãos (GY)",
+    title = "Relação entre produtividade e altura de planta"
+  )
+```
+
+:::
+
+**Interpretação.** Se a inclinação de `PH_R8` for positiva e significativa, isso indica que plantas mais altas tendem a estar associadas a maior produtividade. O valor do coeficiente representa o aumento médio esperado em `GY` para cada unidade adicional de altura. O `R²` indica quanta variação da produtividade é explicada apenas pela altura; em dados de campo, é esperado que esse valor não seja muito elevado, pois a produtividade também depende de genótipo, ambiente, manejo e interações entre esses fatores.
+
+### Triagem de múltiplas relações entre traits
+
+Vários modelos simples entre *traits* são ajustados e comparados. A tabela abaixo ordena os pares pelo menor valor de `p` associado ao preditor, destacando as relações com maior evidência estatística.
+
+```{r screen-trait-models}
+trait_pairs <- tribble(
+  ~resposta, ~preditor,
+  "GY", "PH_R8",
+  "GY", "NDM",
+  "GY", "W100G",
+  "GY", "FLW_DAYS",
+  "PROT", "OIL",
+  "NDM", "FLW_DAYS",
+  "PH_R8", "NDM",
+  "W100G", "NDM"
+)
+
+fit_simple <- function(resposta, preditor, data) {
+  form <- as.formula(paste(resposta, "~", preditor))
+  mod <- lm(form, data = data)
+  tidy_mod <- tidy(mod) %>% filter(term == preditor)
+  glance_mod <- glance(mod)
+
+  tibble(
+    resposta = resposta,
+    preditor = preditor,
+    n = nobs(mod),
+    beta = tidy_mod$estimate,
+    p_valor = tidy_mod$p.value,
+    r2 = glance_mod$r.squared,
+    r2_ajustado = glance_mod$adj.r.squared
+  )
+}
+
+trait_screen <- pmap_dfr(trait_pairs, fit_simple, data = dat) %>%
+  arrange(p_valor)
+
+trait_screen %>%
+  mutate(
+    beta = round(beta, 4),
+    p_valor = signif(p_valor, 3),
+    r2 = round(r2, 3),
+    r2_ajustado = round(r2_ajustado, 3)
+  ) %>%
+  kable(caption = "Triagem de regressões lineares simples entre traits") %>%
+  kable_styling(full_width = FALSE)
+```
+
+```{r plot-selected-traits}
+plot_lm <- function(data, xvar, yvar, xlab, ylab, title) {
+  ggplot(data, aes(x = .data[[xvar]], y = .data[[yvar]])) +
+    geom_point(alpha = 0.22, color = "#2f4858") +
+    geom_smooth(method = "lm", se = TRUE, color = "#c44e52") +
+    labs(x = xlab, y = ylab, title = title)
+}
+
+p1 <- plot_lm(dat, "PH_R8", "GY", "PH_R8", "GY", "GY ~ PH_R8")
+p2 <- plot_lm(dat, "NDM", "GY", "NDM", "GY", "GY ~ NDM")
+p3 <- plot_lm(dat, "OIL", "PROT", "OIL", "PROT", "PROT ~ OIL")
+
+(p1 | p2) / p3
+```
+
+**Interpretação das relações destacadas:**
+
+- `GY ~ PH_R8`: a altura pode refletir vigor vegetativo e capacidade de interceptação de luz, embora plantas excessivamente altas também possam estar associadas ao acamamento em certos contextos.
+- `GY ~ NDM`: ciclos mais longos podem permitir maior acúmulo de biomassa, ainda que em ambientes com estresse hídrico terminal isso possa reduzir a produtividade.
+- `PROT ~ OIL`: em soja, proteína e óleo frequentemente apresentam relação negativa, refletindo um *trade-off* na composição do grão.
+
+---
+
+## Relações entre traits e variáveis bioclimáticas
+
+### Médias por ambiente
+
+Como as variáveis bioclimáticas são constantes dentro de cada ambiente (`env`), a forma mais adequada de avaliar relações ambientais é trabalhar com médias por ambiente. Isso evita inflar artificialmente o número de observações ao repetir o mesmo clima para muitas parcelas ou genótipos.
+
+```{r env-means}
+env_means <- dat %>%
+  group_by(env, COUNTRY, YEAR, LAT, LON, ELEV) %>%
+  summarise(
+    across(all_of(traits_focus), ~ mean(.x, na.rm = TRUE), .names = "mean_{.col}"),
+    n_plot = n(),
+    .groups = "drop"
+  ) %>%
+  mutate(across(starts_with("mean_"), ~ if_else(is.nan(.x), NA_real_, .x))) %>%
+  left_join(bioclim, by = "env")
+
+env_means %>%
+  summarise(
+    n_ambientes = n(),
+    n_com_GY = sum(!is.na(mean_GY)),
+    n_com_PROT = sum(!is.na(mean_PROT)),
+    n_com_OIL = sum(!is.na(mean_OIL))
+  ) %>%
+  kable(caption = "Disponibilidade de médias por ambiente") %>%
+  kable_styling(full_width = FALSE)
+```
+
+### Triagem de relações ambientais simples
+
+Nesta etapa, algumas relações ambientais simples são testadas:
+
+- produtividade média (`mean_GY`) em função da precipitação anual (`bio12_annual_precip`);
+- produtividade média (`mean_GY`) em função da temperatura média anual (`bio1_annual_temp`);
+- altura média (`mean_PH_R8`) em função da temperatura média anual;
+- massa de 100 grãos (`mean_W100G`) em função da precipitação anual.
+
+```{r screen-env-models}
+env_pairs <- tribble(
+  ~resposta, ~preditor,
+  "mean_GY", "bio12_annual_precip",
+  "mean_GY", "bio1_annual_temp",
+  "mean_PH_R8", "bio1_annual_temp",
+  "mean_W100G", "bio12_annual_precip",
+  "mean_NDM", "bio1_annual_temp",
+  "mean_NDM", "bio12_annual_precip"
+)
+
+env_screen <- pmap_dfr(env_pairs, fit_simple, data = env_means) %>%
+  arrange(p_valor)
+
+env_screen %>%
+  mutate(
+    beta = round(beta, 4),
+    p_valor = signif(p_valor, 3),
+    r2 = round(r2, 3),
+    r2_ajustado = round(r2_ajustado, 3)
+  ) %>%
+  kable(caption = "Regressões entre médias ambientais de traits e variáveis bioclimáticas") %>%
+  kable_styling(full_width = FALSE)
+```
+
+```{r plot-env-models}
+p4 <- plot_lm(env_means, "bio12_annual_precip", "mean_GY", "Precipitação anual", "GY médio", "GY médio ~ precipitação anual")
+p5 <- plot_lm(env_means, "bio1_annual_temp", "mean_GY", "Temperatura média anual", "GY médio", "GY médio ~ temperatura")
+p6 <- plot_lm(env_means, "bio1_annual_temp", "mean_NDM", "Temperatura média anual", "NDM médio", "NDM médio ~ temperatura")
+
+(p4 | p5) / p6
+```
+
+**Interpretação.** Quando um coeficiente ambiental é significativo, ele indica uma tendência média entre ambientes. Um coeficiente positivo para precipitação anual em `mean_GY` sugeriria que ambientes mais chuvosos tendem a apresentar maior produtividade média. Um coeficiente negativo para temperatura em `mean_NDM` indicaria que ambientes mais quentes tendem a acelerar o ciclo, reduzindo os dias até a maturidade. Essas relações devem ser interpretadas como associações, não como causalidade direta, pois clima, manejo, país, ano e composição genética podem estar parcialmente confundidos.
+
+### Varredura sistemática: todos os traits × todas as BIOs
+
+Para identificar as associações mais fortes sem precisar especificar previamente os pares de interesse, testamos sistematicamente todas as combinações entre médias de *traits* e variáveis bioclimáticas. A tabela e o gráfico abaixo destacam as 20 relações com maior evidência estatística.
+
+```{r screen-all-env-models}
+mean_traits <- paste0("mean_", traits_focus)
+mean_traits <- intersect(mean_traits, names(env_means))
+
+all_env_pairs <- crossing(
+  resposta = mean_traits,
+  preditor = env_all
+)
+
+fit_simple_safe <- function(resposta, preditor, data) {
+  temp <- data %>%
+    select(all_of(c(resposta, preditor))) %>%
+    drop_na()
+
+  if (
+    nrow(temp) <= 30 ||
+    n_distinct(temp[[resposta]]) <= 3 ||
+    n_distinct(temp[[preditor]]) <= 3
+  ) {
+    return(tibble())
+  }
+
+  fit_simple(resposta, preditor, temp)
+}
+
+env_screen_all <- pmap_dfr(all_env_pairs, fit_simple_safe, data = env_means) %>%
+  mutate(
+    trait = str_remove(resposta, "^mean_"),
+    bio = str_replace(preditor, "^bio", "BIO")
+  ) %>%
+  arrange(p_valor)
+
+env_screen_all %>%
+  mutate(
+    beta = round(beta, 4),
+    p_valor = formatC(p_valor, format = "e", digits = 2),
+    r2 = round(r2, 3),
+    r2_ajustado = round(r2_ajustado, 3)
+  ) %>%
+  select(trait, preditor, n, beta, p_valor, r2, r2_ajustado) %>%
+  slice_head(n = 20) %>%
+  kable(caption = "Top 20 regressões trait × ambiente em médias por ambiente") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover", "condensed")) %>%
+  column_spec(5, bold = TRUE, color = "#c0392b") %>%
+  column_spec(6, bold = TRUE, color = "#247a3d") %>%
+  janela_tabela()
+```
+
+```{r plot-screen-all-env, fig.cap="R² das principais regressões trait × ambiente"}
+env_screen_all %>%
+  filter(p_valor < 0.01) %>%
+  slice_head(n = 20) %>%
+  mutate(par = paste(trait, "~", str_replace(preditor, "^bio", "BIO"))) %>%
+  ggplot(aes(x = reorder(par, r2), y = r2, fill = trait)) +
+  geom_col(alpha = 0.85) +
+  coord_flip() +
+  scale_fill_brewer(palette = "Paired") +
+  labs(
+    title = "Top 20 regressões por R²",
+    subtitle = "Apenas modelos com p < 0,01",
+    x = NULL,
+    y = "R²",
+    fill = "Trait"
+  )
+```
+
+---
+
+## Modelos ambientais avançados
+
+### Modelo polinomial: resposta da produtividade à temperatura
+
+Nem toda relação ambiental é estritamente linear. A produtividade pode aumentar até determinada faixa de temperatura e, a partir daí, diminuir. Para explorar esse comportamento, comparamos um modelo linear com um modelo quadrático:
+
+$$
+mean\_GY = \beta_0 + \beta_1 \, temp + \beta_2 \, temp^2 + \varepsilon
+$$
+
+```{r polynomial-model}
+mod_temp_linear <- lm(mean_GY ~ bio1_annual_temp, data = env_means)
+mod_temp_quad <- lm(mean_GY ~ bio1_annual_temp + I(bio1_annual_temp^2), data = env_means)
+
+bind_rows(
+  linear = glance(mod_temp_linear),
+  quadratico = glance(mod_temp_quad),
+  .id = "modelo"
+) %>%
+  select(modelo, r.squared, adj.r.squared, AIC, BIC, p.value, nobs) %>%
+  mutate(across(where(is.numeric), ~ round(.x, 3))) %>%
+  kable(caption = "Comparação entre modelo linear e quadrático") %>%
+  kable_styling(full_width = FALSE)
+
+anova(mod_temp_linear, mod_temp_quad) %>%
+  tidy() %>%
+  mutate(across(where(is.numeric), ~ round(.x, 4))) %>%
+  kable(caption = "Teste de ganho de ajuste ao adicionar o termo quadrático") %>%
+  kable_styling(full_width = FALSE)
+```
+
+```{r plot-polynomial}
+ggplot(env_means, aes(x = bio1_annual_temp, y = mean_GY)) +
+  geom_point(alpha = 0.6, color = "#2f4858") +
+  geom_smooth(method = "lm", formula = y ~ x, se = FALSE, color = "#c44e52", linetype = 2) +
+  geom_smooth(method = "lm", formula = y ~ x + I(x^2), se = TRUE, color = "#3b8b5f") +
+  labs(
+    x = "Temperatura média anual",
+    y = "Produtividade média por ambiente",
+    title = "Comparação entre tendência linear (vermelho) e quadrática (verde)"
+  )
+```
+
+**Interpretação.** Se o termo quadrático for significativo e o modelo quadrático reduzir AIC/BIC ou aumentar claramente o `R²` ajustado, há evidência de curvatura na resposta. Em termos biológicos, isso pode indicar a existência de uma faixa de temperatura mais favorável à produtividade, com queda nos extremos — tanto em temperaturas muito baixas quanto muito altas.
+
+### Regressão múltipla: temperatura e precipitação combinadas
+
+Temperatura e precipitação podem atuar simultaneamente sobre a produtividade. Três modelos são comparados: temperatura isolada, precipitação isolada e a combinação de ambas.
+
+```{r multiple-env-model}
+df_env_gy <- env_means %>%
+  select(
+    mean_GY,
+    bio1_annual_temp,
+    bio12_annual_precip
+  ) %>%
+  drop_na()
+
+mod_env_bio1 <- lm(mean_GY ~ bio1_annual_temp, data = df_env_gy)
+mod_env_bio12 <- lm(mean_GY ~ bio12_annual_precip, data = df_env_gy)
+mod_env_mult <- lm(mean_GY ~ bio1_annual_temp + bio12_annual_precip, data = df_env_gy)
+
+model_compare <- bind_rows(
+  "BIO1 apenas" = glance(mod_env_bio1),
+  "BIO12 apenas" = glance(mod_env_bio12),
+  "BIO1 + BIO12" = glance(mod_env_mult),
+  .id = "modelo"
+) %>%
+  select(modelo, r.squared, adj.r.squared, AIC, BIC, p.value, nobs)
+
+model_compare %>%
+  mutate(across(where(is.numeric), ~ round(.x, 4))) %>%
+  kable(caption = "Comparação de modelos ambientais para produtividade média") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover")) %>%
+  row_spec(which.min(model_compare$AIC), bold = TRUE, background = "#d4edda")
+
+tidy(mod_env_mult, conf.int = TRUE) %>%
+  mutate(across(where(is.numeric), ~ round(.x, 4))) %>%
+  kable(caption = "Coeficientes do modelo múltiplo: mean_GY ~ BIO1 + BIO12") %>%
+  kable_styling(full_width = FALSE)
+
+vif_manual <- function(modelo) {
+  X <- model.matrix(modelo)
+  X <- X[, colnames(X) != "(Intercept)", drop = FALSE]
+
+  if (ncol(X) < 2) {
+    return(tibble(variavel = colnames(X), VIF = NA_real_))
+  }
+
+  tibble(
+    variavel = colnames(X),
+    VIF = map_dbl(seq_len(ncol(X)), function(j) {
+      r2_j <- summary(lm(X[, j] ~ X[, -j, drop = FALSE]))$r.squared
+      1 / (1 - r2_j)
+    })
+  )
+}
+
+vif_manual(mod_env_mult) %>%
+  mutate(VIF = round(VIF, 3)) %>%
+  kable(caption = "VIF manual para o modelo múltiplo ambiental") %>%
+  kable_styling(full_width = FALSE)
+```
+
+**Interpretação.** O melhor modelo pelo AIC aparece destacado em verde. Caso BIO1 e BIO12 permaneçam significativos no modelo múltiplo, isso sugere que temperatura e precipitação carregam informações ambientais complementares. O VIF auxilia na detecção de multicolinearidade; valores muito elevados indicam instabilidade nos coeficientes individuais.
+
+### Seleção automática de variáveis por AIC (*stepwise*)
+
+Com 19 variáveis bioclimáticas disponíveis, a seleção *stepwise* identifica um subconjunto mais parcimonioso, sem precisar testar manualmente todas as combinações. Esta etapa é exploratória e não substitui a interpretação biológica.
+
+```{r stepwise-env-model}
+df_step <- env_means %>%
+  select(all_of(c("mean_GY", env_all))) %>%
+  drop_na()
+
+mod_env_null <- lm(mean_GY ~ 1, data = df_step)
+mod_env_full <- lm(reformulate(env_all, response = "mean_GY"), data = df_step)
+
+mod_env_step <- step(
+  mod_env_null,
+  scope = list(lower = mod_env_null, upper = mod_env_full),
+  direction = "both",
+  trace = 0
+)
+
+step_compare <- bind_rows(
+  "Nulo" = glance(mod_env_null),
+  "BIO1 + BIO12" = glance(update(mod_env_mult, data = df_step)),
+  "Stepwise" = glance(mod_env_step),
+  "Completo" = glance(mod_env_full),
+  .id = "modelo"
+) %>%
+  select(modelo, r.squared, adj.r.squared, AIC, BIC, nobs)
+
+step_compare %>%
+  mutate(across(where(is.numeric), ~ round(.x, 3))) %>%
+  arrange(AIC) %>%
+  kable(caption = "Comparação de modelos ambientais por AIC") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover")) %>%
+  row_spec(1, bold = TRUE, background = "#d4edda")
+
+tidy(mod_env_step, conf.int = TRUE) %>%
+  mutate(across(where(is.numeric), ~ round(.x, 4))) %>%
+  kable(caption = "Coeficientes do modelo selecionado por stepwise") %>%
+  kable_styling(full_width = FALSE)
+```
+
+**Interpretação.** O modelo *stepwise* seleciona as variáveis que mais reduzem o AIC. Como as BIOs são frequentemente correlacionadas entre si, o conjunto selecionado deve ser lido como uma combinação preditiva, e não como evidência isolada de causalidade para cada variável.
+
+### Regularização Ridge: estabilização com muitos preditores correlacionados
+
+A regressão Ridge reduz a magnitude dos coeficientes quando há muitos preditores correlacionados, sendo especialmente útil quando as BIOs apresentam alta multicolinearidade.
+
+```{r ridge-env-model}
+ridge_df <- env_means %>%
+  select(all_of(c("mean_GY", env_all))) %>%
+  drop_na()
+
+X_ridge <- scale(as.matrix(ridge_df[, env_all]))
+y_ridge <- ridge_df$mean_GY - mean(ridge_df$mean_GY)
+
+ridge_coef <- function(X, y, lambda) {
+  p <- ncol(X)
+  solve(t(X) %*% X + lambda * diag(p)) %*% t(X) %*% y
+}
+
+lambda_vals <- c(0.01, 0.1, 1, 5, 10, 50, 100)
+coef_ridge <- sapply(lambda_vals, function(lambda) ridge_coef(X_ridge, y_ridge, lambda))
+rownames(coef_ridge) <- env_all
+colnames(coef_ridge) <- paste0("lambda_", lambda_vals)
+
+coef_ridge %>%
+  as.data.frame() %>%
+  rownames_to_column("variavel") %>%
+  mutate(across(where(is.numeric), ~ round(.x, 3))) %>%
+  kable(caption = "Coeficientes Ridge manuais para diferentes lambdas") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "condensed")) %>%
+  janela_tabela(altura = "520px")
+```
+
+```{r ridge-env-plot, fig.cap="Trajetória dos coeficientes Ridge para variáveis bioclimáticas"}
+ridge_long <- coef_ridge %>%
+  as.data.frame() %>%
+  rownames_to_column("variavel") %>%
+  pivot_longer(-variavel, names_to = "lambda", values_to = "coeficiente") %>%
+  mutate(
+    lambda = as.numeric(str_remove(lambda, "lambda_")),
+    log_lambda = log10(lambda)
+  )
+
+ggplot(ridge_long, aes(x = log_lambda, y = coeficiente, color = variavel)) +
+  geom_hline(yintercept = 0, linetype = 2, color = "grey55") +
+  geom_line(linewidth = 0.9, alpha = 0.85) +
+  labs(
+    title = "Regularização Ridge",
+    subtitle = "Coeficientes encolhem em direção a zero conforme lambda aumenta",
+    x = "log10(lambda)",
+    y = "Coeficiente padronizado",
+    color = "Variável"
+  ) +
+  theme(legend.position = "right")
+```
+
+**Interpretação.** À medida que `lambda` aumenta, os coeficientes são atraídos em direção a zero. Isso reduz a instabilidade das estimativas sem exigir a exclusão de variáveis inteiras, sendo preferível ao *stepwise* em cenários com multicolinearidade elevada.
+
+---
+
+## Modelos com interação
+
+### Interação ambiental: temperatura × precipitação
+
+O efeito da precipitação sobre a produtividade pode depender da temperatura. Para explorar essa hipótese, um modelo com interação entre BIO1 e BIO12 é comparado ao modelo aditivo.
+
+```{r env-interaction-model}
+mod_env_interaction <- lm(
+  mean_GY ~ bio1_annual_temp * bio12_annual_precip,
+  data = df_env_gy
+)
+
+tidy(mod_env_interaction, conf.int = TRUE) %>%
+  mutate(across(where(is.numeric), ~ round(.x, 5))) %>%
+  kable(caption = "Modelo com interação ambiental: BIO1 × BIO12") %>%
+  kable_styling(full_width = FALSE)
+
+anova(mod_env_mult, mod_env_interaction) %>%
+  tidy() %>%
+  mutate(across(where(is.numeric), ~ round(.x, 4))) %>%
+  kable(caption = "Comparação entre modelo aditivo e modelo com interação") %>%
+  kable_styling(full_width = FALSE)
+```
+
+```{r plot-env-interaction, fig.cap="Superfície de resposta para produtividade média em função de BIO1 e BIO12"}
+grid_env <- expand_grid(
+  bio1_annual_temp = seq(
+    quantile(df_env_gy$bio1_annual_temp, 0.05),
+    quantile(df_env_gy$bio1_annual_temp, 0.95),
+    length.out = 50
+  ),
+  bio12_annual_precip = seq(
+    quantile(df_env_gy$bio12_annual_precip, 0.05),
+    quantile(df_env_gy$bio12_annual_precip, 0.95),
+    length.out = 50
+  )
+) %>%
+  mutate(pred_GY = predict(mod_env_interaction, newdata = .))
+
+ggplot(grid_env, aes(x = bio1_annual_temp, y = bio12_annual_precip, fill = pred_GY)) +
+  geom_tile() +
+  scale_fill_viridis_c(name = "GY médio\npredito", option = "C") +
+  labs(
+    title = "Superfície de resposta: temperatura × precipitação",
+    subtitle = "Predição do modelo com interação ambiental",
+    x = "BIO1 — temperatura média anual",
+    y = "BIO12 — precipitação anual"
+  ) +
+  theme(legend.position = "right")
+```
+
+**Interpretação.** Gradientes diagonais e variações acentuadas de cor ao longo de ambos os eixos indicam que a interação entre temperatura e precipitação exerce maior influência sobre a produtividade do que os efeitos isolados. Por se tratar de uma cultura C3, como a soja, temperaturas elevadas até um limite fisiológico ótimo, associadas à adequada disponibilidade hídrica, tendem a favorecer a máxima expressão do potencial produtivo. Em contrapartida, alta temperatura combinada com baixa precipitação intensifica o estresse hídrico, promovendo fechamento estomático e queda na assimilação de carbono.
+
+### Interação entre altura de planta e precipitação
+
+A relação entre altura de planta e produtividade pode variar conforme a disponibilidade hídrica do ambiente. Para testar essa hipótese, um modelo com interação entre `PH_R8` e precipitação anual é ajustado:
+
+$$
+GY = \beta_0 + \beta_1 PH\_R8 + \beta_2 precip + \beta_3(PH\_R8 \times precip) + \varepsilon
+$$
+
+```{r interaction-model}
+mod_interaction <- lm(GY ~ PH_R8 * bio12_annual_precip, data = dat)
+
+tidy(mod_interaction, conf.int = TRUE) %>%
+  mutate(across(where(is.numeric), ~ round(.x, 5))) %>%
+  kable(caption = "Modelo com interação: GY ~ PH_R8 * precipitação anual") %>%
+  kable_styling(full_width = FALSE)
+
+glance(mod_interaction) %>%
+  select(r.squared, adj.r.squared, sigma, statistic, p.value, nobs) %>%
+  mutate(across(where(is.numeric), ~ round(.x, 4))) %>%
+  kable(caption = "Resumo do modelo com interação") %>%
+  kable_styling(full_width = FALSE)
+```
+
+```{r plot-interaction}
+interaction_df <- dat %>%
+  select(GY, PH_R8, bio12_annual_precip) %>%
+  drop_na() %>%
+  mutate(
+    precip_grupo = ntile(bio12_annual_precip, 3),
+    precip_grupo = factor(
+      precip_grupo,
+      labels = c("Baixa precipitação", "Precipitação intermediária", "Alta precipitação")
+    )
+  )
+
+ggplot(interaction_df, aes(x = PH_R8, y = GY, color = precip_grupo)) +
+  geom_point(alpha = 0.15) +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_color_brewer(palette = "Dark2") +
+  labs(
+    x = "Altura de planta em R8",
+    y = "Produtividade de grãos",
+    color = "Grupo ambiental",
+    title = "A relação altura–produtividade muda com a precipitação?"
+  )
+```
+
+**Interpretação.** O padrão gráfico não indica separação clara entre ambientes de baixa e alta precipitação, pois ambos apresentam inclinações semelhantes. A principal diferença visual ocorre no grupo de precipitação intermediária, cuja relação entre altura e produtividade parece menos acentuada. Assim, embora a interação possa ser avaliada estatisticamente, sua interpretação biológica deve ser feita com cautela, pois a precipitação anual isoladamente pode não ser suficiente para explicar diferenças consistentes na relação altura–produtividade.
+
+---
+
+## Diagnóstico do modelo principal
+
+### Análise dos resíduos
+
+Os diagnósticos permitem avaliar se os resíduos do modelo apresentam padrões estruturados, heterocedasticidade ou observações excessivamente influentes.
+
+```{r diagnostics}
+par(mfrow = c(2, 2))
+plot(mod_gy_ph)
+par(mfrow = c(1, 1))
+```
+
+**Interpretação.** A análise dos resíduos indica desvios relevantes em relação às premissas do modelo linear. O gráfico de resíduos versus valores ajustados sugere heterocedasticidade, evidenciada pelo aumento da dispersão dos resíduos em maiores valores ajustados. O gráfico Q-Q aponta desvios da normalidade nas caudas, indicando a presença de valores extremos. Esses resultados sugerem que o modelo linear simples captura apenas parcialmente a relação entre altura de planta e produtividade, sendo recomendada a inclusão de variáveis adicionais ou termos de interação.
+
+### Observações mais influentes
+
+```{r influential-points}
+augment(mod_gy_ph) %>%
+  arrange(desc(.cooksd)) %>%
+  select(GY, PH_R8, .fitted, .resid, .std.resid, .cooksd) %>%
+  slice_head(n = 10) %>%
+  mutate(across(where(is.numeric), ~ round(.x, 3))) %>%
+  kable(caption = "Dez observações mais influentes no modelo GY ~ PH_R8") %>%
+  kable_styling(full_width = FALSE) %>%
+  janela_tabela(altura = "320px")
+```
+
+**Interpretação.** As dez observações destacadas apresentam resíduos negativos elevados, indicando que o modelo superestima a produtividade nesses casos, mesmo para plantas com maior altura. Apesar disso, os valores de distância de Cook são relativamente baixos, sugerindo que essas observações não exercem influência desproporcional sobre o ajuste global do modelo.
+
+---
+
+## Análise de componentes principais (PCA)
+
+### Similaridade entre genótipos com base nos traits agronômicos
+
+A PCA resume a variação multivariada dos *traits* em poucos eixos, permitindo visualizar quais genótipos apresentam perfis agronômicos semelhantes. Cada ponto representa um genótipo, posicionado de acordo com suas médias nos traits avaliados — genótipos próximos têm perfil similar.
+
+```{r pca-genotipos}
+pca_df <- dat %>%
+  group_by(gen) %>%
+  summarise(
+    across(all_of(traits_focus), ~ mean(.x, na.rm = TRUE)),
+    n_obs = n(),
+    .groups = "drop"
+  ) %>%
+  filter(n_obs >= 3) %>%
+  select(gen, all_of(traits_focus)) %>%
+  column_to_rownames("gen")
+
+pca_df <- pca_df %>%
+  select(where(~ mean(!is.na(.x)) > 0.5)) %>%
+  select(where(~ var(.x, na.rm = TRUE) > 1e-6))
+
+pca_df_imp <- pca_df %>%
+  mutate(across(everything(), ~ ifelse(is.na(.x), mean(.x, na.rm = TRUE), .x)))
+
+pca_res <- prcomp(pca_df_imp, scale. = TRUE, center = TRUE)
+
+variancia_explicada <- summary(pca_res)$importance[2, ] * 100
+
+scores <- as.data.frame(pca_res$x) %>%
+  rownames_to_column("gen") %>%
+  select(gen, PC1, PC2)
+
+ggplot(scores, aes(x = PC1, y = PC2, label = gen)) +
+  geom_point(color = "#2f4858", alpha = 0.6, size = 2) +
+  geom_text_repel(size = 2.5, color = "grey30", max.overlaps = 30) +
+  geom_hline(yintercept = 0, linetype = 2, color = "grey70") +
+  geom_vline(xintercept = 0, linetype = 2, color = "grey70") +
+  labs(
+    title = "PCA dos genótipos pelos traits agronômicos",
+    subtitle = sprintf(
+      "PC1 = %.1f%%  |  PC2 = %.1f%%  |  %d genótipos",
+      variancia_explicada[1], variancia_explicada[2], nrow(scores)
+    ),
+    x = paste0("PC1 (", round(variancia_explicada[1], 1), "%)"),
+    y = paste0("PC2 (", round(variancia_explicada[2], 1), "%)")
+  )
+```
+
+**Interpretação.** Genótipos próximos entre si apresentam perfil agronômico semelhante nas variáveis avaliadas. Genótipos distantes diferem substancialmente em pelo menos um eixo de variação. O percentual de variância explicada por cada PC indica o quanto da variação total dos *traits* é capturado pelos dois primeiros eixos. Para entender quais *traits* separam os grupos, o biplot com setas de *loadings* pode ser consultado como análise complementar.
+
+Observa-se uma dispersão relativamente contínua dos genótipos ao longo dos eixos, sem a formação de agrupamentos bem definidos. Esse padrão sugere ausência de estruturas claras de agrupamento, indicando que os genótipos apresentam variação gradual nos traits agronômicos, em vez de se organizarem em grupos distintos.
+
+Genótipos localizados próximos entre si apresentam perfis fenotípicos semelhantes, enquanto aqueles posicionados em regiões opostas do gráfico diferem substancialmente em pelo menos um conjunto de características. Em particular, genótipos mais afastados da origem tendem a representar combinações mais extremas de traits, contribuindo de forma mais acentuada para a variabilidade observada.
+
+A maior dispersão ao longo do eixo PC1 sugere que esse componente representa o principal gradiente de variação entre os genótipos, enquanto o PC2 captura variações secundárias. No entanto, sem a análise dos loadings, não é possível atribuir diretamente quais traits são responsáveis por cada eixo.
+
+De forma geral, os resultados indicam diversidade fenotípica considerável entre os genótipos avaliados, porém sem evidências de separação em grupos bem definidos, o que é consistente com uma estrutura contínua de variação agronômica.
+
+---
+
+## Sumário comparativo dos modelos
+
+Esta tabela reúne todos os modelos ajustados ao longo do documento, facilitando a comparação direta por `R²`, `R²` ajustado e AIC. O modelo com menor AIC aparece destacado em verde.
+
+```{r model-summary}
+modelos_resumo <- list(
+  "GY ~ PH_R8" = mod_gy_ph,
+  "GY ~ PH_R8 * BIO12" = mod_interaction,
+  "mean_GY ~ BIO1" = mod_temp_linear,
+  "mean_GY ~ BIO1 + BIO1^2" = mod_temp_quad,
+  "mean_GY ~ BIO1 + BIO12" = mod_env_mult,
+  "mean_GY ~ BIO1 * BIO12" = mod_env_interaction,
+  "mean_GY stepwise BIOs" = mod_env_step
+)
+
+tab_modelos <- imap_dfr(modelos_resumo, ~ glance(.x) %>% mutate(modelo = .y)) %>%
+  select(modelo, r.squared, adj.r.squared, AIC, BIC, sigma, nobs) %>%
+  arrange(AIC)
+
+tab_modelos %>%
+  mutate(across(where(is.numeric), ~ round(.x, 3))) %>%
+  kable(caption = "Resumo comparativo dos modelos principais") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover")) %>%
+  row_spec(1, bold = TRUE, background = "#d4edda") %>%
+  janela_tabela(altura = "360px")
+```
+
+```{r model-summary-plot, fig.cap="Comparação dos modelos por R² ajustado"}
+tab_modelos %>%
+  mutate(modelo = fct_reorder(modelo, adj.r.squared)) %>%
+  ggplot(aes(x = modelo, y = adj.r.squared, fill = adj.r.squared)) +
+  geom_col(alpha = 0.9) +
+  coord_flip() +
+  scale_fill_gradient(low = "#c6dbef", high = "#2166ac", guide = "none") +
+  labs(
+    title = "Comparação dos modelos principais",
+    subtitle = "Ordenação visual pelo R² ajustado",
+    x = NULL,
+    y = "R² ajustado"
+  )
+```
+
+---
+
+## Conclusões
+
+As relações mais relevantes identificadas devem satisfazer simultaneamente três critérios: significância estatística, tamanho de efeito interpretável e coerência biológica.
+
+**Entre traits:**
+
+- Avaliar se `GY ~ PH_R8`, `GY ~ NDM` e `PROT ~ OIL` emergem como relações significativas após renderização.
+- A relação negativa entre proteína e óleo, caso confirmada, reforça o *trade-off* clássico de composição do grão em soja.
+
+**Entre ambiente e traits:**
+
+- Verificar se temperatura e precipitação explicam parte da variação nas médias ambientais.
+- Usar o mapa de calor e a varredura geral para selecionar novas relações candidatas com boa combinação de `p_valor`, `R²` e coerência biológica.
+
+**Sobre os modelos:**
+
+- O modelo *stepwise* e a regressão Ridge são ferramentas exploratórias complementares para lidar com o grande número de variáveis bioclimáticas correlacionadas.
+- Caso o modelo quadrático para temperatura melhore o ajuste em relação ao linear, discutir a possível existência de uma faixa ótima de temperatura para a cultura.
+- Nos modelos com interação, verificar se BIO1 × BIO12 melhora a predição da produtividade média e se a relação altura–produtividade varia de forma consistente ao longo do gradiente hídrico.
+
+**Sobre os genótipos:**
+
+- A PCA permite identificar grupos de genótipos com perfis agronômicos semelhantes, servindo como base para análises de seleção ou agrupamento em etapas futuras.
