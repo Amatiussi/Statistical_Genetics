@@ -23,9 +23,6 @@ Diante desse cenário, o autor propõe como alternativa o uso da regra dos três
 
 Portanto, o artigo demonstra que a interpretação usual de $p=0,05$ como evidência é inadequada. A confiabilidade de um resultado significativo depende não apenas do p-valor, mas também do poder do teste e da proporção de hipóteses realmente verdadeiras entre as que são investigadas. Como consequência, defende-se maior rigor na interpretação dos resultados e a adoção de critérios mais exigentes/rigorosos, como $p≤0,001$, para reduzir a taxa de falsas descobertas e melhorar a robustez da evidência científica.
 
-
 # Referência
 
 COLQUHOUN, David. An investigation of the false discovery rate and the misinterpretation of p-values. Royal Society open science, v. 1, n. 3, 2014.
-
-
