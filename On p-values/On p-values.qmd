@@ -2,13 +2,13 @@
 format:
   revealjs:
     center: false
-    incremental: false # se for True: alguns elementos vão aparecendo um por vez
+    incremental: false   # se for True: alguns elementos vão aparecendo um por vez
     theme: [default, custom.scss]
     slide-number: c/t
     show-slide-number: all
     preview-links: true
-    embed-resources: true # Incorpora todos os recursos no próprio HTML, evitando dependências externas
-    self-contained-math: true # Embute a biblioteca de fórmulas no HTML para exibir matemática sem dependências externas
+    embed-resources: true   # Incorpora todos os recursos no próprio HTML, evitando dependências externas
+    self-contained-math: true   # Embute a biblioteca de fórmulas no HTML para exibir matemática sem dependências externas
     width: 1200
     height: 800
     auto-stretch: false
