@@ -1,0 +1,284 @@
+---
+title: "Normalidade dos resíduos: exemplo prático"
+subtitle: "Diagnóstico visual, teste de Shapiro-Wilk e transformação logarítmica"
+author: "Ana Matiussi, Paula Cardoso e Thiago Ludwig"
+date: last-modified
+date-format: DD/MM/YYYY
+format:
+  html:
+    toc: true
+    toc-location: left
+    code-links: repo
+    # code-tools: true
+    embed-resources: true  
+    fig-align: center
+    fig-width: 10
+    # code-fold: show
+    code-overflow: wrap
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+Este relatório apresenta um **exemplo didático** sobre a avaliação da **normalidade dos resíduos** em modelos lineares.
+
+A ideia central é mostrar que a normalidade não deve ser avaliada apenas nos dados brutos, mas principalmente nos **resíduos do modelo**. Para isso, foi usado dois conjuntos de dados disponíveis no R:
+
+-   `mtcars`: exemplo em que os resíduos apresentam comportamento aproximadamente normal;
+-   `airquality`: exemplo com assimetria, valores extremos e melhoria após transformação logarítmica.
+
+**O diagnóstico foi feito combinando:**
+
+-   Histograma dos resíduos;
+-   QQ-plot;
+-   Teste de Shapiro-Wilk;
+-   Interpretação estatística.
+
+## Ato 1 - Exemplo em que a normalidade funciona bem
+
+Neste primeiro exemplo, foi usado o banco de dados `mtcars` e ajustado um **modelo linear simples**, sendo:
+
+$$y_i = \beta_0 + \beta_1 x_i + \varepsilon_i \quad ,\quad \varepsilon_i = y_i - \widehat{y}_i$$
+
+O objetivo é explicar o consumo de combustível (`mpg`) a partir do peso do carro (`wt`). Como mpg mede milhas por galão, valores maiores indicam melhor eficiência. Então a tendência esperada é: quanto maior o peso, menor o mpg. 
+
+Portanto, temos o seguinte modelo:
+
+$$mpg_i = \beta_0 + \beta_1 wt_i + \varepsilon_i$$
+
+Após o ajuste, avaliamos se os resíduos apresentam comportamento aproximadamente normal.
+
+```{r}
+#| message: false
+#| warning: false
+
+# Ajustando o modelo
+modelo1 = lm(mpg ~ wt, data = mtcars)
+
+# Extrair os resíduos de um modelo ajustado 
+res1 = residuals(modelo1) 
+
+# Coeficientes da regressão linear (intercepto e inclinação)
+modelo1$coefficients
+
+# Detalhes estatísticos
+summary(modelo1) 
+```
+
+
+A cada aumento de uma unidade em wt, o consumo em mpg diminui, em média, cerca de 5.34 unidades.
+
+```{r}
+par(mfrow = c(1, 2), mar = c(4, 4, 3, 1))
+
+hist(res1,
+     breaks = 10,
+     main   = "Plot dos Resíduos",
+     xlab   = "Resíduos",
+     col    = "steelblue",
+     border = "white")
+
+qqnorm(res1, main = "QQ-plot", pch = 16, col = "steelblue")
+qqline(res1, col = "red", lwd = 2)
+```
+
+Neste modelo, os resíduos parecem aproximadamente normais. O histograma é razoavelmente simétrico, os pontos do QQ-plot ficam próximos da linha. 
+
+## Teste de Shapiro-Wilk
+
+O teste de Shapiro-Wilk avalia as seguintes hipóteses:
+
+$$H_0: \text{os resíduos seguem distribuição normal}$$
+
+$$H_1: \text{os resíduos não seguem distribuição normal}$$
+
+```{r}
+shapiro.test(res1)
+```
+
+Quando o p-valor do teste de Shapiro-Wilk não é pequeno e os pontos do QQ-plot estão próximos da linha de referência, não há forte evidência contra a normalidade dos resíduos. Logo, não rejeita a hipótese nula ($H_0$).
+
+Neste caso, o modelo `mpg ~ wt` é útil como exemplo de um diagnóstico visual relativamente adequado.
+
+
+## Ato 2 - Olhando os dados brutos de ozônio
+
+Agora será usado o banco `airquality`, que contém dados diários de qualidade do ar em Nova York em 1973. A variável de interesse é `Ozone`, que representa a concentração de ozônio em partes por bilhão (ppb).
+
+Aqui não tem modelo, estamos olhando a distribuição bruta da variável resposta (ozônio).
+
+```{r}
+# Entender os dados brutos
+dados_ozonio = na.omit(airquality$Ozone)
+
+par(mfrow = c(1, 2), mar = c(4, 4, 3, 1))
+
+hist(dados_ozonio,
+     breaks = 12,
+     main   = "Ozônio - distribuição bruta",
+     xlab   = "ppb",
+     col    = "#e05c5c",
+     border = "white")
+
+boxplot(dados_ozonio,
+        main = "Ozônio - boxplot",
+        col  = "steelblue",
+        ylab = "ppb")
+```
+
+O histograma apresenta assimetria positiva (ou à direita), ou seja, caracteriza-se por ter a cauda mais longa estendendo-se para o lado direito, onde estão os valores maiores. O boxplot indica a presença de valores altos. 
+
+Antes de remover ou transformar dados, é importante verificar se esses valores fazem sentido no contexto do problema.
+
+```{r}
+max(dados_ozonio) # 168 ppb
+
+which(dados_ozonio == max(dados_ozonio))  # posição 82
+
+airquality[airquality$Ozone == max(dados_ozonio) &
+             !is.na(airquality$Ozone), ]
+```
+
+**Resultado**: Dia 25/08/1973: 81°F, vento 3.4 mph, sol forte
+
+Em dia quente + sem vento + muito sol = acúmulo de ozônio. Portanto, o valor não é erro de medição, é um evento real.
+
+**O maior valor observado de ozônio não deve ser tratado automaticamente como erro**. Ele pode representar um evento ambiental real, associado a condições como temperatura elevada, baixa velocidade do vento e alta radiação solar. Esse ponto é importante porque, em **diagnóstico de modelos**, a primeira etapa não deve ser corrigir mecanicamente o problema, mas investigar sua causa.
+
+
+## Ato 3 - Modelo sem transformação
+
+Após a análise inicial da distribuição bruta da variável `Ozone`, foi ajustado um modelo linear para explicar a concentração de ozônio a partir de variáveis meteorológicas presentes no banco airquality. O modelo utilizado foi:
+
+$$ Ozone_i = \beta_0 + \beta_1 Solar.R_i + \beta_2 Wind_i + \beta_3 Temp_i + \varepsilon_i $$
+
+em que:
+
+-   `Solar.R`: radiação solar;
+-   `Wind`: velocidade do vento;
+-   `Temp`: temperatura.
+
+```{r}
+dados_air = na.omit(airquality[, c("Ozone", "Solar.R", "Wind", "Temp")])
+
+modelo2 = lm(Ozone ~ Solar.R + Wind + Temp, data = dados_air)
+res2 = residuals(modelo2)
+
+summary(modelo2)
+```
+
+Os resultados indicaram que as três variáveis explicativas foram estatisticamente significativas. A variável `Solar.R` apresentou coeficiente positivo, indicando que maiores valores de radiação solar tendem a estar associados ao aumento da concentração de ozônio. A variável `Temp` também apresentou coeficiente positivo, sugerindo que temperaturas mais altas estão associadas a maiores níveis de ozônio. Por outro lado, `Wind` apresentou coeficiente negativo, indicando que maiores velocidades do vento tendem a reduzir a concentração de ozônio, possivelmente pela dispersão dos poluentes.
+
+```{r}
+# Diagnóstico da normalidade dos resíduos
+par(mfrow = c(1, 2), mar = c(4, 4, 3, 1))
+
+hist(res2,
+     breaks = 12,
+     main   = "Resíduos — modelo sem transformação",
+     xlab   = "Resíduos",
+     col    = "#e05c5c",
+     border = "white")
+
+qqnorm(res2, main = "QQ-plot — modelo sem transformação",
+       pch = 16, col = "#e05c5c")
+qqline(res2, col = "red", lwd = 2)
+```
+
+No entanto, ao avaliar os resíduos, observou-se que a **suposição de normalidade não foi bem atendida**. O histograma dos resíduos apresentou assimetria, com presença de valores extremos positivos. Além disso, no QQ-plot, os pontos se afastaram da linha de referência principalmente na cauda superior, indicando que os resíduos não seguem bem uma distribuição normal.
+
+```{r}
+shapiro.test(res2)
+```
+
+O teste de Shapiro-Wilk confirmou essa evidência. Como o p-valor é muito menor que 0.05, rejeita-se a hipótese nula de normalidade dos resíduos.
+
+Assim, mesmo utilizando variáveis meteorológicas com interpretação física direta, o modelo sem transformação ainda apresentou resíduos com forte desvio da normalidade. Isso sugere que a escala original da variável `Ozone` pode não ser a mais adequada para um modelo linear com erros normalmente distribuídos.
+
+## Ato 4 - Transformação logarítmica da resposta
+
+Como a variável `Ozone` é positiva, assimétrica à direita e apresenta valores altos, foi ajustado um segundo modelo utilizando a transformação logarítmica da resposta. O modelo passou a ser:
+
+$$ log(Ozone_i) = \beta_0 + \beta_1 Solar.R_i + \beta_2 Wind_i + \beta_3 Temp_i + \varepsilon_i$$
+A transformação logarítmica tem como objetivo reduzir o peso relativo dos valores muito altos, sem removê-los do conjunto de dados. Assim, ela pode ajudar a **diminuir a assimetria da resposta** e melhorar o **comportamento dos resíduos**.
+
+```{r}
+modelo3 = lm(log(Ozone) ~ Solar.R + Wind + Temp, data = dados_air)
+res3 = residuals(modelo3)
+
+summary(modelo3)
+```
+
+No modelo com `log(Ozone)`, as variáveis `Solar.R`, `Wind` e `Temp` continuaram estatisticamente significativas. A radiação solar e a temperatura apresentaram efeitos positivos sobre o logaritmo da concentração de ozônio, enquanto a velocidade do vento apresentou efeito negativo.
+
+Além disso, o modelo com transformação apresentou $R^2$ maior que o valor observado no modelo sem transformação. Isso indica que aproximadamente 66,4% da variação em log(Ozone) foi explicada pelas variáveis meteorológicas consideradas.
+
+```{r}
+# Diagnóstico dos resíduos após transformação
+par(mfrow = c(1, 2), mar = c(4, 4, 3, 1))
+
+hist(res3,
+     breaks = 12,
+     main   = "Resíduos - modelo com log(Ozone)",
+     xlab   = "Resíduos",
+     col    = "#4caf7d",
+     border = "white")
+
+qqnorm(res3, main = "QQ-plot - modelo com log(Ozone)",
+       pch = 16, col = "#4caf7d")
+qqline(res3, col = "darkgreen", lwd = 2)
+```
+
+O diagnóstico dos resíduos também melhorou. O histograma dos resíduos ficou mais simétrico e concentrado ao redor de zero. No QQ-plot, os pontos ficaram muito mais próximos da linha de referência, indicando maior compatibilidade com a distribuição normal.
+
+```{r}
+shapiro.test(res3)
+```
+
+O teste de Shapiro-Wilk apresentou W = 0.97749 e p = 0.05726. Como o p-valor foi maior que 0.05, não rejeitamos a hipótese nula de normalidade dos resíduos ao nível de 5%.
+
+Portanto, a **transformação logarítmica melhorou substancialmente o comportamento dos resíduos**. Isso não significa que a normalidade foi “provada”, mas indica que, após a transformação, não há evidência estatística forte contra a suposição de normalidade.
+
+## Ato 5 - Comparação visual: modelo sem transformação vs modelo com transformação log
+
+A comparação visual entre os dois modelos mostra claramente o efeito da transformação logarítmica sobre os resíduos.
+
+```{r}
+par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
+
+hist(res2,
+     breaks = 12,
+     main   = "Antes — histograma",
+     xlab   = "Resíduos",
+     col    = "#e05c5c",
+     border = "white")
+
+hist(res3,
+     breaks = 12,
+     main   = "Depois (log) — histograma",
+     xlab   = "Resíduos",
+     col    = "#4caf7d",
+     border = "white")
+
+qqnorm(res2, main = "Antes — QQ-plot", pch = 16, col = "#e05c5c")
+qqline(res2, col = "red", lwd = 2)
+
+qqnorm(res3, main = "Depois (log) — QQ-plot", pch = 16, col = "#4caf7d")
+qqline(res3, col = "darkgreen", lwd = 2)
+```
+
+No **modelo sem transformação**, o histograma dos resíduos apresentou assimetria à direita e presença de valores extremos. O QQ-plot também mostrou afastamento dos pontos em relação à linha de referência, principalmente na cauda superior. Esse padrão indica que os resíduos do modelo original não se comportavam bem como uma distribuição normal.
+
+Após a **transformação logarítmica da variável** Ozone, o comportamento dos resíduos melhorou. O histograma ficou mais simétrico e mais concentrado em torno de zero. Além disso, o QQ-plot passou a apresentar pontos mais próximos da linha de referência, indicando melhor aproximação à normalidade.
+
+Dessa forma, a transformação logarítmica reduziu a assimetria e o impacto dos valores extremos, **tornando os resíduos mais compatíveis com a suposição de normalidade**. A comparação reforça que a decisão não deve ser baseada apenas no teste formal, mas também na avaliação visual dos resíduos e no sentido estatístico da transformação.
+
+
+## Conclusão
+
+Neste exemplo, a normalidade dos resíduos foi avaliada a partir de uma sequência de diagnóstico:
+
+$$ \text{Ajustar o modelo} \rightarrow \text{avaliar resíduos} \rightarrow \text{interpretar desvios} \rightarrow \text{decidir uma estratégia} $$
+
+Quando a normalidade não é atendida, o caminho mais adequado é investigar a causa do problema e, se necessário, considerar alternativas como transformações, modelos lineares generalizados, métodos robustos ou bootstrap.
