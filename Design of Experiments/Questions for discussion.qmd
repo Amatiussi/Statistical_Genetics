@@ -1,0 +1,82 @@
+---
+title: "Questions for discussion"
+author: "Ana Matiussi"
+format: pdf
+editor: visual
+---
+
+Book: [BAILEY, Rosemary A. Design of comparative experiments. Cambridge University Press, 2008.](https://doi.org/10.1017/CBO9780511611483)
+
+## Questions for discussion
+
+**1.1** A professional apple-grower has written to you, making an appointment to discuss an experiment which he is proposing to conduct in the coming growing season. Part of his letter reads:
+
+> There is a new type of chemical spray available, which is supposed to make the apple flowers more attractive to bees. Since bees are essential for setting the fruit, I want to investigate these chemicals. Two manufacturers are selling the new sprays, under the trade names Buzz!! and Attractabee.
+>
+> I propose dividing my orchard into three parts. I shall spray Attractabee onto one part, and Buzz!! onto the second part. The third part will be managed in the normal way, with none of these new sprays. I shall then see which part of the orchard does best.
+
+Make notes on what you should discuss with him—and why!—at your meeting.
+
+**1.2** Several studies have suggested that drinking red wine gives some protection against heart disease, but it is not known whether the effect is caused by the alcohol or by some other ingredient of red wine. To investigate this, medical scientists enrolled 40 volunteers into a trial lasting 28 days. For the first 14 days, half the volunteers drank two glasses of red wine per day, while the other half had two standard drinks of gin. For the remaining 14 days the drinks were reversed: those who had been drinking red wine changed to gin, while those who had been drinking gin changed to red wine. On days 14 and 28, the scientists took a blood sample from each volunteer and measured the amount of inflammatory substance in the blood.
+
+Identify the experimental units and observational units. How many are there of each?
+
+What is the plot structure?
+
+What are the treatments? What is the treatment structure?
+
+**1.3** Twelve people took part in a study to compare four formulations of lithium carbonate. Formulations A, B and C were pills, while formulation D had the lithium carbonate dissolved in solution. Pills A and B were similar, but with different excipients (this is the name for the inactive substance that holds the active chemical). Pill C contained something to delay the release of the lithium carbonate. The formulations contained different quantities of lithium carbonate, as follows, in milligrams per dose.
+
+|   | A | B | C | D |
+|---|---:|---:|---:|---:|
+|   | 300 | 250 | 450 | 300 |
+
+On one day, each person was given a dose of one formulation. Blood samples were taken two, three, five, six, nine and twelve hours later. The quantity of lithium in the sample, after scaling to a common dose, was recorded. One week later, the procedure was repeated, with each person receiving a different formulation from the previous one. Table 1.1 shows the data.
+
+| Person | Day | Drug | 2 | 3 | 5 | 6 | 9 | 12 |
+|---:|---:|:---:|---:|---:|---:|---:|---:|---:|
+| 1 | 1 | A | 0.667 | 0.467 | 0.333 | 0.300 | 0.233 | 0.200 |
+| 1 | 2 | B | 0.480 | 0.440 | 0.280 | 0.240 | 0.160 | 0.160 |
+| 2 | 1 | D | 0.700 | 0.500 | 0.333 | 0.333 | 0.267 | 0.267 |
+| 2 | 2 | C | 0.133 | 0.156 | 0.200 | 0.200 | 0.178 | 0.178 |
+| 3 | 1 | C | 0.156 | 0.200 | 0.178 | 0.200 | 0.156 | 0.156 |
+| 3 | 2 | A | 0.733 | 0.533 | 0.333 | 0.300 | 0.200 | 0.200 |
+| 4 | 1 | B | 0.680 | 0.520 | 0.360 | 0.360 | 0.280 | 0.280 |
+| 4 | 2 | C | 0.156 | 0.222 | 0.222 | 0.200 | 0.156 | 0.178 |
+| 5 | 1 | D | 0.733 | 0.600 | 0.400 | 0.433 | 0.367 | 0.333 |
+| 5 | 2 | A | 0.667 | 0.467 | 0.300 | 0.233 | 0.200 | 0.167 |
+| 6 | 1 | D | 0.600 | 0.467 | 0.300 | 0.387 | 0.267 | 0.233 |
+| 6 | 2 | B | 0.680 | 0.520 | 0.360 | 0.320 | 0.240 | 0.200 |
+| 7 | 1 | B | 0.800 | 0.600 | 0.360 | 0.440 | 0.320 | 0.320 |
+| 7 | 2 | A | 0.733 | 0.467 | 0.333 | 0.300 | 0.200 | 0.200 |
+| 8 | 1 | B | 0.800 | 0.680 | 0.360 | 0.440 | 0.360 | 0.320 |
+| 8 | 2 | D | 0.700 | 0.400 | 0.300 | 0.267 | 0.200 | 0.200 |
+| 9 | 1 | C | 0.111 | 0.156 | 0.156 | 0.133 | 0.133 | 0.111 |
+| 9 | 2 | D | 0.567 | 0.467 | 0.300 | 0.233 | 0.133 | 0.133 |
+| 10 | 1 | A | 0.700 | 0.533 | 0.433 | 0.400 | 0.367 | 0.333 |
+| 10 | 2 | D | 0.567 | 0.433 | 0.300 | 0.267 | 0.200 | 0.200 |
+| 11 | 1 | A | 0.667 | 0.433 | 0.367 | 0.367 | 0.300 | 0.233 |
+| 11 | 2 | C | 0.200 | 0.267 | 0.289 | 0.267 | 0.200 | 0.178 |
+| 12 | 1 | C | 0.133 | 0.156 | 0.200 | 0.200 | 0.222 | 0.244 |
+| 12 | 2 | B | 0.720 | 0.520 | 0.320 | 0.280 | 0.200 | 0.160 |
+
+What are the experimental units? What are the observational units? What are the treatments? How many are there of each?
+
+Comment on the data recording.
+
+**1.4** Two types of concrete mix are to be compared.
+
+| Ingredient | Type (a) | Type (b) |
+|---|---:|---:|
+| cement | 220 kg/m³ | 390 kg/m³ |
+| water | 172 kg/m³ | 210 kg/m³ |
+| aggregate | 1868 kg/m³ | 1839 kg/m³ |
+
+Each of five operators mixes two batches, one of each type, then casts three cylindrical samples from each batch. The samples are left to harden for 21 days. After 7 days, each operator randomly chooses one cylinder of each type and ascertains the breaking load of each by using a standard concrete-testing machine. After 14 days, one of the remaining two cylinders of each type is chosen at random, and measured in the same way. The final cylinder of each type is measured after 21 days.
+
+What are the treatments? How many are there? What is the treatment structure?
+
+Identify the experimental units and observational units. What is the plot structure?
+
+**1.5** Read the paper ‘The importance of experimental design in proteomic mass spectrometry experiments: some cautionary tales’ written by Jianhua Hu, Kevin R. Coombes, Jeffrey S. Morris and Keith A. Baggerly, which was published in the journal *Briefings in Functional Genomics and Proteomics* in 2005 (Volume 3, pages 322–331). How far do you think their recommendations apply to experiments in other areas of science?
+

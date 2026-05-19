@@ -1,0 +1,19 @@
+---
+title: "Why randomize agricultural experiments?"
+author: "Ana Matiussi"
+format:
+  pdf:
+    include-in-header:
+      text: |
+        \usepackage{indentfirst}
+        \setlength{\parindent}{1.25cm}
+        \setlength{\parskip}{0pt}
+editor: visual
+---
+
+...
+
+
+# Referência
+
+PIEPHO, H. P.; MOHRING, J.; WILLIAMS, E. R. Why randomize agricultural experiments?. Journal of Agronomy and Crop Science, v. 199, n. 5, p. 374-383, 2013.
