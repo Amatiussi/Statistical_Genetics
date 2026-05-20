@@ -1,37 +1,53 @@
 ---
-title: "Questions for discussion"
+title: "Atividade do livro"
 author: "Ana Matiussi"
 format: pdf
-editor: visual
 ---
 
 Book: [BAILEY, Rosemary A. Design of comparative experiments. Cambridge University Press, 2008.](https://doi.org/10.1017/CBO9780511611483)
 
 ## Questions for discussion
 
-**1.1** A professional apple-grower has written to you, making an appointment to discuss an experiment which he is proposing to conduct in the coming growing season. Part of his letter reads:
+**1.1 A professional apple-grower has written to you, making an appointment to discuss an experiment which he is proposing to conduct in the coming growing season. Part of his letter reads:**
 
-> There is a new type of chemical spray available, which is supposed to make the apple flowers more attractive to bees. Since bees are essential for setting the fruit, I want to investigate these chemicals. Two manufacturers are selling the new sprays, under the trade names Buzz!! and Attractabee.
+> **There is a new type of chemical spray available, which is supposed to make the apple flowers more attractive to bees. Since bees are essential for setting the fruit, I want to investigate these chemicals. Two manufacturers are selling the new sprays, under the trade names Buzz!! and Attractabee.**
 >
-> I propose dividing my orchard into three parts. I shall spray Attractabee onto one part, and Buzz!! onto the second part. The third part will be managed in the normal way, with none of these new sprays. I shall then see which part of the orchard does best.
+> **I propose dividing my orchard into three parts. I shall spray Attractabee onto one part, and Buzz!! onto the second part. The third part will be managed in the normal way, with none of these new sprays. I shall then see which part of the orchard does best.**
 
-Make notes on what you should discuss with him—and why!—at your meeting.
+**Make notes on what you should discuss with him—and why!—at your meeting.**
 
-**1.2** Several studies have suggested that drinking red wine gives some protection against heart disease, but it is not known whether the effect is caused by the alcohol or by some other ingredient of red wine. To investigate this, medical scientists enrolled 40 volunteers into a trial lasting 28 days. For the first 14 days, half the volunteers drank two glasses of red wine per day, while the other half had two standard drinks of gin. For the remaining 14 days the drinks were reversed: those who had been drinking red wine changed to gin, while those who had been drinking gin changed to red wine. On days 14 and 28, the scientists took a blood sample from each volunteer and measured the amount of inflammatory substance in the blood.
+**R:** O principal ponto a ser discutido com o produtor é a forma como o experimento será conduzido. Na proposta inicial, ele pretende dividir o pomar em três áreas e aplicar um tratamento diferente em cada uma. No entanto, essa ideia apresenta limitações, especialmente porque há apenas uma área por tratamento, ou seja, não há repetição. Dessa forma, qualquer diferença observada entre as áreas pode estar associada não apenas ao efeito dos pulverizadores, mas também a características próprias de cada parte do pomar.
 
-Identify the experimental units and observational units. How many are there of each?
+Por isso, seria necessário discutir a divisão do pomar em várias parcelas menores, de modo que os três tratamentos fossem aplicados em diferentes parcelas, com repetição. Caso exista variação espacial no pomar (como diferenças na fertilidade do solo, na exposição solar, na umidade ou no vigor das plantas), o ideal seria utilizar blocos. Dentro de cada bloco, os tratamentos e o controle deveriam ser distribuídos aleatoriamente entre as parcelas. Isso permitiria comparar os produtos em condições mais homogêneas e reduziria o risco de viés sistemático.
 
-What is the plot structure?
+Também seria importante discutir questões práticas do experimento em campo, como o tamanho das parcelas, a necessidade de bordaduras ou faixas de separação e a distância entre parcelas com tratamentos diferentes.
 
-What are the treatments? What is the treatment structure?
+Outro ponto é a aleatorização. Os tratamentos não devem ser alocados de acordo com a conveniência do produtor ou com a posição do terreno. A escolha de qual parcela receberá cada pulverizador ou o controle deve ser feita por sorteio, principalmente dentro de cada bloco, para evitar que características específicas do local sejam confundidas com o efeito dos tratamentos.
 
-**1.3** Twelve people took part in a study to compare four formulations of lithium carbonate. Formulations A, B and C were pills, while formulation D had the lithium carbonate dissolved in solution. Pills A and B were similar, but with different excipients (this is the name for the inactive substance that holds the active chemical). Pill C contained something to delay the release of the lithium carbonate. The formulations contained different quantities of lithium carbonate, as follows, in milligrams per dose.
+Por fim, seria necessário discutir o plano de coleta de dados. Os dados devem ser registrados por parcela, árvore ou ramo, conforme a unidade observacional definida e não apenas como uma média final de cada parte do pomar. Também seria importante registrar informações auxiliares, como datas de floração, condições climáticas, datas de aplicação dos produtos, intensidade da florada, localização das parcelas e eventuais problemas ocorridos durante a condução do experimento.
+
+
+**1.2 Several studies have suggested that drinking red wine gives some protection against heart disease, but it is not known whether the effect is caused by the alcohol or by some other ingredient of red wine. To investigate this, medical scientists enrolled 40 volunteers into a trial lasting 28 days. For the first 14 days, half the volunteers drank two glasses of red wine per day, while the other half had two standard drinks of gin. For the remaining 14 days the drinks were reversed: those who had been drinking red wine changed to gin, while those who had been drinking gin changed to red wine. On days 14 and 28, the scientists took a blood sample from each volunteer and measured the amount of inflammatory substance in the blood.**
+
+**Identify the experimental units and observational units. How many are there of each?**
+
+**R:** As unidades experimentais são as combinações entre voluntário e o período (14 dias). Cada voluntário recebe uma bebida em cada período: vinho tinto ou gim. Como há 40 voluntários e 2 períodos, então são 40 x 2 = 80 unidades experimentais. As unidades observacionais são as amostras de sangue coletadas ao final de cada período (14 e 28 dias). Como há uma amostra por voluntário em cada período, também são 40 x 2 = 80 unidades observacionais.
+
+**What is the plot structure?**
+
+**R:** A estrutura das parcelas envolve dois fatores de controle: os voluntários e os períodos. Cada voluntário funciona como um bloco, pois cada pessoa recebe os dois tratamentos em momentos diferentes. Além disso, há o efeito de período, porque as medidas feitas no dia 14 podem diferir das medidas feitas no dia 28, independentemente da bebida. Nesse caso, se trata de um delineamento cruzado (capítulo “7.3 Cross-over trials”).
+
+**What are the treatments? What is the treatment structure?**
+
+**R:** Os tratamentos são vinho tinto e o gim, totalizando dois tratamentos sem estrutura fatorial, em que o objetivo é estimar o efeito do tipo de bebida sobre a concentração de substância inflamatória no sangue.
+
+**1.3 Twelve people took part in a study to compare four formulations of lithium carbonate. Formulations A, B and C were pills, while formulation D had the lithium carbonate dissolved in solution. Pills A and B were similar, but with different excipients (this is the name for the inactive substance that holds the active chemical). Pill C contained something to delay the release of the lithium carbonate. The formulations contained different quantities of lithium carbonate, as follows, in milligrams per dose.**
 
 |   | A | B | C | D |
 |---|---:|---:|---:|---:|
 |   | 300 | 250 | 450 | 300 |
 
-On one day, each person was given a dose of one formulation. Blood samples were taken two, three, five, six, nine and twelve hours later. The quantity of lithium in the sample, after scaling to a common dose, was recorded. One week later, the procedure was repeated, with each person receiving a different formulation from the previous one. Table 1.1 shows the data.
+**On one day, each person was given a dose of one formulation. Blood samples were taken two, three, five, six, nine and twelve hours later. The quantity of lithium in the sample, after scaling to a common dose, was recorded. One week later, the procedure was repeated, with each person receiving a different formulation from the previous one. Table 1.1 shows the data.**
 
 | Person | Day | Drug | 2 | 3 | 5 | 6 | 9 | 12 |
 |---:|---:|:---:|---:|---:|---:|---:|---:|---:|
@@ -60,11 +76,15 @@ On one day, each person was given a dose of one formulation. Blood samples were 
 | 12 | 1 | C | 0.133 | 0.156 | 0.200 | 0.200 | 0.222 | 0.244 |
 | 12 | 2 | B | 0.720 | 0.520 | 0.320 | 0.280 | 0.200 | 0.160 |
 
-What are the experimental units? What are the observational units? What are the treatments? How many are there of each?
+**What are the experimental units? What are the observational units? What are the treatments? How many are there of each?**
 
-Comment on the data recording.
+**R:** As unidades experimentais são as combinações entre pessoa e dia de administração da formulação. Cada pessoa recebeu uma formulação em um dia e outra formulação uma semana depois. Como há 12 pessoas e 2 dias de administração, então existem: 12 × 2 = 24 unidades experimentais.
 
-**1.4** Two types of concrete mix are to be compared.
+As unidades observacionais são as amostras de sangue coletadas em diferentes tempos após a administração do medicamento. Para cada unidade experimental, foram feitas medidas em 6 tempos: 2, 3, 5, 6, 9 e 12 horas após a administração. Portanto, existem: 24 × 6 = 144 unidades observacionais.
+
+Os tratamentos são as quatro formulações de carbonato de lítio: A, B, C, D. Cada tratamento aparece em 6 unidades experimentais, pois cada formulação foi administrada a 6 combinações pessoa-dia.
+
+**1.4 Two types of concrete mix are to be compared.**
 
 | Ingredient | Type (a) | Type (b) |
 |---|---:|---:|
@@ -72,11 +92,29 @@ Comment on the data recording.
 | water | 172 kg/m³ | 210 kg/m³ |
 | aggregate | 1868 kg/m³ | 1839 kg/m³ |
 
-Each of five operators mixes two batches, one of each type, then casts three cylindrical samples from each batch. The samples are left to harden for 21 days. After 7 days, each operator randomly chooses one cylinder of each type and ascertains the breaking load of each by using a standard concrete-testing machine. After 14 days, one of the remaining two cylinders of each type is chosen at random, and measured in the same way. The final cylinder of each type is measured after 21 days.
+**Each of five operators mixes two batches, one of each type, then casts three cylindrical samples from each batch. The samples are left to harden for 21 days. After 7 days, each operator randomly chooses one cylinder of each type and ascertains the breaking load of each by using a standard concrete-testing machine. After 14 days, one of the remaining two cylinders of each type is chosen at random, and measured in the same way. The final cylinder of each type is measured after 21 days.**
 
-What are the treatments? How many are there? What is the treatment structure?
+**What are the treatments? How many are there? What is the treatment structure?**
 
-Identify the experimental units and observational units. What is the plot structure?
+**R:** Os tratamentos podem ser interpretados como as combinações entre tipo de mistura de concreto e idade de rompimento. Há dois tipos de mistura, tipo (a) e tipo (b), e três idades de avaliação: 7, 14 e 21 dias. Logo, temos: 2 × 3 = 6 tratamentos.
 
-**1.5** Read the paper ‘The importance of experimental design in proteomic mass spectrometry experiments: some cautionary tales’ written by Jianhua Hu, Kevin R. Coombes, Jeffrey S. Morris and Keith A. Baggerly, which was published in the journal *Briefings in Functional Genomics and Proteomics* in 2005 (Volume 3, pages 322–331). How far do you think their recommendations apply to experiments in other areas of science?
+A estrutura dos tratamentos é do tipo fatorial, com dois fatores: tipo de concreto (2 níveis, qualitativo) e tempo de cura (3 níveis, quantitativo). Os dois fatores são aplicados em níveis hierárquicos diferentes, o que caracteriza um delineamento em parcelas subdivididas (split-plot).
+
+**Identify the experimental units and observational units. What is the plot structure?**
+
+**R:** As unidades observacionais são os cilindros, pois a carga de ruptura é medida em cada cilindro. Portanto, há 10 x 3 = 30 unidades observacionais.
+
+No caso das unidades experimentais, o tipo de concreto é aplicado ao lote preparado por cada operador. Cada operador prepara dois lotes, um de cada tipo. Como há cinco operadores, então existem: 5 × 2 = 10 unidades experimentais.
+
+A estrutura das parcelas é hierárquica ou aninhada. Os operadores funcionam como blocos, porque cada operador prepara os dois tipos de concreto. Isso permite comparar os tipos de concreto dentro de cada operador, reduzindo a variação devida às diferenças entre operadores.
+
+
+**1.5 Read the paper ‘The importance of experimental design in proteomic mass spectrometry experiments: some cautionary tales’ written by Jianhua Hu, Kevin R. Coombes, Jeffrey S. Morris and Keith A. Baggerly, which was published in the journal *Briefings in Functional Genomics and Proteomics* in 2005 (Volume 3, pages 322–331). How far do you think their recommendations apply to experiments in other areas of science?**
+
+
+**R:** As recomendações dos autores se aplicam a outros experimentos em outras áreas da ciência, não apenas à proteômica. Embora o artigo trate de uma área específica, os problemas discutidos (como falta de aleatorização, ausência de replicação adequada, confundimento entre efeitos técnicos e efeitos biológicos, mudanças de protocolo e falhas de calibração) são comuns a muitos tipos de experimentos. Nesse contexto, o artigo mostra que dados obtidos com tecnologias caras e sofisticadas podem ter pouco valor se o delineamento experimental e a análise não forem planejados com cuidado. Os próprios autores destacam que problemas de delineamento podem corromper os dados e que muitos vieses poderiam ser evitados antes da execução do experimento.
+
+Em geral, um experimento mal planejado pode gerar resultados aparentemente convincentes, mas que na verdade refletem efeitos externos, como lote, data de processamento, operador, equipamento ou método de coleta. Por isso, é importante planejar o delineamento antes da coleta dos dados, definir claramente as unidades experimentais e observacionais, randomizar a ordem de execução, usar repetição, controlar fontes conhecidas de variação e registrar corretamente os dados. 
+
+Portanto, as recomendações dos autores têm aplicação bastante ampla, pois reforçam princípios básicos do delineamento experimental. Embora os cuidados e detalhes técnicos possam variar conforme a área de estudo, a origem dos problemas costuma ser semelhante: falhas no planejamento, ausência de controle adequado e possíveis fontes de viés. Assim, seguir esses princípios ajuda a tornar o experimento mais confiável e aumenta a segurança das conclusões obtidas. 
 

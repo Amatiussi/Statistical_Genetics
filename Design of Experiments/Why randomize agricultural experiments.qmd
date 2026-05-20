@@ -1,5 +1,5 @@
 ---
-title: "Why randomize agricultural experiments?"
+title: "Resumo"
 author: "Ana Matiussi"
 format:
   pdf:
@@ -11,7 +11,15 @@ format:
 editor: visual
 ---
 
-...
+No artigo [“Why Randomize Agricultural Experiments?”](https://doi.org/10.1111/jac.12026), os autores discutem o papel da aleatorização em experimentos agrícolas, com foco em ensaios de campo sujeitos à heterogeneidade espacial. O artigo parte da ideia de que a aleatorização não é apenas uma formalidade estatística, mas também uma condição para que as inferências obtidas a partir de um experimento sejam válidas e possam ser generalizadas a situações semelhantes. Para isso, o delineamento precisa evitar que os efeitos do tratamento sejam confundidos com variações ambientais não controladas.
+
+Os autores mostram que, em experimentos de campo, diferenças no solo, na disponibilidade de água, no relevo, na fertilidade e em outros fatores espaciais podem criar padrões sistemáticos ou irregulares de produtividade. Quando os tratamentos são distribuídos de forma sistemática, sem sorteio, esses padrões podem ser interpretados erroneamente como diferenças reais entre os tratamentos. Assim, um tratamento pode parecer superior apenas porque foi posicionado em uma região mais favorável do campo.
+
+Para demonstrar esse problema, o artigo apresenta exemplos hipotéticos de ensaios de variedades. Em um deles, todas as parcelas recebem a mesma variedade, mas os rótulos dos tratamentos são distribuídos aleatoriamente ou sistematicamente. Na alocação sistemática, a análise detecta diferenças significativas entre “tratamentos”, mesmo na ausência de diferenças reais entre eles. Esse resultado ocorre porque a tendência espacial do campo se alinha à disposição dos tratamentos. Com a aleatorização, esse tipo de confundimento é reduzido, pois os tratamentos deixam de seguir diretamente a estrutura espacial do terreno.
+
+Além dos exemplos hipotéticos, os autores analisam dados de um ensaio de uniformidade e conduzem um estudo de simulação. Esses resultados indicam que, quando há aleatorização adequada, a ANOVA clássica mantém melhor controle do erro do tipo I, mesmo na presença de variação espacial. O artigo também avalia análises espaciais, mostrando que esses modelos podem aumentar a precisão quando o experimento é bem delineado e o modelo é adequado. Porém, a análise espacial não corrige necessariamente um experimento sem aleatorização, pois os efeitos de tratamento e os efeitos espaciais podem permanecer confundidos.
+
+Em conclusão, o artigo afirma que experimentos agrícolas devem ser aleatorizados sempre que possível. Em situações com variação espacial conhecida ou suspeita, os autores defendem o uso combinado de blocagem e aleatorização: os blocos ajudam a controlar fontes conhecidas de variação, enquanto a aleatorização protege contra tendências desconhecidas. Dessa forma, o delineamento reduz vieses, melhora a validade dos testes estatísticos e torna as estimativas dos efeitos de tratamento mais confiáveis.
 
 
 # Referência
