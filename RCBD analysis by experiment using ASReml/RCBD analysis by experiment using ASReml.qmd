@@ -1,0 +1,787 @@
+---
+title: "RCBD analysis by experiment using ASReml"
+author: "Ana Matiussi, Paula Cardoso e Thiago Ludwig"
+date: last-modified
+format:
+  html:
+    toc: true
+    code-links: repo    # adicionar link do GitHub
+    toc-location: left
+    toc-depth: 5
+    fig-align: center
+    fig-width: 10
+    self-contained: true
+    embed-resources: true 
+    number-sections: true
+    theme: 
+      light: flatly
+      dark: darkly
+    code-overflow: wrap  # quebrar linhas de código 
+    code-tools: true
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{=html}
+<style>
+  p {
+    text-align: justify;
+    text-justify: inter-word;
+    text-indent: 1.25cm;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+</style>
+```
+
+
+# Introdução
+
+Neste relatório, foi realizada a análise de dados de ensaios conduzidos no Zimbabwe, considerando duas características agronômicas: produtividade de grãos (GY) e altura de planta no estádio R8 (PH_R8). Os dados foram analisados por meio de modelos mistos ajustados no pacote asreml, considerando a estrutura de delineamento em blocos casualizados em múltiplos ambientes.
+
+# Pacotes e preparação dos dados
+
+```{r}
+#| message: false
+#| warning: false
+#| output: false
+
+library(asreml); library(dplyr); library(tidyr); library(tibble); library(ggplot2)
+```
+
+```{r}
+# dados brutos
+dat = read.csv("https://raw.githubusercontent.com/mauricioaraujj/Pan_African_Trials_Network/refs/heads/main/data/data.csv", sep = ';')
+
+# dados filtrados (Zimbabwe)
+dat_zim = dat %>%
+  filter(COUNTRY == "Zimbabwe") %>%
+  mutate(
+    env = as.factor(env),
+    gen = as.factor(gen),
+    rep = as.factor(rep),
+    YEAR = as.factor(YEAR),
+    loc = as.factor(loc),
+    SEASON = as.factor(SEASON),
+    check = as.factor(check),
+    RAINFED = as.factor(RAINFED))
+
+# Características escolhidas
+traits = c("GY", "PH_R8")
+
+# Conferência inicial
+summary = summary(dat_zim[, c("env", "gen", "rep", "GY", "PH_R8")])
+knitr::kable(summary)
+
+# Número de ambientes
+ne = n_distinct(dat_zim$env)
+
+# Número harmônico de repetições (gen dentro de ambiente)
+rep_harm = dat_zim %>%
+  drop_na(GY) %>%
+  count(env, gen) %>%
+  summarise(h = n_distinct(gen) / sum(1 / n)) %>%
+  pull(h)
+```
+
+# Exploração dos dados
+## Número de genótipos e blocos por ensaio
+```{r}
+tab_structure = dat_zim %>%
+  group_by(YEAR, env, loc, RAINFED) %>%
+  summarise(
+    n_obs = n(),
+    n_gen = n_distinct(gen),
+    n_rep = n_distinct(rep),
+    .groups = "drop"
+  ) %>%
+  arrange(YEAR, env)
+
+knitr::kable(
+  tab_structure |> slice(1:10)) # 10 primeiras linhas
+```
+
+## Resumo das duas características por ensaio
+```{r}
+trait_summary = dat_zim %>%
+  pivot_longer(
+    cols = all_of(traits),
+    names_to = "trait",
+    values_to = "value"
+  ) %>%
+  group_by(trait, YEAR, env, loc, RAINFED) %>%
+  summarise(
+    n = sum(!is.na(value)),
+    mean = mean(value, na.rm = TRUE),
+    sd = sd(value, na.rm = TRUE),
+    min = min(value, na.rm = TRUE),
+    max = max(value, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(trait, YEAR, env)
+
+knitr::kable(
+  trait_summary |> slice(1:10)) # 10 primeiras linhas
+```
+
+A exploração inicial dos dados mostrou que os ensaios apresentam estrutura multiambiente, com diferentes combinações de ano, local e ambiente. Para os primeiros ensaios apresentados, observou-se uma estrutura balanceada, com 30 genótipos e 3 repetições por ambiente. No entanto, considerando todo o conjunto de dados, há diferenças no número de observações entre ensaios, principalmente em função de valores ausentes em algumas características.
+
+As duas características avaliadas apresentaram ampla variação fenotípica. Para produtividade de grãos, as médias observadas variaram bastante entre os ambientes, indicando forte influência das condições ambientais sobre o desempenho produtivo. Essa variação é esperada para uma característica quantitativa complexa, altamente influenciada por fatores ambientais (como local, ano, disponibilidade hídrica, fertilidade do solo, manejo, etc.).
+
+Para altura de planta, também houve variação entre ensaios. Entretanto, durante a exploração dos dados, foram identificados ambientes com valores iguais a zero para PH_R8. Como altura de planta igual a zero não representa um valor biologicamente plausível, esses registros foram posteriormente tratados como dados ausentes antes do ajuste dos modelos para essa característica.
+
+# Gráficos exploratórios 
+```{r}
+# Dados longos
+dat_long = dat_zim %>%
+  pivot_longer(
+    cols = all_of(traits),
+    names_to = "trait",
+    values_to = "value")
+```
+
+## Boxplot por ensaio
+```{r}
+p_box_env = ggplot(dat_long, aes(x = env, y = value)) +
+  geom_boxplot() +
+  facet_wrap(~ trait, scales = "free_y") +
+  theme_gray() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(
+    x = "Ensaio",
+    y = "Valor observado",
+    title = "Distribuição das características por ensaio"); p_box_env
+```
+
+Os boxplots por ensaio indicaram variação expressiva na distribuição das duas características entre os ambientes. Para GY, observou-se grande amplitude de valores dentro e entre ensaios, com presença de valores extremos em alguns ambientes. Esse padrão reforça a ideia de considerar o efeito de ambiente no modelo.
+
+Para PH_R8, a distribuição também variou entre os ensaios, mas de forma menos intensa em comparação à produtividade de grãos. A presença inicial de valores iguais a zero em alguns ambientes reforçou a necessidade de inspeção e tratamento prévio dos dados antes da modelagem.
+
+## Boxplot por ano
+```{r}
+p_box_year = ggplot(dat_long, aes(x = YEAR, y = value)) +
+  geom_boxplot() +
+  facet_wrap(~ trait, scales = "free_y") +
+  theme_gray() +
+  labs(
+    x = "Ano",
+    y = "Valor observado",
+    title = "Distribuição das características por ano"); p_box_year
+```
+
+A distribuição das características por ano mostrou diferenças temporais no desempenho dos genótipos. Para GY, alguns anos apresentaram maiores medianas e maior dispersão, sugerindo influência das condições específicas de cada ano agrícola. Para PH_R8, as diferenças entre anos foram mais moderadas, indicando maior estabilidade relativa dessa característica.
+
+Esses resultados justificam o uso de modelos que considerem os ambientes de avaliação, pois as diferenças entre anos e locais podem alterar tanto as médias quanto a precisão experimental dos ensaios.
+
+## Médias observadas por ensaio
+```{r}
+# Médias observadas por ensaio
+p_mean_env = trait_summary %>%
+  ggplot(aes(x = env, y = mean)) +
+  geom_col() +
+  facet_wrap(~ trait, scales = "free_y") +
+  theme_gray() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(
+    x = "Ensaio",
+    y = "Média observada",
+    title = "Média observada por ensaio"); p_mean_env
+```
+
+As médias observadas por ensaio confirmaram a existência de diferenças entre ambientes. Para GY, alguns ensaios apresentaram médias muito superiores a outros, evidenciando forte variação ambiental. Para PH_R8, as médias também variaram entre ensaios, mas com menor amplitude relativa.
+
+Essa variação entre ambientes reforça a decisão de incluir o ambiente como efeito fixo no modelo, corrigindo as diferenças médias entre os ensaios antes da predição dos efeitos genotípicos.
+
+# Ajuste dos modelos para ambas as características
+
+## Modelo para produtividade de grãos (GY)
+
+### Ajuste do modelo misto
+```{r}
+#| message: false
+#| warning: false
+#| output: false
+
+# Modelo com resíduo homogêneo
+modGY_hom = asreml(fixed = GY ~ env,
+          random = ~ gen + gen:env + env:rep, 
+          residual = ~ id(units), data = dat_zim,
+          na.action = na.method(x = "include", y = "include"))
+
+# Modelo com resíduo heterogêneo
+modGY_het = asreml(fixed = GY ~ env,
+          random = ~ gen + gen:env + env:rep, 
+          residual = ~ dsum(~ id(units) | env), data = dat_zim,
+          na.action = na.method(x = "include", y = "include"))
+```
+
+Para produtividade de grãos, foram ajustados dois modelos mistos. O primeiro modelo considerou variância residual homogênea entre os ambientes, assumindo uma única variância residual para todos os ensaios. O segundo modelo considerou variância residual heterogênea por ambiente, permitindo que cada ensaio apresentasse sua própria variância residual.
+
+Em ambos os modelos, o efeito de ambiente foi incluído como fixo, enquanto os efeitos de genótipo, interação genótipo × ambiente e blocos dentro de ambiente foram incluídos como aleatórios. Essa estrutura permite avaliar a variabilidade genética entre os genótipos, a presença de interação GxE e a contribuição dos blocos para o controle da variação experimental.
+
+### Estimativas dos componentes de variância
+```{r}
+# Componentes – modelo homogêneo
+vcGY_hom = summary(modGY_hom)$varcomp  # assume uma única variância residual para todos os ambientes
+
+knitr::kable(vcGY_hom)
+
+# Componentes – modelo heterogêneo
+vcGY_het = summary(modGY_het)$varcomp # assume variância residual diferente para cada ambiente
+
+knitr::kable(
+  vcGY_het |> slice(1:10)) # 10 primeiras linhas
+```
+
+A redução das estimativas de variância genotípica e da interação GxE no modelo heterogêneo indica que parte da variação capturada pelo modelo homogêneo estava associada à heterogeneidade residual entre os ambientes. Assim, o modelo heterogêneo fornece uma decomposição mais adequada da variabilidade observada.
+
+Além disso, em ambos os modelos, a variância da interação GxE foi superior à variância genotípica. Esse resultado indica que o desempenho relativo dos genótipos variou entre os ambientes, o que pode causar alterações no ranking dos candidatos à seleção.
+
+### Herdabilidade e CVe
+
+#### Modelo homogêneo 
+```{r}
+# média geral 
+mu_GY = coef(modGY_hom)$fixed[1]   
+
+# Extrair os três componentes
+Vg_hom = vcGY_hom["gen", "component"]
+Vge_hom = vcGY_hom["gen:env", "component"]
+Ve_hom = vcGY_hom["units!R", "component"]
+
+# Herdabilidade em sentido amplo
+H2_GY_hom = Vg_hom / (Vg_hom + Vge_hom / ne + Ve_hom / (ne * rep_harm)); H2_GY_hom
+
+# Coeficiente de variação
+CVe_GY_hom = sqrt(Ve_hom) / mu_GY * 100; CVe_GY_hom
+```
+
+#### Modelo heterogêneo 
+```{r}
+# Extrair os três componentes
+Vg_het = vcGY_het["gen", "component"]
+Vge_het = vcGY_het["gen:env", "component"]
+
+# Variância residual média (aritmética simples dos valores por ambiente)
+var_res_het = vcGY_het[grepl("!R", rownames(vcGY_het)), "component"]
+Ve_het_mean = mean(var_res_het)
+
+# Herdabilidade em sentido amplo
+H2_GY_het = Vg_het / (Vg_het + Vge_het / ne + Ve_het_mean / (ne * rep_harm)); H2_GY_het
+
+# Coeficiente de variação
+CVe_GY_het = sqrt(Ve_het_mean) / mu_GY * 100; CVe_GY_het
+```
+
+No modelo homogêneo, a herdabilidade em sentido amplo para GY foi estimada em 0,7590, enquanto no modelo heterogêneo foi de 0,7288. Esses valores indicam que existe variabilidade genética para produtividade de grãos e que a seleção de genótipos superiores é possível.
+
+A pequena redução da herdabilidade no modelo heterogêneo sugere que, ao considerar diferentes variâncias residuais entre ambientes, a proporção da variação atribuída ao componente genético foi levemente menor. Ainda assim, a herdabilidade permaneceu em magnitude elevada.
+
+O coeficiente de variação experimental foi alto para GY, sendo 60,67% no modelo homogêneo e 61,86% no modelo heterogêneo. Esses valores indicam elevada variação residual em relação à média da característica. Esse resultado é coerente com a natureza da produtividade de grãos, que é uma característica altamente influenciada pelas condições ambientais.
+
+### Testes de hipóteses
+
+#### Significância do efeito genético (σ²_g = 0) para cada modelo
+```{r}
+#| message: false
+#| warning: false
+#| output: false
+
+# Modelo homogêneo
+modGY_hom_red = asreml(
+  fixed = GY ~ env,
+  random = ~ env:rep,      # remove gen e gen:env
+  residual = ~ id(units),
+  data = dat_zim,
+  na.action = na.method(x = "include", y = "include"))
+```
+
+```{r}
+# LRT
+LRT_gen_hom = -2 * (modGY_hom_red$loglik - modGY_hom$loglik); LRT_gen_hom
+
+#p-value
+p_gen_hom = 0.5 * pchisq(LRT_gen_hom, df = 2, lower.tail = FALSE); p_gen_hom
+```
+
+```{r}
+#| message: false
+#| warning: false
+#| output: false
+
+# Modelo heterogêneo
+modGY_het_red = asreml(
+  fixed = GY ~ env,
+  random = ~ env:rep,
+  residual = ~ dsum(~ id(units) | env),
+  data = dat_zim,
+  na.action = na.method(x = "include", y = "include"))
+```
+
+```{r}
+# LRT
+LRT_gen_het = -2 * (modGY_het_red$loglik - modGY_het$loglik); LRT_gen_het
+
+#p-value
+p_gen_het = 0.5 * pchisq(LRT_gen_het, df = 2, lower.tail = FALSE); p_gen_het
+```
+
+#### Comparação entre os dois modelos (resíduo homogêneo vs. heterogêneo)
+```{r}
+LRT_res = -2 * (modGY_hom$loglik - modGY_het$loglik); LRT_res
+p_res = pchisq(LRT_res, df = ne - 1, lower.tail = FALSE); p_res
+```
+
+O teste de razão de verossimilhança indicou efeito genético significativo para produtividade de grãos nos dois modelos. No modelo homogêneo, o LRT foi de 867,86, com p-valor extremamente baixo. No modelo heterogêneo, o LRT foi de 748,94, também com p-valor extremamente baixo.
+
+Esses resultados indicam que existe variabilidade genética significativa entre os genótipos avaliados para GY. Portanto, há base genética para seleção de candidatos superiores para produtividade de grãos.
+
+A comparação entre os modelos residual homogêneo e heterogêneo também foi significativa. O LRT foi de 822,21, com p-valor muito baixo, indicando que a estrutura com variância residual heterogênea por ambiente ajustou melhor os dados. Assim, o modelo heterogêneo foi considerado mais adequado para as interpretações principais de GY.
+
+### BLUPs e confiabilidade
+
+```{r}
+#| message: false
+#| warning: false
+#| output: false
+
+# BLUPs – modelo homogêneo
+blupsGY_hom = predict(modGY_hom, classify = "gen:env")$pvals %>%
+  as_tibble() %>%
+  rename(BLUP = predicted.value, SE = std.error) %>%
+  mutate(
+    PEV = SE^2,
+    Confiabilidade = 1 - PEV / (Vg_hom + Vge_hom),
+    Ambiente = env,
+    Genotipo = gen
+  ) %>%
+  select(Ambiente, Genotipo, BLUP, SE, PEV, Confiabilidade)
+
+# BLUPs – modelo heterogêneo
+blupsGY_het = predict(modGY_het, classify = "gen:env")$pvals %>%
+  as_tibble() %>%
+  rename(BLUP = predicted.value, SE = std.error) %>%
+  mutate(
+    PEV = SE^2,
+    Confiabilidade = 1 - PEV / (Vg_het + Vge_het),
+    Ambiente = env,
+    Genotipo = gen
+  ) %>%
+  select(Ambiente, Genotipo, BLUP, SE, PEV, Confiabilidade)
+```
+
+```{r}
+knitr::kable(
+  blupsGY_hom |> slice(1:10)) # 10 primeiras linhas
+
+knitr::kable(
+  blupsGY_het |> slice(1:10)) # 10 primeiras linhas
+```
+
+Os BLUPs foram obtidos para a combinação GxE, permitindo avaliar o desempenho predito dos genótipos em cada ensaio. A confiabilidade variou entre genótipos e ambientes, mostrando que a precisão das predições não foi uniforme.
+
+No modelo heterogêneo, as confiabilidades foram influenciadas pelas diferenças de variância residual entre os ambientes. Ambientes com menor variância residual tendem a contribuir com maior precisão para a predição dos genótipos, enquanto ambientes com maior erro experimental tendem a gerar predições menos confiáveis.
+
+A variação na confiabilidade reforça a relevancia de considerar não apenas o valor do BLUP, mas também a precisão associada à predição. Genótipos com BLUP elevado e maior confiabilidade são candidatos mais seguros para seleção.
+
+
+### Candidatos à seleção
+
+#### Modelo Homogêneo
+```{r}
+# Top 10 geral (média dos BLUPs nos ambientes) 
+topGY_hom = blupsGY_hom %>%
+  group_by(Genotipo) %>%
+  summarise(BLUP_medio = mean(BLUP)) %>%
+  slice_max(BLUP_medio, n = 10)
+
+knitr::kable(topGY_hom) 
+
+# Top 5 por ambiente 
+topGY_hom_amb = blupsGY_hom %>%
+  group_by(Ambiente) %>%
+  slice_max(BLUP, n = 5) %>%
+  select(Ambiente, Genotipo, BLUP, Confiabilidade); topGY_hom_amb
+```
+
+#### Modelo Heterogêneo
+```{r}
+# Top 10 geral (média dos BLUPs nos ambientes) 
+topGY_het = blupsGY_het %>%
+  group_by(Genotipo) %>%
+  summarise(BLUP_medio = mean(BLUP)) %>%
+  slice_max(BLUP_medio, n = 10)
+
+knitr::kable(topGY_het) 
+
+# Top 5 por ambiente 
+topGY_het_amb = blupsGY_het %>%
+  group_by(Ambiente) %>%
+  slice_max(BLUP, n = 5) %>%
+  select(Ambiente, Genotipo, BLUP, Confiabilidade); topGY_het_amb
+```
+
+No modelo homogêneo, os dez genótipos com maiores BLUPs médios para produtividade de grãos foram G150, G107, G149, G076, G144, G130, G110, G068, G006 e G142. No modelo heterogêneo, os dez principais candidatos foram G150, G149, G107, G076, G144, G130, G077, G006, G068 e G145. O genótipo G150 apresentou o maior BLUP médio no modelo heterogêneo, com valor de 3312,40, seguido por G149, G107, G076, G144 e G130.
+
+A comparação entre os modelos mostrou que alguns genótipos foram consistentes entre as duas estruturas residuais, como G150, G149, G107, G076, G144, G130, G006 e G068. Essa consistência indica que esses materiais possuem desempenho superior mais estável em relação à escolha da estrutura residual.
+
+Por outro lado, alguns genótipos apareceram apenas em um dos rankings, como G077 e G145 no modelo heterogêneo. Isso mostra que a forma de modelar a variância residual pode alterar a classificação dos candidatos, especialmente quando há diferenças expressivas de precisão entre os ambientes.
+
+### Gráficos
+
+#### Modelo Homogêneo
+```{r}
+# Boxplot dos BLUPs por ambiente (modelo homogêneo)
+ggplot(blupsGY_hom, aes(x = Ambiente, y = BLUP)) +
+  geom_boxplot() +
+  theme_gray() +
+  labs(title = "GY – BLUPs por ambiente (modelo homogêneo)")
+
+# Confiabilidade versus BLUP médio
+blupsGY_hom %>%
+  group_by(Genotipo) %>%
+  summarise(BLUP_medio = mean(BLUP), Conf_media = mean(Confiabilidade)) %>%
+  mutate(rank = rank(-BLUP_medio)) %>%
+  ggplot(aes(x = rank, y = Conf_media)) +
+  geom_point() +
+  labs(title = "GY – Confiabilidade média ao longo do ranking")
+```
+
+#### Modelo Heterogêneo
+```{r}
+# Boxplot dos BLUPs por ambiente (modelo heterogêneo)
+ggplot(blupsGY_het, aes(x = Ambiente, y = BLUP)) +
+  geom_boxplot() +
+  theme_gray() +
+  labs(title = "GY – BLUPs por ambiente (modelo heterogêneo)")
+
+# Confiabilidade versus BLUP médio
+blupsGY_het %>%
+  group_by(Genotipo) %>%
+  summarise(BLUP_medio = mean(BLUP), Conf_media = mean(Confiabilidade)) %>%
+  mutate(rank = rank(-BLUP_medio)) %>%
+  ggplot(aes(x = rank, y = Conf_media)) +
+  geom_point() +
+  labs(title = "GY – Confiabilidade média ao longo do ranking")
+```
+
+Os gráficos dos BLUPs por ambiente mostraram diferenças claras entre os ensaios para produtividade de grãos. Em alguns ambientes, os valores preditos foram mais altos e mais dispersos, enquanto em outros os BLUPs ficaram concentrados em valores menores. Esse padrão é consistente com a presença de interação GxE.
+
+O gráfico de confiabilidade ao longo do ranking indicou que a precisão das predições não segue necessariamente a ordem dos maiores BLUPs. Ou seja, genótipos melhor classificados nem sempre apresentam as maiores confiabilidades. Por isso, a seleção deve considerar simultaneamente o desempenho predito e a confiabilidade associada.
+
+De modo geral, os gráficos reforçam que a produtividade de grãos apresenta forte influência ambiental e mudança no desempenho relativo dos genótipos entre ensaios. Assim, a seleção para GY deve considerar tanto o desempenho médio quanto a estabilidade e a confiabilidade dos candidatos.
+
+## Modelo para altura de planta (PH_R8)
+
+```{r}
+dat_PH = dat_zim %>%
+  mutate(PH_R8 = na_if(PH_R8, 0)) %>%
+  filter(!is.na(PH_R8)) %>%
+  droplevels()
+
+dat_PH_filt = dat_PH %>%
+  group_by(env) %>%
+  summarise(
+    n = n(),
+    var = var(PH_R8, na.rm = TRUE),
+    min = min(PH_R8, na.rm = TRUE),
+    max = max(PH_R8, na.rm = TRUE)
+  ) %>%
+  arrange(var)
+
+knitr::kable(
+  dat_PH_filt |> slice(1:10)) # 10 primeiras linhas
+```
+
+Antes do ajuste dos modelos para PH_R8, valores iguais a zero foram convertidos para dados ausentes. Essa decisão foi necessária porque altura de planta igual a zero não representa uma observação biologicamente plausível. Após esse tratamento, os modelos foram ajustados apenas com dados válidos, evitando problemas de estimação causados por ambientes com variância nula.
+
+### Ajuste do modelo misto
+```{r}
+#| message: false
+#| warning: false
+#| output: false
+
+# Modelo com resíduo homogêneo
+modPH_hom = asreml(fixed = PH_R8 ~ env,
+          random = ~ gen + gen:env + env:rep,
+          residual = ~ id(units),
+          data = dat_PH,
+          na.action = na.method(x = "include", y = "include"))
+
+# Modelo com resíduo heterogêneo
+modPH_het = asreml(fixed = PH_R8 ~ env,
+          random = ~ gen + gen:env + env:rep,
+          residual = ~ dsum(~ id(units) | env),
+          data = dat_PH,
+          na.action = na.method(x = "include", y = "include"))
+```
+
+Para altura de planta, também foram ajustados dois modelos mistos: um com variância residual homogênea entre ambientes e outro com variância residual heterogênea por ambiente.
+
+Assim como em GY, o efeito de ambiente foi considerado fixo, enquanto os efeitos de genótipo, interação GxE e blocos dentro de ambiente foram considerados aleatórios. Essa estrutura permite estimar a variabilidade genética da altura de planta, avaliar a presença de interação genótipo × ambiente e obter BLUPs dos genótipos em cada ensaio.
+
+### Estimativas dos componentes de variância
+```{r}
+# Componentes – modelo homogêneo
+vcPH_hom = summary(modPH_hom)$varcomp  # assume uma única variância residual para todos os ambientes
+
+knitr::kable(vcPH_hom) 
+
+# Componentes – modelo heterogêneo
+vcPH_het = summary(modPH_het)$varcomp # assume variância residual diferente para cada ambiente
+
+knitr::kable(
+  vcPH_het |> slice(1:10)) # 10 primeiras linhas
+```
+
+No modelo homogêneo, a variância genotípica foi estimada em 196,45, a variância da interação genótipo × ambiente em 53,28, a variância de blocos dentro de ambiente em 2,55 e a variância residual em 104,70.
+
+No modelo heterogêneo, a variância genotípica foi estimada em 206,06, a variância da interação genótipo × ambiente em 46,26 e a variância de blocos dentro de ambiente em 2,55. As variâncias residuais foram estimadas separadamente para cada ambiente.
+
+Diferentemente do observado para produtividade de grãos, em PH_R8 a variância genotípica foi maior que a variância da interação GxE. Isso sugere que a altura de planta apresentou maior estabilidade relativa entre ambientes e maior controle genético.
+
+A variância de blocos dentro de ambiente foi pequena em comparação aos demais componentes. Mesmo assim, sua inclusão no modelo é adequada, pois os blocos fazem parte da estrutura experimental e auxiliam no controle da variação local dentro dos ensaios.
+
+### Herdabilidade e CVe
+
+#### Modelo homogêneo 
+```{r}
+# média geral 
+mu_PH = coef(modPH_hom)$fixed[1]   
+
+# Extrair os três componentes
+Vg_ph_hom = vcPH_hom["gen", "component"]
+Vge_ph_hom = vcPH_hom["gen:env", "component"]
+Ve_ph_hom = vcPH_hom["units!R", "component"]
+
+# Herdabilidade em sentido amplo
+H2_PH_hom = Vg_ph_hom / (Vg_ph_hom + Vge_ph_hom / ne + Ve_ph_hom / (ne * rep_harm)); H2_PH_hom
+
+# Coeficiente de variação
+CVe_PH_hom = sqrt(Ve_ph_hom) / mu_PH * 100; CVe_PH_hom
+```
+
+#### Modelo heterogêneo
+```{r}
+# Extrair os três componentes
+Vg_ph_het = vcPH_het["gen", "component"]
+Vge_ph_het = vcPH_het["gen:env", "component"]
+
+# Variância residual média (aritmética simples dos valores por ambiente)
+var_res_ph_het = vcPH_het[grepl("!R", rownames(vcPH_het)), "component"]
+Ve_ph_het_mean = mean(var_res_ph_het)
+
+# Herdabilidade em sentido amplo
+H2_PH_het = Vg_ph_het / (Vg_ph_het + Vge_ph_het / ne + Ve_ph_het_mean / (ne * rep_harm)); H2_PH_het
+
+# Coeficiente de variação
+CVe_PH_het = sqrt(Ve_ph_het_mean) / mu_PH * 100; CVe_PH_het
+```
+
+A herdabilidade em sentido amplo para PH_R8 foi alta nos dois modelos. No modelo homogêneo, a herdabilidade foi de 0,9414, enquanto no modelo heterogêneo foi de 0,9432.
+
+Esses valores indicam forte controle genético da altura de planta e alta precisão esperada para a seleção de genótipos com maior valor predito. A semelhança entre as herdabilidades dos dois modelos mostra que a mudança na estrutura residual teve pouco efeito sobre a estimativa da herdabilidade para PH_R8.
+
+O coeficiente de variação experimental foi de 13,09% no modelo homogêneo e 13,29% no modelo heterogêneo. Esses valores são muito menores do que os observados para produtividade de grãos, indicando maior precisão experimental para altura de planta.
+
+Essa diferença entre GY e PH_R8 é esperada, pois produtividade de grãos é uma característica mais complexa e ambientalmente influenciada, enquanto altura de planta tende a apresentar maior controle genético e menor variação residual relativa.
+
+### Testes de hipóteses
+
+#### Significância do efeito genético (σ²_g = 0) para cada modelo
+```{r}
+#| message: false
+#| warning: false
+#| output: false
+
+# Modelo homogêneo
+modPH_hom_red = asreml(fixed = PH_R8 ~ env, 
+              random = ~ env:rep,
+              residual = ~ id(units), data = dat_PH,
+              na.action = na.method(x = "include", y = "include"))
+```
+
+```{r}
+# LRT
+LRT_PH_hom = -2 * (modPH_hom_red$loglik - modPH_hom$loglik); LRT_PH_hom
+
+#p-value
+p_PH_hom = 0.5 * pchisq(LRT_PH_hom, df = 2, lower.tail = FALSE); p_PH_hom
+```
+
+```{r}
+#| message: false
+#| warning: false
+#| output: false
+
+# Modelo heterogêneo
+modPH_het_red = asreml(fixed = PH_R8 ~ env, 
+              random = ~ env:rep,
+              residual = ~ dsum(~ id(units) | env), data = dat_PH,
+              na.action = na.method(x = "include", y = "include"))
+```
+
+```{r}
+# LRT
+LRT_PH_het = -2 * (modPH_het_red$loglik - modPH_het$loglik); LRT_PH_het
+
+#p-value
+p_PH_het = 0.5 * pchisq(LRT_PH_het, df = 2, lower.tail = FALSE); p_PH_het
+```
+
+#### Comparação entre os dois modelos (resíduo homogêneo vs. heterogêneo)
+```{r}
+LRT_PH_res = -2 * (modPH_hom$loglik - modPH_het$loglik); LRT_PH_res
+p_PH_res = pchisq(LRT_PH_res, df = ne - 1, lower.tail = FALSE); p_PH_res
+```
+
+O teste de razão de verossimilhança indicou efeito genético significativo para PH_R8 nos dois modelos. No modelo homogêneo, o LRT foi de 2537,26, com p-valor aproximado de zero. No modelo heterogêneo, o LRT foi de 2765,29, também com p-valor aproximado de zero.
+
+Esses resultados confirmam a presença de variabilidade genética significativa entre os genótipos para altura de planta. Portanto, há base genética para seleção dessa característica.
+
+A comparação entre os modelos residual homogêneo e heterogêneo também indicou diferença significativa entre as estruturas residuais. O LRT foi de 780,86, com p-valor muito baixo, indicando que a variância residual não foi constante entre os ambientes. Assim, o modelo heterogêneo foi considerado mais adequado para a interpretação principal de PH_R8.
+
+### BLUPs e confiabilidade
+
+```{r}
+#| message: false
+#| warning: false
+#| output: false
+
+# BLUPs – modelo homogêneo
+blupsPH_hom = predict(modPH_hom, classify = "gen:env")$pvals %>%
+  as_tibble() %>%
+  rename(BLUP = predicted.value, SE = std.error) %>%
+  mutate(
+    PEV = SE^2,
+    Confiabilidade = 1 - PEV / (Vg_ph_hom + Vge_ph_hom),
+    Ambiente = env, Genotipo = gen
+  ) %>%
+  select(Ambiente, Genotipo, BLUP, SE, PEV, Confiabilidade)
+
+# BLUPs – modelo heterogêneo
+blupsPH_het = predict(modPH_het, classify = "gen:env")$pvals %>%
+  as_tibble() %>%
+  rename(BLUP = predicted.value, SE = std.error) %>%
+  mutate(
+    PEV = SE^2,
+    Confiabilidade = 1 - PEV / (Vg_ph_het + Vge_ph_het),
+    Ambiente = env, Genotipo = gen
+  ) %>%
+  select(Ambiente, Genotipo, BLUP, SE, PEV, Confiabilidade)
+```
+
+```{r}
+knitr::kable(
+  blupsPH_hom |> slice(1:10)) # 10 primeiras linhas
+
+knitr::kable(
+  blupsPH_het |> slice(1:10)) # 10 primeiras linhas
+```
+
+Os BLUPs de PH_R8 apresentaram confiabilidades mais elevadas do que os observados para produtividade de grãos. No modelo heterogêneo, as primeiras predições apresentaram confiabilidade em torno de 0,75, e alguns genótipos nos rankings por ambiente apresentaram valores superiores a 0,90.
+
+Esse resultado indica maior precisão das predições para altura de planta em comparação à produtividade de grãos. Essa maior confiabilidade está relacionada à alta herdabilidade da característica e ao menor coeficiente de variação experimental.
+
+Assim, a seleção para PH_R8 tende a ser mais segura do que para GY, pois os valores preditos apresentam maior precisão e menor influência relativa do erro experimental.
+
+### Candidatos à seleção
+
+#### Modelo Homogêneo
+```{r}
+# Top 10 geral (média dos BLUPs nos ambientes) 
+topPH_hom = blupsPH_hom %>%
+  group_by(Genotipo) %>%
+  summarise(BLUP_medio = mean(BLUP)) %>%
+  slice_max(BLUP_medio, n = 10)
+
+knitr::kable(topPH_hom) 
+
+# Top 5 por ambiente 
+topPH_hom_amb = blupsPH_hom %>%
+  group_by(Ambiente) %>%
+  slice_max(BLUP, n = 5) %>%
+  select(Ambiente, Genotipo, BLUP, Confiabilidade); topPH_hom_amb
+```
+
+#### Modelo Heterogêneo
+```{r}
+# Top 10 geral (média dos BLUPs nos ambientes) 
+topPH_het = blupsPH_het %>%
+  group_by(Genotipo) %>%
+  summarise(BLUP_medio = mean(BLUP)) %>%
+  slice_max(BLUP_medio, n = 10)
+
+knitr::kable(topPH_het) 
+
+# Top 5 por ambiente 
+topPH_het_amb = blupsPH_het %>%
+  group_by(Ambiente) %>%
+  slice_max(BLUP, n = 5) %>%
+  select(Ambiente, Genotipo, BLUP, Confiabilidade); topPH_het_amb
+```
+
+No modelo homogêneo, os dez genótipos com maiores BLUPs médios para altura de planta foram G081, G082, G084, G145, G095, G121, G303, G146, G204 e G206. No modelo heterogêneo, os dez principais candidatos foram os mesmos: G081, G082, G084, G145, G095, G121, G303, G146, G204 e G206. O genótipo G081 apresentou o maior BLUP médio, com valor de 150,92, seguido por G082, com 148,96, e G084, com 135,92.
+
+A coincidência dos principais candidatos nos dois modelos indica que o ranking de PH_R8 foi bastante estável em relação à estrutura residual. Isso reforça que a altura de planta apresentou maior controle genético e menor sensibilidade às diferenças de precisão experimental entre ambientes.
+
+No entanto, a interpretação dos candidatos para PH_R8 depende do objetivo de seleção. Caso o interesse seja selecionar plantas mais altas, os genótipos G081, G082 e G084 são os mais promissores. Caso o objetivo seja selecionar plantas de menor porte ou porte intermediário, o critério de seleção deve ser ajustado.
+
+### Gráficos
+
+#### Modelo Homogêneo
+```{r}
+# Boxplot dos BLUPs por ambiente (modelo heterogêneo)
+ggplot(blupsPH_hom, aes(x = Ambiente, y = BLUP)) +
+  geom_boxplot() +
+  theme_gray() +
+  labs(title = "PH – BLUPs por ambiente (modelo homogêneo)")
+
+# Confiabilidade versus BLUP médio
+blupsPH_hom %>%
+  group_by(Genotipo) %>%
+  summarise(BLUP_medio = mean(BLUP), Conf_media = mean(Confiabilidade)) %>%
+  mutate(rank = rank(-BLUP_medio)) %>%
+  ggplot(aes(x = rank, y = Conf_media)) +
+  geom_point() +
+  labs(title = "PH – Confiabilidade média ao longo do ranking")
+```
+
+#### Modelo Heterogêneo
+```{r}
+# Boxplot dos BLUPs por ambiente (modelo heterogêneo)
+ggplot(blupsPH_het, aes(x = Ambiente, y = BLUP)) +
+  geom_boxplot() +
+  theme_gray() +
+  labs(title = "PH – BLUPs por ambiente (modelo heterogêneo)")
+
+# Confiabilidade versus BLUP médio
+blupsPH_het %>%
+  group_by(Genotipo) %>%
+  summarise(BLUP_medio = mean(BLUP), Conf_media = mean(Confiabilidade)) %>%
+  mutate(rank = rank(-BLUP_medio)) %>%
+  ggplot(aes(x = rank, y = Conf_media)) +
+  geom_point() +
+  labs(title = "PH – Confiabilidade média ao longo do ranking")
+```
+
+Os gráficos dos BLUPs por ambiente para PH_R8 mostraram menor variação relativa entre ambientes quando comparados aos gráficos de GY. Embora existam diferenças entre ensaios, os valores preditos de altura de planta foram mais consistentes.
+
+O gráfico de confiabilidade ao longo do ranking mostrou valores geralmente mais altos para PH_R8, reforçando a maior precisão das predições dessa característica. Esse comportamento está de acordo com a alta herdabilidade e o menor CVe estimados para altura de planta.
+
+De modo geral, os gráficos indicam que a seleção para PH_R8 é mais estável e direta do que para produtividade de grãos. A menor influência da interação genótipo × ambiente e a maior confiabilidade das predições tornam essa característica mais favorável à seleção baseada em BLUPs.
+
+# Conclusão 
+
+Comparando as duas características, observa-se que produtividade de grãos apresentou maior influência da interação genótipo × ambiente e maior variação residual relativa. No modelo heterogêneo, a variância da interação genótipo × ambiente para GY foi maior que a variância genotípica, indicando que o desempenho dos genótipos foi bastante dependente do ambiente.
+
+Para PH_R8, ocorreu o contrário, a variância genotípica foi maior que a variância da interação genótipo × ambiente. Isso indica que a altura de planta foi mais estável entre os ensaios e apresentou maior controle genético.
+
+A herdabilidade também foi maior para PH_R8. No modelo heterogêneo, a herdabilidade foi de 0,7288 para GY e 0,9432 para PH_R8. Além disso, o CVe foi muito maior para GY, com valor de 61,86%, enquanto para PH_R8 foi de 13,29%.
+
+Esses resultados mostram que a seleção para produtividade de grãos deve ser feita com maior cautela, considerando a estabilidade dos genótipos entre ambientes. Já a seleção para altura de planta tende a ser mais precisa, pois a característica apresentou maior herdabilidade, menor CVe e rankings mais estáveis entre os modelos.
+
+Portanto, os resultados indicam presença de variabilidade genética para ambas as características, permitindo a seleção de candidatos superiores. Entretanto, a estratégia de seleção deve considerar a natureza de cada característica: para GY, é importante avaliar desempenho médio, estabilidade e confiabilidade; para PH_R8, a seleção pode ser mais direta, desde que o objetivo de porte da planta esteja claramente definido.
+
