@@ -587,22 +587,52 @@ ggplot(blupsGY_hom, aes(x = Ambiente, y = BLUP, fill = Ambiente)) +
   labs(
     x = "Ambiente",
     y = "BLUP",
-    title = "BLUPs por ambiente (modelo homogêneo)")
+    title = "BLUPs por ambiente (modelo homogêneo) - GY")
 
-# Confiabilidade versus ranking do BLUP médio
-blupsGY_hom %>%
+# Ranking do BLUP médio - GY modelo homogêneo
+rankGY_hom = blupsGY_hom %>%
   group_by(Genotipo) %>%
-  summarise(BLUP_medio = mean(BLUP), Conf_media = mean(Confiabilidade)) %>%
-  mutate(rank = rank(-BLUP_medio)) %>%
-  ggplot(aes(x = rank, y = Conf_media)) +
+  summarise(
+    BLUP_medio = mean(BLUP, na.rm = TRUE),
+    Conf_media = mean(Confiabilidade, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(BLUP_medio)) %>%
+  mutate(rank = row_number())
+
+top10_GY_hom = rankGY_hom %>%
+  slice(1:10)
+
+# Gráfico
+ggplot(rankGY_hom, aes(x = rank, y = Conf_media)) +
   geom_point(color = "#2196F3", alpha = 0.7, size = 2) +
-  geom_smooth(method = "loess", se = TRUE, color = "#e53935", linewidth = 0.8) +
+  geom_point(
+    data = top10_GY_hom,
+    color = "black",
+    size = 2.4
+  ) +
+  geom_text(
+    data = top10_GY_hom,
+    aes(label = Genotipo),
+    nudge_x = 1.5,
+    hjust = 0,
+    size = 3,
+    check_overlap = TRUE
+  ) +
+  geom_smooth(
+    method = "loess",
+    se = TRUE,
+    color = "#e53935",
+    linewidth = 0.8
+  ) +
   theme_gray(base_size = 12) +
   theme(panel.grid.minor = element_blank()) +
   labs(
     x = "Posição no ranking (maior BLUP = rank 1)",
     y = "Confiabilidade média",
-    title = "Confiabilidade média ao longo do ranking (modelo homogêneo)")
+    title = "Confiabilidade média ao longo do ranking (modelo homogêneo) - GY",
+    subtitle = "Modelo homogêneo; rótulos indicam os 10 genótipos com maior BLUP médio"
+  )
 ```
 
 #### Modelo Heterogêneo
@@ -618,22 +648,49 @@ ggplot(blupsGY_het, aes(x = Ambiente, y = BLUP, fill = Ambiente)) +
   labs(
     x = "Ambiente",
     y = "BLUP",
-    title = "BLUPs por ambiente (modelo heterogêneo)")
+    title = "BLUPs por ambiente (modelo heterogêneo) - GY")
 
 # Confiabilidade versus ranking do BLUP médio
-blupsGY_het %>%
+rankGY_het = blupsGY_het %>%
   group_by(Genotipo) %>%
-  summarise(BLUP_medio = mean(BLUP), Conf_media = mean(Confiabilidade)) %>%
-  mutate(rank = rank(-BLUP_medio)) %>%
-  ggplot(aes(x = rank, y = Conf_media)) +
+  summarise(
+    BLUP_medio = mean(BLUP, na.rm = TRUE),
+    Conf_media = mean(Confiabilidade, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(BLUP_medio)) %>%
+  mutate(rank = row_number())
+
+top10_GY_rank = rankGY_het %>%
+  slice(1:10)
+
+ggplot(rankGY_het, aes(x = rank, y = Conf_media)) +
   geom_point(color = "#2196F3", alpha = 0.7, size = 2) +
-  geom_smooth(method = "loess", se = TRUE, color = "#e53935", linewidth = 0.8) +
+  geom_point(
+    data = top10_GY_rank,
+    color = "black",
+    size = 2.4
+  ) +
+  geom_text(
+    data = top10_GY_rank,
+    aes(label = Genotipo),
+    vjust = -0.8,
+    size = 3
+  ) +
+  geom_smooth(
+    method = "loess",
+    se = TRUE,
+    color = "#e53935",
+    linewidth = 0.8
+  ) +
   theme_gray(base_size = 12) +
   theme(panel.grid.minor = element_blank()) +
   labs(
     x = "Posição no ranking (maior BLUP = rank 1)",
     y = "Confiabilidade média",
-    title = "Confiabilidade média ao longo do ranking (modelo heterogêneo)")
+    title = "Confiabilidade média ao longo do ranking (modelo heterogêneo) - GY",
+    subtitle = "Rótulos indicam os 10 genótipos com maior BLUP médio"
+  )
 ```
 
 Os gráficos dos BLUPs por ambiente mostraram diferenças claras entre os ensaios para produtividade de grãos. Em alguns ambientes, os valores preditos foram mais altos e mais dispersos, enquanto em outros os BLUPs ficaram concentrados em valores menores. Esse padrão é consistente com a presença de interação GxE.
@@ -960,7 +1017,6 @@ DT::datatable(
 #### Modelo Heterogêneo
 ```{r}
 # Top 10 geral (média dos BLUPs nos ambientes) 
-# Top 10 geral (média dos BLUPs nos ambientes) 
 topPH_het = blupsPH_het %>%
   group_by(Genotipo) %>%
   summarise(BLUP_medio = mean(BLUP)) %>%
@@ -1008,22 +1064,53 @@ ggplot(blupsPH_hom, aes(x = Ambiente, y = BLUP, fill = Ambiente)) +
   labs(
     x = "Ambiente",
     y = "BLUP",
-    title = "BLUPs por ambiente (modelo homogêneo)")
+    title = "BLUPs por ambiente (modelo homogêneo) - PH_R8")
 
 # Confiabilidade versus ranking do BLUP médio
-blupsPH_hom %>%
+# Ranking do BLUP médio - PH_R8 modelo homogêneo
+rankPH_hom = blupsPH_hom %>%
   group_by(Genotipo) %>%
-  summarise(BLUP_medio = mean(BLUP), Conf_media = mean(Confiabilidade)) %>%
-  mutate(rank = rank(-BLUP_medio)) %>%
-  ggplot(aes(x = rank, y = Conf_media)) +
+  summarise(
+    BLUP_medio = mean(BLUP, na.rm = TRUE),
+    Conf_media = mean(Confiabilidade, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(BLUP_medio)) %>%
+  mutate(rank = row_number())
+
+top10_PH_hom = rankPH_hom %>%
+  slice(1:10)
+
+# Gráfico
+ggplot(rankPH_hom, aes(x = rank, y = Conf_media)) +
   geom_point(color = "#4CAF50", alpha = 0.7, size = 2) +
-  geom_smooth(method = "loess", se = TRUE, color = "#e53935", linewidth = 0.8) +
+  geom_point(
+    data = top10_PH_hom,
+    color = "black",
+    size = 2.4
+  ) +
+  geom_text(
+    data = top10_PH_hom,
+    aes(label = Genotipo),
+    nudge_x = 1.5,
+    hjust = 0,
+    size = 3,
+    check_overlap = TRUE
+  ) +
+  geom_smooth(
+    method = "loess",
+    se = TRUE,
+    color = "#e53935",
+    linewidth = 0.8
+  ) +
   theme_gray(base_size = 12) +
   theme(panel.grid.minor = element_blank()) +
   labs(
     x = "Posição no ranking (maior BLUP = rank 1)",
     y = "Confiabilidade média",
-    title = "Confiabilidade média ao longo do ranking (modelo homogêneo)")
+    title = "Confiabilidade média ao longo do ranking (modelo homogêneo) - PH_R8",
+    subtitle = "Modelo homogêneo; rótulos indicam os 10 genótipos com maior BLUP médio"
+  )
 ```
 
 #### Modelo Heterogêneo
@@ -1039,22 +1126,49 @@ ggplot(blupsPH_het, aes(x = Ambiente, y = BLUP, fill = Ambiente)) +
   labs(
     x = "Ambiente",
     y = "BLUP",
-    title = "BLUPs por ambiente (modelo heterogêneo)")
+    title = "BLUPs por ambiente (modelo heterogêneo) - PH_R8")
 
 # Confiabilidade versus ranking do BLUP médio
-blupsPH_het %>%
+rankPH_het = blupsPH_het %>%
   group_by(Genotipo) %>%
-  summarise(BLUP_medio = mean(BLUP), Conf_media = mean(Confiabilidade)) %>%
-  mutate(rank = rank(-BLUP_medio)) %>%
-  ggplot(aes(x = rank, y = Conf_media)) +
-  geom_point(color = "#4CAF50", alpha = 0.7, size = 2) +
-  geom_smooth(method = "loess", se = TRUE, color = "#e53935", linewidth = 0.8) +
+  summarise(
+    BLUP_medio = mean(BLUP, na.rm = TRUE),
+    Conf_media = mean(Confiabilidade, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(BLUP_medio)) %>%
+  mutate(rank = row_number())
+
+top10_PH_rank = rankPH_het %>%
+  slice(1:10)
+
+ggplot(rankPH_het, aes(x = rank, y = Conf_media)) +
+  geom_point(color = "#2196F3", alpha = 0.7, size = 2) +
+  geom_point(
+    data = top10_PH_rank,
+    color = "black",
+    size = 2.4
+  ) +
+  geom_text(
+    data = top10_PH_rank,
+    aes(label = Genotipo),
+    vjust = -0.8,
+    size = 3
+  ) +
+  geom_smooth(
+    method = "loess",
+    se = TRUE,
+    color = "#e53935",
+    linewidth = 0.8
+  ) +
   theme_gray(base_size = 12) +
   theme(panel.grid.minor = element_blank()) +
   labs(
     x = "Posição no ranking (maior BLUP = rank 1)",
     y = "Confiabilidade média",
-    title = "Confiabilidade média ao longo do ranking (modelo heterogêneo)")
+    title = "Confiabilidade média ao longo do ranking (modelo heterogêneo) - PH_R8",
+    subtitle = "Rótulos indicam os 10 genótipos com maior BLUP médio"
+  )
 ```
 
 Os gráficos dos BLUPs por ambiente para PH_R8 mostraram menor variação relativa entre ambientes quando comparados aos gráficos de GY. Embora existam diferenças entre ensaios, os valores preditos de altura de planta foram mais consistentes.
