@@ -39,7 +39,7 @@ execute:
 
 # Introdução
 
-Neste relatório, foi realizada a análise de dados de ensaios conduzidos no Zimbabwe, considerando duas características agronômicas: produtividade de grãos (GY) e altura de planta no estádio R8 (PH_R8). Os dados foram analisados por meio de modelos mistos ajustados no pacote asreml, considerando a estrutura de delineamento em blocos casualizados em múltiplos ambientes.
+Neste relatório, foi realizada a análise de dados de ensaios conduzidos no Zimbabwe, considerando duas características agronômicas: produtividade de grãos (GY) e altura de planta no estádio R8 (PH_R8). Os dados foram analisados por meio de modelos mistos ajustados no pacote `asreml`, considerando a estrutura de delineamento em blocos casualizados em múltiplos ambientes.
 
 # Pacotes e preparação dos dados
 
@@ -48,7 +48,7 @@ Neste relatório, foi realizada a análise de dados de ensaios conduzidos no Zim
 #| warning: false
 #| output: false
 
-library(asreml); library(dplyr); library(tidyr); library(tibble); library(ggplot2)
+library(asreml); library(dplyr); library(tidyr); library(tibble); library(ggplot2); library(DT)
 ```
 
 ```{r}
@@ -71,10 +71,6 @@ dat_zim = dat %>%
 # Características escolhidas
 traits = c("GY", "PH_R8")
 
-# Conferência inicial
-summary = summary(dat_zim[, c("env", "gen", "rep", "GY", "PH_R8")])
-knitr::kable(summary)
-
 # Número de ambientes
 ne = n_distinct(dat_zim$env)
 
@@ -84,6 +80,10 @@ rep_harm = dat_zim %>%
   count(env, gen) %>%
   summarise(h = n_distinct(gen) / sum(1 / n)) %>%
   pull(h)
+
+# Conferência inicial
+resumo_dados = summary(dat_zim[, c("env", "gen", "rep", "GY", "PH_R8")])
+knitr::kable(resumo_dados)
 ```
 
 # Exploração dos dados
@@ -99,8 +99,11 @@ tab_structure = dat_zim %>%
   ) %>%
   arrange(YEAR, env)
 
-knitr::kable(
-  tab_structure |> slice(1:10)) # 10 primeiras linhas
+DT::datatable(
+  tab_structure,
+  caption = "Estrutura dos ensaios: número de genótipos e blocos por ambiente.",
+  options = list(pageLength = 10, scrollX = TRUE),
+  rownames = FALSE)
 ```
 
 ## Resumo das duas características por ensaio
@@ -122,8 +125,12 @@ trait_summary = dat_zim %>%
   ) %>%
   arrange(trait, YEAR, env)
 
-knitr::kable(
-  trait_summary |> slice(1:10)) # 10 primeiras linhas
+DT::datatable(
+  trait_summary,
+  caption = "Resumo descritivo das características por ensaio.",
+  options = list(pageLength = 10, scrollX = TRUE),
+  rownames = FALSE) %>%
+  DT::formatRound(columns = c("mean", "sd", "min", "max"), digits = 2)
 ```
 
 A exploração inicial dos dados mostrou que os ensaios apresentam estrutura multiambiente, com diferentes combinações de ano, local e ambiente. Para os primeiros ensaios apresentados, observou-se uma estrutura balanceada, com 30 genótipos e 3 repetições por ambiente. No entanto, considerando todo o conjunto de dados, há diferenças no número de observações entre ensaios, principalmente em função de valores ausentes em algumas características.
@@ -144,11 +151,15 @@ dat_long = dat_zim %>%
 
 ## Boxplot por ensaio
 ```{r}
-p_box_env = ggplot(dat_long, aes(x = env, y = value)) +
-  geom_boxplot() +
-  facet_wrap(~ trait, scales = "free_y") +
-  theme_gray() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+p_box_env = ggplot(dat_long, aes(x = env, y = value, fill = trait)) +
+  geom_boxplot(alpha = 0.7, outlier.size = 0.8, outlier.alpha = 0.5) +
+  facet_wrap(~ trait, scales = "free_y", labeller = labeller(trait = c(GY = "Produtividade de grãos (GY)", PH_R8 = "Altura de planta (PH_R8)"))) +
+  scale_fill_manual(values = c("GY" = "#2196F3", "PH_R8" = "#4CAF50"), guide = "none") +
+  theme_gray(base_size = 12) +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 7),
+    strip.text = element_text(face = "bold"),
+    panel.grid.minor = element_blank()) +
   labs(
     x = "Ensaio",
     y = "Valor observado",
@@ -161,10 +172,14 @@ Para PH_R8, a distribuição também variou entre os ensaios, mas de forma menos
 
 ## Boxplot por ano
 ```{r}
-p_box_year = ggplot(dat_long, aes(x = YEAR, y = value)) +
-  geom_boxplot() +
-  facet_wrap(~ trait, scales = "free_y") +
-  theme_gray() +
+p_box_year = ggplot(dat_long, aes(x = YEAR, y = value, fill = YEAR)) +
+  geom_boxplot(alpha = 0.7, outlier.size = 1, outlier.alpha = 0.5) +
+  facet_wrap(~ trait, scales = "free_y", labeller = labeller(trait = c(GY = "Produtividade de grãos (GY)", PH_R8 = "Altura de planta (PH_R8)"))) +
+  scale_fill_brewer(palette = "Set2", guide = "none") +
+  theme_gray(base_size = 12) +
+  theme(
+    strip.text = element_text(face = "bold"),
+    panel.grid.minor = element_blank()) +
   labs(
     x = "Ano",
     y = "Valor observado",
@@ -179,11 +194,15 @@ Esses resultados justificam o uso de modelos que considerem os ambientes de aval
 ```{r}
 # Médias observadas por ensaio
 p_mean_env = trait_summary %>%
-  ggplot(aes(x = env, y = mean)) +
-  geom_col() +
-  facet_wrap(~ trait, scales = "free_y") +
-  theme_gray() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  ggplot(aes(x = env, y = mean, fill = trait)) +
+  geom_col(alpha = 0.85) +
+  facet_wrap(~ trait, scales = "free_y", labeller = labeller(trait = c(GY = "Produtividade de grãos (GY)", PH_R8 = "Altura de planta (PH_R8)"))) +
+  scale_fill_manual(values = c("GY" = "#2196F3", "PH_R8" = "#4CAF50"), guide = "none") +
+  theme_gray(base_size = 12) +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 7),
+    strip.text = element_text(face = "bold"),
+    panel.grid.minor = element_blank()) +
   labs(
     x = "Ensaio",
     y = "Média observada",
@@ -224,15 +243,19 @@ Em ambos os modelos, o efeito de ambiente foi incluído como fixo, enquanto os e
 ### Estimativas dos componentes de variância
 ```{r}
 # Componentes – modelo homogêneo
-vcGY_hom = summary(modGY_hom)$varcomp  # assume uma única variância residual para todos os ambientes
+vcGY_hom = summary(modGY_hom)$varcomp 
 
-knitr::kable(vcGY_hom)
+DT::datatable(vcGY_hom,
+  caption = "Componentes de variância – modelo homogêneo (uma única variância residual para todos os ambientes).")  %>%
+  DT::formatRound(columns = which(sapply(vcGY_hom, is.numeric)), digits = 4, dec.mark = ".", mark = "")
 
 # Componentes – modelo heterogêneo
-vcGY_het = summary(modGY_het)$varcomp # assume variância residual diferente para cada ambiente
+vcGY_het = summary(modGY_het)$varcomp 
 
-knitr::kable(
-  vcGY_het |> slice(1:10)) # 10 primeiras linhas
+DT::datatable(vcGY_het,
+  caption = "Componentes de variância – modelo heterogêneo (variância residual diferente para cada ambiente).",
+  options = list(pageLength = 10, scrollX = TRUE)) %>%
+  DT::formatRound(columns = which(sapply(vcGY_hom, is.numeric)), digits = 4, dec.mark = ".", mark = "")
 ```
 
 A redução das estimativas de variância genotípica e da interação GxE no modelo heterogêneo indica que parte da variação capturada pelo modelo homogêneo estava associada à heterogeneidade residual entre os ambientes. Assim, o modelo heterogêneo fornece uma decomposição mais adequada da variabilidade observada.
@@ -373,11 +396,19 @@ blupsGY_het = predict(modGY_het, classify = "gen:env")$pvals %>%
 ```
 
 ```{r}
-knitr::kable(
-  blupsGY_hom |> slice(1:10)) # 10 primeiras linhas
+DT::datatable(
+  blupsGY_hom,
+  caption = "BLUPs por genótipo e ambiente (modelo homogêneo).",
+  options = list(pageLength = 10, scrollX = TRUE),
+  rownames = FALSE
+) %>% DT::formatRound(columns = c("BLUP", "SE", "PEV", "Confiabilidade"), digits = 3, dec.mark = ".", mark = "")
 
-knitr::kable(
-  blupsGY_het |> slice(1:10)) # 10 primeiras linhas
+DT::datatable(
+  blupsGY_het,
+  caption = "BLUPs por genótipo e ambiente (modelo heterogêneo).",
+  options = list(pageLength = 10, scrollX = TRUE),
+  rownames = FALSE
+) %>% DT::formatRound(columns = c("BLUP", "SE", "PEV", "Confiabilidade"), digits = 3, dec.mark = ".", mark = "")
 ```
 
 Os BLUPs foram obtidos para a combinação GxE, permitindo avaliar o desempenho predito dos genótipos em cada ensaio. A confiabilidade variou entre genótipos e ambientes, mostrando que a precisão das predições não foi uniforme.
@@ -397,13 +428,25 @@ topGY_hom = blupsGY_hom %>%
   summarise(BLUP_medio = mean(BLUP)) %>%
   slice_max(BLUP_medio, n = 10)
 
-knitr::kable(topGY_hom) 
+DT::datatable(
+  topGY_hom,
+  caption = "Top 10 genótipos por BLUP médio (modelo homogêneo).",
+  options = list(pageLength = 10, scrollX = TRUE),
+  rownames = FALSE
+) %>% DT::formatRound(columns = "BLUP_medio", digits = 3, dec.mark = ".", mark = "")
 
 # Top 5 por ambiente 
 topGY_hom_amb = blupsGY_hom %>%
   group_by(Ambiente) %>%
   slice_max(BLUP, n = 5) %>%
-  select(Ambiente, Genotipo, BLUP, Confiabilidade); topGY_hom_amb
+  select(Ambiente, Genotipo, BLUP, Confiabilidade)
+
+DT::datatable(
+  topGY_hom_amb,
+  caption = "Top 5 genótipos por ambiente (modelo homogêneo).",
+  options = list(pageLength = 10, scrollX = TRUE),
+  rownames = FALSE
+) %>% DT::formatRound(columns = c("BLUP", "Confiabilidade"), digits = 3, dec.mark = ".", mark = "")
 ```
 
 #### Modelo Heterogêneo
@@ -414,13 +457,25 @@ topGY_het = blupsGY_het %>%
   summarise(BLUP_medio = mean(BLUP)) %>%
   slice_max(BLUP_medio, n = 10)
 
-knitr::kable(topGY_het) 
+DT::datatable(
+  topGY_het,
+  caption = "Top 10 genótipos por BLUP médio (modelo heterogêneo).",
+  options = list(pageLength = 10, scrollX = TRUE),
+  rownames = FALSE
+) %>% DT::formatRound(columns = "BLUP_medio", digits = 3, dec.mark = ".", mark = "")
 
 # Top 5 por ambiente 
 topGY_het_amb = blupsGY_het %>%
   group_by(Ambiente) %>%
   slice_max(BLUP, n = 5) %>%
-  select(Ambiente, Genotipo, BLUP, Confiabilidade); topGY_het_amb
+  select(Ambiente, Genotipo, BLUP, Confiabilidade)
+
+DT::datatable(
+  topGY_het_amb,
+  caption = "Top 5 genótipos por ambiente (modelo heterogêneo).",
+  options = list(pageLength = 10, scrollX = TRUE),
+  rownames = FALSE
+) %>% DT::formatRound(columns = c("BLUP", "Confiabilidade"), digits = 3, dec.mark = ".", mark = "")
 ```
 
 No modelo homogêneo, os dez genótipos com maiores BLUPs médios para produtividade de grãos foram G150, G107, G149, G076, G144, G130, G110, G068, G006 e G142. No modelo heterogêneo, os dez principais candidatos foram G150, G149, G107, G076, G144, G130, G077, G006, G068 e G145. O genótipo G150 apresentou o maior BLUP médio no modelo heterogêneo, com valor de 3312,40, seguido por G149, G107, G076, G144 e G130.
@@ -434,37 +489,63 @@ Por outro lado, alguns genótipos apareceram apenas em um dos rankings, como G07
 #### Modelo Homogêneo
 ```{r}
 # Boxplot dos BLUPs por ambiente (modelo homogêneo)
-ggplot(blupsGY_hom, aes(x = Ambiente, y = BLUP)) +
-  geom_boxplot() +
-  theme_gray() +
-  labs(title = "GY – BLUPs por ambiente (modelo homogêneo)")
+ggplot(blupsGY_hom, aes(x = Ambiente, y = BLUP, fill = Ambiente)) +
+  geom_boxplot(alpha = 0.7, outlier.size = 0.8, outlier.alpha = 0.5, show.legend = FALSE) +
+  scale_fill_viridis_d(option = "C", begin = 0.1, end = 0.9) +
+  theme_gray(base_size = 12) +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 7),
+    panel.grid.minor = element_blank()) +
+  labs(
+    x = "Ambiente",
+    y = "BLUP",
+    title = "BLUPs por ambiente (modelo homogêneo)")
 
-# Confiabilidade versus BLUP médio
+# Confiabilidade versus ranking do BLUP médio
 blupsGY_hom %>%
   group_by(Genotipo) %>%
   summarise(BLUP_medio = mean(BLUP), Conf_media = mean(Confiabilidade)) %>%
   mutate(rank = rank(-BLUP_medio)) %>%
   ggplot(aes(x = rank, y = Conf_media)) +
-  geom_point() +
-  labs(title = "GY – Confiabilidade média ao longo do ranking")
+  geom_point(color = "#2196F3", alpha = 0.7, size = 2) +
+  geom_smooth(method = "loess", se = TRUE, color = "#e53935", linewidth = 0.8) +
+  theme_gray(base_size = 12) +
+  theme(panel.grid.minor = element_blank()) +
+  labs(
+    x = "Posição no ranking (maior BLUP = rank 1)",
+    y = "Confiabilidade média",
+    title = "Confiabilidade média ao longo do ranking (modelo homogêneo)")
 ```
 
 #### Modelo Heterogêneo
 ```{r}
 # Boxplot dos BLUPs por ambiente (modelo heterogêneo)
-ggplot(blupsGY_het, aes(x = Ambiente, y = BLUP)) +
-  geom_boxplot() +
-  theme_gray() +
-  labs(title = "GY – BLUPs por ambiente (modelo heterogêneo)")
+ggplot(blupsGY_het, aes(x = Ambiente, y = BLUP, fill = Ambiente)) +
+  geom_boxplot(alpha = 0.7, outlier.size = 0.8, outlier.alpha = 0.5, show.legend = FALSE) +
+  scale_fill_viridis_d(option = "C", begin = 0.1, end = 0.9) +
+  theme_gray(base_size = 12) +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 7),
+    panel.grid.minor = element_blank()) +
+  labs(
+    x = "Ambiente",
+    y = "BLUP",
+    title = "BLUPs por ambiente (modelo heterogêneo)")
 
-# Confiabilidade versus BLUP médio
+# Confiabilidade versus ranking do BLUP médio
 blupsGY_het %>%
   group_by(Genotipo) %>%
   summarise(BLUP_medio = mean(BLUP), Conf_media = mean(Confiabilidade)) %>%
   mutate(rank = rank(-BLUP_medio)) %>%
   ggplot(aes(x = rank, y = Conf_media)) +
-  geom_point() +
-  labs(title = "GY – Confiabilidade média ao longo do ranking")
+  geom_point(color = "#2196F3", alpha = 0.7, size = 2) +
+  geom_smooth(method = "loess", se = TRUE, color = "#e53935", linewidth = 0.8) +
+  theme_gray(base_size = 12) +
+  theme(panel.grid.minor = element_blank()) +
+  labs(
+    x = "Posição no ranking (maior BLUP = rank 1)",
+    y = "Confiabilidade média",
+    title = "Confiabilidade média ao longo do ranking (modelo heterogêneo)")
 ```
 
 Os gráficos dos BLUPs por ambiente mostraram diferenças claras entre os ensaios para produtividade de grãos. Em alguns ambientes, os valores preditos foram mais altos e mais dispersos, enquanto em outros os BLUPs ficaram concentrados em valores menores. Esse padrão é consistente com a presença de interação GxE.
@@ -491,8 +572,12 @@ dat_PH_filt = dat_PH %>%
   ) %>%
   arrange(var)
 
-knitr::kable(
-  dat_PH_filt |> slice(1:10)) # 10 primeiras linhas
+DT::datatable(
+  dat_PH_filt,
+  caption = "Resumo por ambiente após remoção de valores zero para PH_R8.",
+  options = list(pageLength = 10, scrollX = TRUE),
+  rownames = FALSE
+) %>% DT::formatRound(columns = c("var", "min", "max"), digits = 3, dec.mark = ".", mark = "")
 ```
 
 Antes do ajuste dos modelos para PH_R8, valores iguais a zero foram convertidos para dados ausentes. Essa decisão foi necessária porque altura de planta igual a zero não representa uma observação biologicamente plausível. Após esse tratamento, os modelos foram ajustados apenas com dados válidos, evitando problemas de estimação causados por ambientes com variância nula.
@@ -525,15 +610,22 @@ Assim como em GY, o efeito de ambiente foi considerado fixo, enquanto os efeitos
 ### Estimativas dos componentes de variância
 ```{r}
 # Componentes – modelo homogêneo
-vcPH_hom = summary(modPH_hom)$varcomp  # assume uma única variância residual para todos os ambientes
+vcPH_hom = summary(modPH_hom)$varcomp  
 
-knitr::kable(vcPH_hom) 
+DT::datatable(
+  vcPH_hom,
+  caption = "Componentes de variância – modelo homogêneo (única variância residual para todos os ambientes).",
+  options = list(pageLength = 10, scrollX = TRUE)) %>%
+  DT::formatRound(columns = which(sapply(vcGY_hom, is.numeric)), digits = 4, dec.mark = ".", mark = "")
 
 # Componentes – modelo heterogêneo
-vcPH_het = summary(modPH_het)$varcomp # assume variância residual diferente para cada ambiente
+vcPH_het = summary(modPH_het)$varcomp 
 
-knitr::kable(
-  vcPH_het |> slice(1:10)) # 10 primeiras linhas
+DT::datatable(
+  vcPH_het,
+  caption = "Componentes de variância - modelo heterogêneo (variância residual diferente para cada ambiente).",
+  options = list(pageLength = 10, scrollX = TRUE)) %>%
+  DT::formatRound(columns = which(sapply(vcGY_hom, is.numeric)), digits = 4, dec.mark = ".", mark = "")
 ```
 
 No modelo homogêneo, a variância genotípica foi estimada em 196,45, a variância da interação genótipo × ambiente em 53,28, a variância de blocos dentro de ambiente em 2,55 e a variância residual em 104,70.
@@ -674,11 +766,19 @@ blupsPH_het = predict(modPH_het, classify = "gen:env")$pvals %>%
 ```
 
 ```{r}
-knitr::kable(
-  blupsPH_hom |> slice(1:10)) # 10 primeiras linhas
+DT::datatable(
+  blupsPH_hom,
+  caption = "BLUPs por genótipo e ambiente (modelo homogêneo).",
+  options = list(pageLength = 10, scrollX = TRUE),
+  rownames = FALSE
+) %>% DT::formatRound(columns = c("BLUP", "SE", "PEV", "Confiabilidade"), digits = 4, dec.mark = ".", mark = "")
 
-knitr::kable(
-  blupsPH_het |> slice(1:10)) # 10 primeiras linhas
+DT::datatable(
+  blupsPH_het,
+  caption = "BLUPs por genótipo e ambiente (modelo heterogêneo).",
+  options = list(pageLength = 10, scrollX = TRUE),
+  rownames = FALSE
+) %>% DT::formatRound(columns = c("BLUP", "SE", "PEV", "Confiabilidade"), digits = 4, dec.mark = ".", mark = "")
 ```
 
 Os BLUPs de PH_R8 apresentaram confiabilidades mais elevadas do que os observados para produtividade de grãos. No modelo heterogêneo, as primeiras predições apresentaram confiabilidade em torno de 0,75, e alguns genótipos nos rankings por ambiente apresentaram valores superiores a 0,90.
@@ -697,30 +797,55 @@ topPH_hom = blupsPH_hom %>%
   summarise(BLUP_medio = mean(BLUP)) %>%
   slice_max(BLUP_medio, n = 10)
 
-knitr::kable(topPH_hom) 
+DT::datatable(
+  topPH_hom,
+  caption = "Top 10 genótipos por BLUP médio – modelo homogêneo.",
+  options = list(pageLength = 10, scrollX = TRUE),
+  rownames = FALSE
+) %>% DT::formatRound(columns = "BLUP_medio", digits = 4, dec.mark = ".", mark = "")
 
 # Top 5 por ambiente 
 topPH_hom_amb = blupsPH_hom %>%
   group_by(Ambiente) %>%
   slice_max(BLUP, n = 5) %>%
-  select(Ambiente, Genotipo, BLUP, Confiabilidade); topPH_hom_amb
+  select(Ambiente, Genotipo, BLUP, Confiabilidade)
+
+DT::datatable(
+  topPH_hom_amb,
+  caption = "Top 5 genótipos por ambiente – modelo homogêneo.",
+  options = list(pageLength = 10, scrollX = TRUE),
+  rownames = FALSE
+) %>% DT::formatRound(columns = c("BLUP", "Confiabilidade"), digits = 4, dec.mark = ".", mark = "")
 ```
 
 #### Modelo Heterogêneo
 ```{r}
+# Top 10 geral (média dos BLUPs nos ambientes) 
 # Top 10 geral (média dos BLUPs nos ambientes) 
 topPH_het = blupsPH_het %>%
   group_by(Genotipo) %>%
   summarise(BLUP_medio = mean(BLUP)) %>%
   slice_max(BLUP_medio, n = 10)
 
-knitr::kable(topPH_het) 
+DT::datatable(
+  topPH_het,
+  caption = "Top 10 genótipos por BLUP médio – modelo heterogêneo.",
+  options = list(pageLength = 10, scrollX = TRUE),
+  rownames = FALSE
+) %>% DT::formatRound(columns = "BLUP_medio", digits = 4, dec.mark = ".", mark = "")
 
 # Top 5 por ambiente 
 topPH_het_amb = blupsPH_het %>%
   group_by(Ambiente) %>%
   slice_max(BLUP, n = 5) %>%
-  select(Ambiente, Genotipo, BLUP, Confiabilidade); topPH_het_amb
+  select(Ambiente, Genotipo, BLUP, Confiabilidade)
+
+DT::datatable(
+  topPH_het_amb,
+  caption = "Top 5 genótipos por ambiente – modelo heterogêneo.",
+  options = list(pageLength = 10, scrollX = TRUE),
+  rownames = FALSE
+) %>% DT::formatRound(columns = c("BLUP", "Confiabilidade"), digits = 4, dec.mark = ".", mark = "")
 ```
 
 No modelo homogêneo, os dez genótipos com maiores BLUPs médios para altura de planta foram G081, G082, G084, G145, G095, G121, G303, G146, G204 e G206. No modelo heterogêneo, os dez principais candidatos foram os mesmos: G081, G082, G084, G145, G095, G121, G303, G146, G204 e G206. O genótipo G081 apresentou o maior BLUP médio, com valor de 150,92, seguido por G082, com 148,96, e G084, com 135,92.
@@ -733,38 +858,64 @@ No entanto, a interpretação dos candidatos para PH_R8 depende do objetivo de s
 
 #### Modelo Homogêneo
 ```{r}
-# Boxplot dos BLUPs por ambiente (modelo heterogêneo)
-ggplot(blupsPH_hom, aes(x = Ambiente, y = BLUP)) +
-  geom_boxplot() +
-  theme_gray() +
-  labs(title = "PH – BLUPs por ambiente (modelo homogêneo)")
+# Boxplot dos BLUPs por ambiente (modelo homogêneo)
+ggplot(blupsPH_hom, aes(x = Ambiente, y = BLUP, fill = Ambiente)) +
+  geom_boxplot(alpha = 0.7, outlier.size = 0.8, outlier.alpha = 0.5, show.legend = FALSE) +
+  scale_fill_viridis_d(option = "D", begin = 0.1, end = 0.9) +
+  theme_gray(base_size = 12) +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 7),
+    panel.grid.minor = element_blank()) +
+  labs(
+    x = "Ambiente",
+    y = "BLUP",
+    title = "BLUPs por ambiente (modelo homogêneo)")
 
-# Confiabilidade versus BLUP médio
+# Confiabilidade versus ranking do BLUP médio
 blupsPH_hom %>%
   group_by(Genotipo) %>%
   summarise(BLUP_medio = mean(BLUP), Conf_media = mean(Confiabilidade)) %>%
   mutate(rank = rank(-BLUP_medio)) %>%
   ggplot(aes(x = rank, y = Conf_media)) +
-  geom_point() +
-  labs(title = "PH – Confiabilidade média ao longo do ranking")
+  geom_point(color = "#4CAF50", alpha = 0.7, size = 2) +
+  geom_smooth(method = "loess", se = TRUE, color = "#e53935", linewidth = 0.8) +
+  theme_gray(base_size = 12) +
+  theme(panel.grid.minor = element_blank()) +
+  labs(
+    x = "Posição no ranking (maior BLUP = rank 1)",
+    y = "Confiabilidade média",
+    title = "Confiabilidade média ao longo do ranking (modelo homogêneo)")
 ```
 
 #### Modelo Heterogêneo
 ```{r}
 # Boxplot dos BLUPs por ambiente (modelo heterogêneo)
-ggplot(blupsPH_het, aes(x = Ambiente, y = BLUP)) +
-  geom_boxplot() +
-  theme_gray() +
-  labs(title = "PH – BLUPs por ambiente (modelo heterogêneo)")
+ggplot(blupsPH_het, aes(x = Ambiente, y = BLUP, fill = Ambiente)) +
+  geom_boxplot(alpha = 0.7, outlier.size = 0.8, outlier.alpha = 0.5, show.legend = FALSE) +
+  scale_fill_viridis_d(option = "D", begin = 0.1, end = 0.9) +
+  theme_gray(base_size = 12) +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 7),
+    panel.grid.minor = element_blank()) +
+  labs(
+    x = "Ambiente",
+    y = "BLUP",
+    title = "BLUPs por ambiente (modelo heterogêneo)")
 
-# Confiabilidade versus BLUP médio
+# Confiabilidade versus ranking do BLUP médio
 blupsPH_het %>%
   group_by(Genotipo) %>%
   summarise(BLUP_medio = mean(BLUP), Conf_media = mean(Confiabilidade)) %>%
   mutate(rank = rank(-BLUP_medio)) %>%
   ggplot(aes(x = rank, y = Conf_media)) +
-  geom_point() +
-  labs(title = "PH – Confiabilidade média ao longo do ranking")
+  geom_point(color = "#4CAF50", alpha = 0.7, size = 2) +
+  geom_smooth(method = "loess", se = TRUE, color = "#e53935", linewidth = 0.8) +
+  theme_gray(base_size = 12) +
+  theme(panel.grid.minor = element_blank()) +
+  labs(
+    x = "Posição no ranking (maior BLUP = rank 1)",
+    y = "Confiabilidade média",
+    title = "Confiabilidade média ao longo do ranking (modelo heterogêneo)")
 ```
 
 Os gráficos dos BLUPs por ambiente para PH_R8 mostraram menor variação relativa entre ambientes quando comparados aos gráficos de GY. Embora existam diferenças entre ensaios, os valores preditos de altura de planta foram mais consistentes.
@@ -773,7 +924,27 @@ O gráfico de confiabilidade ao longo do ranking mostrou valores geralmente mais
 
 De modo geral, os gráficos indicam que a seleção para PH_R8 é mais estável e direta do que para produtividade de grãos. A menor influência da interação genótipo × ambiente e a maior confiabilidade das predições tornam essa característica mais favorável à seleção baseada em BLUPs.
 
-# Conclusão 
+# Comparação entre as características
+
+```{r}
+# Tabela-resumo 
+tab_conclusao = tibble(
+  Característica         = c("GY", "PH_R8"),
+  `H² – Hom.`           = c(round(H2_GY_hom, 4),  round(H2_PH_hom, 4)),
+  `H² – Het.`           = c(round(H2_GY_het, 4),  round(H2_PH_het, 4)),
+  `CVe (%) – Hom.`      = c(round(CVe_GY_hom, 2), round(CVe_PH_hom, 2)),
+  `CVe (%) – Het.`      = c(round(CVe_GY_het, 2), round(CVe_PH_het, 2)),
+  `LRT – Efeito gen.`   = c(round(LRT_gen_hom, 2), round(LRT_PH_hom, 2)),
+  `LRT – Res. hom vs het` = c(round(LRT_res, 2),   round(LRT_PH_res, 2)),
+  `Modelo escolhido`    = c("Heterogêneo", "Heterogêneo"))
+
+knitr::kable(tab_conclusao,
+             caption = "Resumo comparativo dos resultados para GY e PH_R8.",
+             align = "lcccccccl",
+             digits = c(0, 4, 4, 2, 2, 2, 2, 0)) %>%
+  kableExtra::kable_styling() 
+```
+
 
 Comparando as duas características, observa-se que produtividade de grãos apresentou maior influência da interação genótipo × ambiente e maior variação residual relativa. No modelo heterogêneo, a variância da interação genótipo × ambiente para GY foi maior que a variância genotípica, indicando que o desempenho dos genótipos foi bastante dependente do ambiente.
 
