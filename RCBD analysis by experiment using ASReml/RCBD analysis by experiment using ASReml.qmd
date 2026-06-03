@@ -39,7 +39,95 @@ execute:
 
 # Introdução
 
-Neste relatório, foi realizada a análise de dados de ensaios conduzidos no Zimbabwe, considerando duas características agronômicas: produtividade de grãos (GY) e altura de planta no estádio R8 (PH_R8). Os dados foram analisados por meio de modelos mistos ajustados no pacote `asreml`, considerando a estrutura de delineamento em blocos casualizados em múltiplos ambientes.
+Neste relatório, foi realizada a análise de dados de ensaios conduzidos no Zimbabwe, considerando duas características agronômicas: `produtividade de grãos (GY)` e `altura de planta (PH_R8)`. As análises foram conduzidas por meio de **Modelos Mistos (MM)** ajustados no pacote `asreml`, considerando a estrutura de **delineamento em blocos casualizados (DBC)** em múltiplos ambientes.
+
+Como os ensaios foram avaliados em diferentes ambientes, definidos pela combinação de ano, local e condição experimental, foi necessário considerar a variação entre ambientes no modelo. O efeito de ambiente (`env`) foi tratado como **fixo**, pois os ambientes avaliados correspondem aos ensaios específicos do conjunto de dados e o objetivo foi corrigir as diferenças médias entre eles. Assim, cada ambiente recebe uma média própria no modelo, sem sofrer shrinkage, o que permite comparar os genótipos após o ajuste das médias ambientais.
+
+Os efeitos de genótipo (`gen`), interação genótipo entre ambiente (`gen:env`) e bloco dentro de ambiente (`rep:env`) foram considerados **aleatórios**. O efeito de genótipo foi tratado como aleatório porque o objetivo principal da análise foi predizer os valores genotípicos por meio de BLUPs, estimar componentes de variância, calcular herdabilidade e avaliar a confiabilidade dos candidatos à seleção. A interação GxE também foi considerada aleatória, pois representa a variação no desempenho relativo dos genótipos entre os ensaios. Já os blocos dentro de ambiente foram considerados aleatórios porque não há interesse em comparar blocos específicos; eles são estruturas de controle experimental utilizadas para reduzir a variação local dentro de cada ensaio.
+
+O **modelo misto geral** utilizado para cada característica pode ser representado por:
+
+$$
+y_{ijk} = \mu + e_j + g_i + (ge)_{ij} + b_{k(j)} + \varepsilon_{ijk}
+$$
+
+em que:
+
+- $y_{ijk}$ é o valor observado do genótipo $i$, no ambiente $j$, no bloco $k$;
+- $\mu$ é a média geral (intercepto);
+- $e_j$ éé o efeito fixo do $j$-ésimo ambiente ;
+- $g_i$ é o efeito aleatório do $i$-ésimo genótipo;
+- $(ge)_{ij}$ é o efeito aleatório da interação entre o genótipo $i$ e o ambiente $j$;
+- $b_{k(j)}$ é o efeito aleatório da $k$-ésima repetição dentro do $j$-ésimo ambiente;
+- $\varepsilon_{ijk}$ é o erro experimental.
+
+Assumiu-se que:
+
+$$
+\mathbf{g} \sim N(0, \sigma_g^2\mathbf{I}_g),\quad
+\mathbf{ge} \sim N(0, \sigma_{ge}^2\mathbf{I}_{ge}),\quad
+\mathbf{b} \sim N(0, \sigma_b^2\mathbf{I}_b)
+$$
+
+em que $\sigma_g^2$ é a variância genotípica, $\sigma_{ge}^2$ é a variância da interação GxE, $\sigma_b^2$ é a variância de blocos dentro de ambiente e $\mathbf{I}$ representa uma matriz identidade, ou seja, uma matriz quadrada com $1$ na diagonal principal e $0$ fora dela:
+
+$$
+\mathbf{I}_n =
+\begin{bmatrix}
+1 & 0 & 0 & \cdots & 0 \\
+0 & 1 & 0 & \cdots & 0 \\
+0 & 0 & 1 & \cdots & 0 \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+0 & 0 & 0 & \cdots & 1
+\end{bmatrix}_{n \times n}
+$$
+
+Isso indica que os efeitos aleatórios são independentes e possuem a mesma variância dentro de cada componente.
+
+Foram comparadas duas estruturas para a matriz de covariância residual $\mathbf{R}$. O modelo com resíduo homogêneo é representado como:
+
+$$
+\boldsymbol{\varepsilon} \sim N(0, \sigma_e^2\mathbf{I}_n) \quad \Rightarrow \quad
+\mathbf{R}_{\text{hom}} = \sigma_e^2\mathbf{I}_n
+$$
+
+todos os ambientes compartilham a mesma variância residual, assumindo precisão experimental igual entre os ensaios. O modelo com resíduo heterogêneo por ambiente é representado por:
+
+$$
+\mathbf{R}_{\text{het}} =
+\begin{bmatrix}
+\sigma_{e_1}^2\mathbf{I}_{n_1} & 0 & \cdots & 0 \\
+0 & \sigma_{e_2}^2\mathbf{I}_{n_2} & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & \sigma_{e_m}^2\mathbf{I}_{n_m}
+\end{bmatrix}
+$$
+
+Nesse caso, se trata de uma matriz diagonal em blocos, onde cada bloco corresponde a um ambiente com sua própria variância residual $\sigma_{e_j}^2$. Essa estrutura permite que ambientes com maior erro experimental tenham variância residual maior, capturando heterogeneidade de precisão entre locais.
+
+A herdabilidade em sentido amplo (baseada na média dos ambientes) foi calculada por:
+
+$$
+H^2 = \frac{\sigma_g^2}
+{\sigma_g^2 + \dfrac{\sigma_{ge}^2}{n_e} + \dfrac{\sigma_e^2}{n_e \, \bar{r}}}
+$$
+
+em que $n_e$ é o número de ambientes e $\bar{r}$ é o número harmônico de repetições. Para o modelo heterogêneo, substitui-se $\sigma_e^2$ pela variância residual média $\bar{\sigma}_e^2 = \frac{1}{m}\sum_{j=1}^{m} \sigma_{e_j}^2$.
+
+O coeficiente de variação experimental foi obtido por:
+
+$$
+CV_e = \frac{\sqrt{\sigma_e^2}}{\bar{y}} \times 100
+$$
+
+Os testes de hipótese foram conduzidos pelo teste da razão de verossimilhança:
+
+$$
+LRT = -2(\log L_{\text{reduzido}} - \log L_{\text{completo}})
+$$
+
+Para testar a existência de variância genética ($\sigma_g^2 = 0$), comparou-se o modelo completo com um modelo reduzido sem os termos `gen` e `gen:env`. Como a hipótese nula situa-se na fronteira do espaço paramétrico, utilizou-se a mistura de distribuições qui-quadrado apropriada para calcular o p-valor. A comparação entre os modelos com resíduo homogêneo e heterogêneo também foi feita via LRT, com graus de liberdade iguais ao número de ambientes menos um.
+
 
 # Pacotes e preparação dos dados
 
@@ -554,6 +642,57 @@ O gráfico de confiabilidade ao longo do ranking indicou que a precisão das pre
 
 De modo geral, os gráficos reforçam que a produtividade de grãos apresenta forte influência ambiental e mudança no desempenho relativo dos genótipos entre ensaios. Assim, a seleção para GY deve considerar tanto o desempenho médio quanto a estabilidade e a confiabilidade dos candidatos.
 
+#### Gráfico de estabilidade (modelo heterogêneo)
+```{r}
+# Índice ambiental para GY
+indice_GY = blupsGY_het %>%
+  group_by(Ambiente) %>%
+  summarise(
+    media_amb = mean(BLUP),
+    .groups = "drop") %>%
+  mutate(
+    indice_amb = media_amb - mean(media_amb)) %>%
+  arrange(indice_amb)
+
+# Top 10 genótipos com maior BLUP médio
+top10_GY = blupsGY_het %>%
+  group_by(Genotipo) %>%
+  summarise(
+    BLUP_medio = mean(BLUP),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(BLUP_medio)) %>%
+  mutate(rank = row_number()) %>%
+  slice(1:10)
+
+# Dados para estabilidade
+estab_GY = blupsGY_het %>%
+  semi_join(top10_GY, by = "Genotipo") %>%
+  left_join(indice_GY, by = "Ambiente")
+
+# Gráfico de estabilidade
+ggplot(estab_GY, aes(x = indice_amb, y = BLUP, group = Genotipo)) +
+  geom_point(aes(color = Genotipo)) +
+  geom_smooth(aes(color = Genotipo), method = "lm", se = FALSE) +
+  labs(
+    x = "Índice ambiental",
+    y = "BLUP",
+    title = "Estabilidade dos 10 melhores genótipos para GY (modelo heterogêneo)",
+    subtitle = "Regressão dos BLUPs em função do índice ambiental",
+    color = "Genótipo"
+  )
+```
+O gráfico de estabilidade para produtividade de grãos mostra a resposta dos dez genótipos com maiores BLUPs médios em função do índice ambiental. O índice ambiental representa a qualidade relativa dos ambientes: valores negativos indicam ambientes menos favoráveis, enquanto valores positivos indicam ambientes mais favoráveis.
+
+Observa-se que todos os genótipos apresentaram resposta positiva ao aumento do índice ambiental, ou seja, os BLUPs aumentaram conforme os ambientes se tornaram mais favoráveis. Esse comportamento é esperado para produtividade de grãos, pois ambientes com melhores condições de cultivo tendem a permitir maior expressão do potencial produtivo dos genótipos.
+
+As linhas de regressão apresentaram inclinações semelhantes entre os genótipos, indicando que os principais candidatos responderam de forma parecida à melhoria das condições ambientais. No entanto, as linhas não estão completamente sobrepostas, mostrando diferenças no desempenho médio dos genótipos. O genótipo G150 se destacou por apresentar valores preditos superiores ao longo da maior parte do gradiente ambiental, mantendo bom desempenho tanto em ambientes menos favoráveis quanto em ambientes mais favoráveis.
+
+Apesar da presença de interação para GY, o gráfico sugere que, entre os dez melhores genótipos, não houve forte cruzamento entre as linhas de regressão. Isso indica que os principais candidatos mantiveram certa consistência relativa no ranking ao longo dos ambientes. Ainda assim, a grande amplitude dos BLUPs entre ambientes reforça que a produtividade de grãos foi fortemente influenciada pelas condições ambientais.
+
+Portanto, genótipos com alto desempenho médio e linhas posicionadas acima dos demais, como G150, G149, G107, G076, G144 e G130, podem ser considerados candidatos promissores.
+
+
 ## Modelo para altura de planta (PH_R8)
 
 ```{r}
@@ -923,6 +1062,53 @@ Os gráficos dos BLUPs por ambiente para PH_R8 mostraram menor variação relati
 O gráfico de confiabilidade ao longo do ranking mostrou valores geralmente mais altos para PH_R8, reforçando a maior precisão das predições dessa característica. Esse comportamento está de acordo com a alta herdabilidade e o menor CVe estimados para altura de planta.
 
 De modo geral, os gráficos indicam que a seleção para PH_R8 é mais estável e direta do que para produtividade de grãos. A menor influência da interação genótipo × ambiente e a maior confiabilidade das predições tornam essa característica mais favorável à seleção baseada em BLUPs.
+
+#### Gráfico de estabilidade (modelo heterogêneo)
+```{r}
+# Índice ambiental para PH_R8
+indice_PH = blupsPH_het %>%
+  group_by(Ambiente) %>%
+  summarise(
+    media_amb = mean(BLUP, na.rm = TRUE),
+    .groups = "drop") %>%
+  mutate(
+    indice_amb = media_amb - mean(media_amb, na.rm = TRUE)) %>%
+  arrange(indice_amb)
+
+# Top 10 genótipos com maior BLUP médio para PH_R8
+top10_PH = blupsPH_het %>%
+  group_by(Genotipo) %>%
+  summarise(
+    BLUP_medio = mean(BLUP, na.rm = TRUE),
+    .groups = "drop") %>%
+  arrange(desc(BLUP_medio)) %>%
+  mutate(rank = row_number()) %>%
+  slice(1:10)
+
+# Dados para estabilidade
+estab_PH = blupsPH_het %>%
+  semi_join(top10_PH, by = "Genotipo") %>%
+  left_join(indice_PH, by = "Ambiente") %>%
+  filter(!is.na(BLUP), !is.na(indice_amb))
+
+ggplot(estab_PH, aes(x = indice_amb, y = BLUP, group = Genotipo)) +
+  geom_point(aes(color = Genotipo)) +
+  geom_smooth(aes(color = Genotipo), method = "lm", se = FALSE) +
+  labs(
+    x = "Índice ambiental",
+    y = "BLUP",
+    title = "Estabilidade dos 10 melhores genótipos para PH_R8 (modelo heterogêneo)",
+    subtitle = "Regressão dos BLUPs em função do índice ambiental",
+    color = "Genótipo"
+  )
+```
+O gráfico de estabilidade para altura de planta mostra a resposta dos dez genótipos com maiores BLUPs médios de PH_R8 em função do índice ambiental. Assim como em GY, valores negativos do índice ambiental representam ambientes menos favoráveis para a expressão da característica, enquanto valores positivos representam ambientes mais favoráveis.
+
+Para PH_R8, observou-se uma resposta positiva dos genótipos ao aumento do índice ambiental. Isso indica que os valores preditos de altura de planta aumentaram em ambientes mais favoráveis. No entanto, diferentemente do observado para produtividade de grãos, as linhas de regressão apresentaram maior separação entre grupos de genótipos e menor evidência de cruzamento entre elas.
+
+Os genótipos G081 e G082 se destacaram claramente, apresentando os maiores BLUPs ao longo de praticamente todo o gradiente ambiental. O genótipo G084 também apresentou desempenho superior, mas em um patamar abaixo de G081 e G082. Os demais genótipos, como G095, G121, G145, G146, G204, G206 e G303, formaram um grupo com valores preditos mais próximos entre si.
+
+A ausência visual de cruzamentos expressivos entre as linhas sugere maior estabilidade do ranking dos genótipos para PH_R8 em comparação com GY. Esse resultado está de acordo com as estimativas dos componentes de variância, nas quais a variância genotípica foi superior à variância da interação GxE para altura de planta. Assim, PH_R8 apresentou maior controle genético e menor mudança relativa de desempenho entre ambientes.
 
 # Comparação entre as características
 
