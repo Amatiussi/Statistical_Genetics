@@ -119,16 +119,6 @@ traits = c("GY", "PH_R8")
 
 ambientes = unique(dat_zim$env)
 
-# Número de ambientes
-ne = n_distinct(dat_zim$env)
-
-# Número harmônico de repetições (gen dentro de ambiente)
-rep_harm = dat_zim %>%
-  drop_na(GY) %>%
-  count(env, gen) %>%
-  summarise(h = n_distinct(gen) / sum(1 / n)) %>%
-  pull(h)
-
 # Conferência inicial
 resumo_dados = summary(dat_zim[, c("env", "gen", "rep", "GY", "PH_R8")])
 knitr::kable(resumo_dados)
@@ -152,8 +142,6 @@ DT::datatable(
   options = list(pageLength = 10, scrollX = TRUE),
   rownames = FALSE)
 ```
-
-TEXTO
 
 ## Resumo das duas características por ensaio
 ```{r}
@@ -181,7 +169,7 @@ DT::datatable(
   DT::formatRound(columns = c("mean", "sd", "min", "max"), digits = 2)
 ```
 
-TEXTO
+O resumo descritivo das características mostrou ampla variação entre os ambientes avaliados. Para produtividade de grãos, observou-se grande diferença entre as médias, desvios-padrão e amplitudes dos ensaios, indicando que essa característica foi fortemente influenciada pelas condições ambientais de cada local e ano. Alguns ambientes, por exemplo, apresentaram maior dispersão dos valores observados, sugerindo maior heterogeneidade experimental ou maior sensibilidade da produtividade às condições de condução do ensaio. Para altura de planta, também houve variação entre ambientes, embora o comportamento geral tenha sido mais regular em comparação com a produtividade. 
 
 # Gráficos exploratórios 
 ```{r}
@@ -210,7 +198,7 @@ p_box_env = ggplot(dat_long, aes(x = env, y = value, fill = trait)) +
     title = "Distribuição das características por ensaio"); p_box_env
 ```
 
-TEXTO
+Os boxplots por ensaio mostraram diferenças na distribuição das duas características entre os ambientes. Para produtividade de grãos, a variação entre ensaios foi bastante expressiva, tanto em relação às medianas quanto à amplitude dos valores observados. Esse comportamento indica que a produtividade foi fortemente afetada pelas condições ambientais específicas de cada ensaio. Alguns ambientes apresentaram maior dispersão e presença de valores extremos, o que pode refletir maior heterogeneidade experimental, diferenças de manejo ou maior sensibilidade dos genótipos ao ambiente. Para altura de planta, a variação entre ensaios também foi observada, porém de forma relativamente menos irregular do que para produtividade. Com base nesses resultados, fica evidente a necessidade da análise individual por ambiente, pois os padrões de distribuição não foram homogêneos entre os ensaios.
 
 ## Boxplot por ano
 ```{r}
@@ -228,7 +216,7 @@ p_box_year = ggplot(dat_long, aes(x = YEAR, y = value, fill = YEAR)) +
     title = "Distribuição das características por ano"); p_box_year
 ```
 
-TEXTO
+A distribuição das características por ano indica que houve variação temporal no desempenho dos genótipos. Para produtividade de grãos, as diferenças entre anos foram mais evidentes, com alterações nas medianas e na amplitude dos valores observados. Esse resultado sugere que a produtividade foi influenciada por condições de cada ano agrícola (como disponibilidade hídrica, temperatura, manejo e outros fatores ambientais). Para altura de planta, a variação entre anos também ocorreu, mas de forma menos intensa do que para GY. Esse contraste entre as duas características indica que a produtividade apresenta maior sensibilidade às variações ambientais, enquanto a altura de planta tende a apresentar maior estabilidade relativa.
 
 ## Médias observadas por ambiente
 ```{r}
@@ -249,7 +237,7 @@ p_mean_env = trait_summary %>%
     title = "Média observada por ensaio"); p_mean_env
 ```
 
-TEXTO
+As médias observadas por ambiente confirmam a existência de diferenças importantes entre os ensaios. Para produtividade de grãos, alguns ambientes apresentaram médias muito superiores às de outros, evidenciando que as condições ambientais tiveram grande impacto no desempenho produtivo. Para altura de planta, as médias também variaram entre ambientes, mas com menor contraste em relação à produtividade. A variação nas médias ambientais indica que os ambientes não podem ser considerados equivalentes quanto ao potencial de expressão das características avaliadas. Esse padrão sugere que, principalmente para GY, pode existir interação entre genótipos e ambientes, uma vez que o desempenho médio muda consideravelmente entre os ensaios.
 
 # Análise individual por ambiente (GY e PH_R8)
 
@@ -339,7 +327,7 @@ DT::datatable(
   DT::formatRound(columns = c("sigma2_g", "sigma2_e"), digits = 3, dec.mark = ".", mark = "")
 ```
 
-TEXTO
+As estimativas dos componentes de variância para produtividade de grãos mostraram que tanto a variância genética quanto a variância residual variaram consideravelmente entre os ambientes. Em alguns ensaios, a variância residual foi elevada, como observado em E048, indicando menor precisão experimental e maior influência de fatores não controlados sobre a produtividade. Por outro lado, em ambientes como E054, E052 e E056, a variância genética apresentou maior contribuição relativa, sugerindo melhor capacidade de discriminação entre os genótipos. Essa diferença entre ambientes mostra que a produtividade de grãos não apresentou o mesmo nível de controle genético em todos os ensaios. Assim, os ambientes com maior variância genética e menor variância residual são mais informativos para a seleção de genótipos superiores.
 
 ### Herdabilidade e CVe (GY)
 ```{r}
@@ -353,12 +341,12 @@ DT::datatable(
   DT::formatRound(columns = c("H2", "CVe"), digits = 4, dec.mark = ".", mark = "")
 ```
 
-TEXTO
+As estimativas de herdabilidade para produtividade de grãos variaram entre os ambientes, indicando que a proporção da variação atribuída às diferenças genéticas não foi constante ao longo dos ensaios. Ambientes como E054, E056, E052 e E051 apresentaram valores elevados de herdabilidade, o que sugere maior eficiência na seleção de genótipos superiores nesses locais. Em contraste, ambientes como E048 e E050 apresentaram menores valores de herdabilidade, indicando menor precisão para discriminar diferenças genéticas entre os materiais avaliados. O coeficiente de variação experimental também variou entre os ambientes, sendo especialmente elevado em E048, o que indica maior variação residual em relação à média do ensaio.
 
 ### Teste de hipótese
 
-$$H_0: \sigma_g^2=0, \quad H_a:\sigma_g^2\neq 0$$
-TEXTO
+$$H_0: \sigma_g^2=0, \quad H_1:\sigma_g^2\neq 0$$
+O teste da razão de verossimilhança foi utilizado para avaliar se a inclusão do efeito aleatório de genótipo melhorou significativamente o ajuste do modelo. A hipótese nula considera ausência de variância genética entre os genótipos, ou seja, assume que os materiais avaliados não diferem geneticamente para produtividade dentro do ambiente. A hipótese alternativa considera a existência de variabilidade genética significativa, justificando a inclusão do efeito de genótipo no modelo e a predição dos valores genotípicos por meio dos BLUPs. Dessa forma, valores significativos do LRT indicam que existem diferenças genéticas detectáveis entre os genótipos avaliados.
 
 ```{r}
 lrt_GY_ind = map_dfr(resultados_GY, ~ .x$lrt)
@@ -371,7 +359,7 @@ DT::datatable(
   DT::formatRound(columns = c("LRT", "p_valor"), digits = 4, dec.mark = ".", mark = "")
 ```
 
-TEXTO
+Os resultados do teste LRT para produtividade de grãos indicaram significância estatística nos ambientes apresentados, com valores de p inferiores a 5%. Esse resultado permite rejeitar a hipótese nula de ausência de variância genética e confirma que há diferenças genotípicas detectáveis para produtividade dentro dos ambientes avaliados. A significância do efeito genotípico justifica o uso dos BLUPs para identificar candidatos superiores em cada ensaio. No entanto, a interpretação desses resultados deve ser feita em conjunto com a herdabilidade, o CVe e a confiabilidade das predições, pois nem todos os ambientes apresentaram a mesma precisão experimental.
 
 ### BLUPs e confiabilidade (GY)
 
@@ -386,7 +374,7 @@ DT::datatable(
   DT::formatRound(columns = c("BLUP", "SE", "PEV", "Confiabilidade"), digits = 4, dec.mark = ".", mark = "")
 ```
 
-TEXTO
+Os BLUPs representam os valores genotípicos preditos para produtividade de grãos em cada ambiente, após o ajuste para o efeito de blocos. Esses valores permitem comparar os genótipos de forma mais adequada do que a simples média observada, pois consideram a estrutura do modelo misto e a variação associada aos efeitos aleatórios. 
 
 ### Candidatos à seleção (GY)
 
@@ -419,7 +407,7 @@ DT::datatable(
   DT::formatRound(columns = c("BLUP_medio"), digits = 4, dec.mark = ".", mark = "")
 ```
 
-TEXTO
+Considerando a média dos BLUPs ao longo dos ambientes, os genótipos G141, G149, G137, G115 e G002 apresentaram os maiores valores para produtividade de grãos. Esses genótipos podem ser considerados candidatos promissores para seleção com base no desempenho produtivo médio. O genótipo G141 apresentou o maior BLUP médio, seguido por G149, indicando destaque produtivo em relação aos demais materiais avaliados. Entretanto, a seleção baseada apenas no BLUP médio pode não representar completamente o comportamento dos genótipos em todos os ambientes. Como a produtividade apresentou forte influência ambiental, é necessário avaliar também a estabilidade e a resposta dos genótipos ao longo dos diferentes ensaios.
 
 ### Análise gráfica (GY)
 ```{r}
@@ -458,7 +446,11 @@ ggplot(blups_GY_ind, aes(x = Ambiente, y = BLUP)) +
     subtitle = "Pontos vermelhos indicam os 5 genótipos com maior BLUP em cada ambiente",
     x = "Ambiente",
     y = "BLUP")
+```
 
+A distribuição dos BLUPs por ambiente para produtividade de grãos mostrou ampla variação no desempenho genotípico predito entre os ensaios. Os ambientes foram ordenados de acordo com a mediana dos BLUPs, permitindo visualizar um gradiente de ambientes menos favoráveis para ambientes mais favoráveis à expressão da produtividade. Observa-se que alguns ambientes apresentaram menor dispersão dos BLUPs, indicando maior homogeneidade entre os genótipos, enquanto outros apresentaram maior amplitude, sugerindo maior capacidade de discriminação genotípica. Os pontos destacados em vermelho representam os cinco genótipos com maior BLUP em cada ambiente, evidenciando que os materiais superiores variam conforme o ensaio. Esse padrão reforça que a produtividade de grãos é fortemente influenciada pelo ambiente e que a seleção de genótipos superiores deve considerar o desempenho específico em cada local.
+
+```{r}
 # Confiabilidade vs. BLUP com destaque
 ggplot(blups_GY_ind, aes(x = BLUP, y = Confiabilidade, color = top5)) +
   geom_point(alpha = 0.7, size = 1.5) +
@@ -469,7 +461,11 @@ ggplot(blups_GY_ind, aes(x = BLUP, y = Confiabilidade, color = top5)) +
         strip.text = element_text(size = 6),
         axis.text.x = element_text(angle = 45, hjust = 1, size = 7)) +
   labs(title = "Confiabilidade vs BLUP (Top 5 em destaque) – GY")
+```
 
+O gráfico de confiabilidade em função dos BLUPs permite avaliar simultaneamente o desempenho predito dos genótipos e a precisão associada a essas predições. Para produtividade de grãos, observa-se que a confiabilidade variou entre os ambientes, refletindo diferenças na herdabilidade e na qualidade experimental de cada ensaio. Em alguns ambientes, os genótipos com maiores BLUPs apresentaram confiabilidade relativamente baixa, indicando que, apesar do bom desempenho predito, a seleção nesses casos deve ser interpretada com cautela. Os pontos destacados em vermelho representam os genótipos classificados entre os cinco melhores dentro de cada ambiente. De modo geral, esse gráfico mostra que o maior valor de BLUP nem sempre está associado à maior segurança de predição, reforçando a importância de considerar a confiabilidade junto ao desempenho médio.
+
+```{r}
 # Gráfico de ranking
 # Calcular médias por genótipo
 rank_gy = blups_GY_ind %>%
@@ -493,7 +489,7 @@ ggplot(rank_gy, aes(x = Genotipo, y = BLUP_medio, fill = Conf_media)) +
     y = "BLUP médio (kg/ha)")
 ```
 
-TEXTO
+O ranking dos genótipos para produtividade de grãos, baseado no BLUP médio ao longo dos ambientes, permitiu identificar os materiais com melhor desempenho geral. Os genótipos G141 e G149 apresentaram os maiores valores médios de BLUP, seguidos por G137, G115 e G002, indicando maior potencial produtivo médio entre os genótipos avaliados.
 
 ::: {.panel-tabset}
 ```{r, results='asis', echo=FALSE, fig.height=6, fig.width=8}
@@ -532,7 +528,7 @@ for (i in seq_along(graficos_pag)) {
 ```
 :::
 
-TEXTO
+O gráfico de BLUPs por ambiente para produtividade de grãos permite observar, de forma mais detalhada, o desempenho dos genótipos dentro de grupos de ambientes. Em cada painel, os genótipos são comparados dentro de um ambiente específico, e o material com maior BLUP é destacado em vermelho. Com base no gráfico, é possivel a identificação dos genótipos superiores em cada ensaio e mostra que o melhor genótipo nem sempre é o mesmo entre os ambientes.
 
 ```{r}
 # Normas de reação dos genótipos superiores
@@ -575,7 +571,7 @@ ggplot(dados_norma, aes(x = Ambiente, y = BLUP, group = Genotipo, color = Genoti
     color = "Genótipo")
 ```
 
-TEXTO
+As normas de reação dos genótipos superiores para produtividade de grãos mostraram que os dez melhores genótipos, selecionados com base no BLUP médio, apresentaram respostas distintas ao longo dos ambientes. Os ambientes foram organizados de acordo com o índice ambiental, permitindo visualizar o comportamento dos genótipos desde condições menos favoráveis até condições mais favoráveis. A presença de cruzamentos entre as linhas indica alteração na classificação dos genótipos entre ambientes, evidenciando interação GxE. Alguns materiais apresentaram maior resposta em ambientes favoráveis, enquanto outros mantiveram desempenho relativamente mais estável. Dessa forma, a escolha de genótipos superiores para produtividade deve considerar não apenas o BLUP médio, mas também a estabilidade e a adaptabilidade dos materiais.
 
 ```{r}
 # Top 30 genótipos com maior BLUP médio
@@ -604,7 +600,7 @@ ggplot(heat_data, aes(x = Ambiente, y = Genotipo, fill = BLUP)) +
     axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 7))
 ```
 
-TEXTO
+O heatmap dos BLUPs para produtividade de grãos permitiu visualizar os padrões de desempenho dos genótipos ao longo dos ambientes. As cores indicam diferenças na magnitude dos BLUPs, com tons mais intensos representando valores mais altos ou mais baixos em relação ao ponto médio da escala. Observa-se que alguns genótipos apresentaram desempenho superior em determinados ambientes, mas não mantiveram necessariamente o mesmo padrão em todos os ensaios. Essa variação confirma que a resposta produtiva dos genótipos depende das condições ambientais.
 
 ## Análise para altura de planta (PH_R8)
 
@@ -633,7 +629,7 @@ DT::datatable(
   DT::formatRound(columns = c("sigma2_g", "sigma2_e"), digits = 3, dec.mark = ".", mark = "")
 ```
 
-TEXTO
+As estimativas dos componentes de variância para PH_R8 indicaram presença expressiva de variabilidade genética entre os genótipos. Em vários ambientes, a variância genética foi superior à variância residual, sugerindo boa capacidade de discriminação genotípica para altura de planta. Esse padrão foi diferente do observado para produtividade de grãos, em que a variância residual apresentou maior peso em alguns ambientes. Para PH_R8, a menor contribuição relativa do erro experimental indica maior precisão na avaliação da característica. Portanto, a altura de planta apresentou maior estabilidade e maior controle genético relativo em comparação com a produtividade.
 
 ### Herdabilidade e CVe (PH_R8)
 ```{r}
@@ -647,7 +643,7 @@ DT::datatable(
   DT::formatRound(columns = c("H2", "CVe"), digits = 4, dec.mark = ".", mark = "")
 ```
 
-TEXTO
+As estimativas de herdabilidade para PH_R8 foram elevadas nos ambientes avaliados. Em muitos ensaios, os valores foram superiores a 0,90, indicando que grande parte da variação observada foi atribuída às diferenças genéticas entre os genótipos. Além disso, os valores de CVe foram relativamente baixos em comparação com os observados para produtividade de grãos, evidenciando maior precisão experimental na mensuração da altura de planta. Ambientes como E047, E054 e E055 apresentaram alta herdabilidade associada a baixos valores de CVe, indicando alta confiabilidade para seleção. Mesmo os ambientes com valores relativamente menores de herdabilidade para PH_R8 ainda apresentaram estimativas consideradas altas, reforçando a maior estabilidade dessa característica.
 
 ### Teste de hipótese (análogo ao modelo GY)
 
@@ -662,7 +658,7 @@ DT::datatable(
   DT::formatRound(columns = c("LRT", "p_valor"), digits = 4, dec.mark = ".", mark = "")
 ```
 
-TEXTO
+O teste LRT para PH_R8 indicou significância estatística para o efeito genotípico nos ambientes apresentados. Os valores de p próximos de zero permitem rejeitar a hipótese nula de ausência de variância genética, confirmando que existem diferenças genéticas detectáveis entre os genótipos para altura de planta. A significância do componente genético, associada às altas estimativas de herdabilidade, demonstra que PH_R8 é uma característica com boa resposta potencial à seleção. 
 
 ### BLUPs e confiabilidade (PH_R8)
 
@@ -677,7 +673,7 @@ DT::datatable(
   DT::formatRound(columns = c("BLUP", "SE", "PEV", "Confiabilidade"), digits = 4, dec.mark = ".", mark = "")
 ```
 
-TEXTO
+Os BLUPs de PH_R8 representam os valores genotípicos preditos para altura de planta em cada ambiente. As predições apresentaram alta confiabilidade em vários ensaios, refletindo as elevadas herdabilidades observadas para essa característica. Em comparação com produtividade de grãos, os valores de confiabilidade para PH_R8 foram mais altos, indicando menor erro de predição e maior segurança na classificação dos genótipos.
 
 ### Candidatos à seleção (PH_R8)
 
@@ -710,7 +706,7 @@ DT::datatable(
   DT::formatRound(columns = "BLUP_medio", digits = 4)
 ```
 
-TEXTO
+Considerando a média dos BLUPs ao longo dos ambientes, os genótipos G081, G082, G084, G149 e G115 apresentaram os maiores valores para altura de planta. Os genótipos G081 e G082 se destacaram de forma mais evidente, com BLUPs médios superiores aos demais materiais avaliados. Esses genótipos podem ser considerados candidatos superiores.
 
 ### Análise gráfica (PH_R8)
 ```{r}
@@ -749,7 +745,11 @@ ggplot(blups_PH_ind, aes(x = Ambiente, y = BLUP)) +
     subtitle = "Pontos vermelhos indicam os 5 genótipos com maior BLUP em cada ambiente",
     x = "Ambiente",
     y = "BLUP")
+```
 
+A distribuição dos BLUPs por ambiente para altura de planta mostrou variação entre os ensaios, porém com comportamento mais consistente em comparação com a produtividade de grãos. Os ambientes foram ordenados pela mediana dos BLUPs, permitindo observar diferenças no nível médio de altura entre os ensaios. Os pontos destacados representam os cinco genótipos com maior BLUP dentro de cada ambiente, evidenciando os materiais de maior altura predita. Em alguns ambientes, os BLUPs ficaram mais concentrados, indicando menor variação entre genótipos, enquanto em outros houve maior dispersão, sugerindo maior capacidade de discriminação. De modo geral, o gráfico confirma que PH_R8 apresenta variação genética importante, mas com menor irregularidade ambiental em relação à produtividade.
+
+```{r}
 # Confiabilidade vs. BLUP com destaque
 ggplot(blups_PH_ind, aes(x = BLUP, y = Confiabilidade, color = top5)) +
   geom_point(alpha = 0.7, size = 1.5) +
@@ -761,7 +761,11 @@ ggplot(blups_PH_ind, aes(x = BLUP, y = Confiabilidade, color = top5)) +
     strip.text = element_text(size = 6),
     axis.text.x = element_text(angle = 45, hjust = 1, size = 7)) +
   labs(title = "Confiabilidade vs BLUP (Top 5 em destaque) – PH_R8")
+```
 
+O gráfico de confiabilidade em função dos BLUPs para PH_R8 mostra que as predições de altura de planta apresentaram, em geral, elevada confiabilidade. Esse resultado está de acordo com as altas estimativas de herdabilidade observadas para essa característica. Os genótipos destacados entre os cinco maiores BLUPs em cada ambiente tendem a apresentar predições mais seguras do que aquelas observadas para produtividade de grãos. A menor dispersão da confiabilidade entre ambientes sugere que a altura de planta foi avaliada com maior precisão experimental.
+
+```{r}
 # Gráfico de ranking
 # Calcular médias por genótipo
 rank_ph = blups_PH_ind %>%
@@ -786,7 +790,7 @@ ggplot(rank_ph, aes(x = Genotipo, y = BLUP_medio, fill = Conf_media)) +
   )
 ```
 
-TEXTO
+O ranking dos genótipos para PH_R8, baseado no BLUP médio ao longo dos ambientes, mostrou destaque para os genótipos G081, G082 e G084, que apresentaram os maiores valores médios de altura de planta. Em seguida, os genótipos G149 e G115 também se destacaram entre os materiais de maior porte. A escala de cor indica a confiabilidade média das predições, mostrando que os genótipos superiores para altura apresentaram, em geral, boa segurança preditiva. Esse resultado reforça que PH_R8 possui maior controle genético relativo e maior precisão de seleção em comparação com GY.
 
 ::: {.panel-tabset}
 ```{r, results='asis', echo=FALSE, fig.height=6, fig.width=8}
@@ -825,7 +829,7 @@ for (i in seq_along(graficos_pag_PH)) {
 ```
 :::
 
-TEXTO
+Em alguns painéis, a diferença entre genótipos foi mais evidente, enquanto em outros a variação visual foi menor, indicando maior semelhança entre os materiais. Mesmo com alta herdabilidade para PH_R8, a análise por ambiente mostra que ainda pode haver alteração no desempenho relativo dos genótipos.
 
 ```{r}
 # Normas de reação dos genótipos superiores
@@ -866,7 +870,7 @@ ggplot(dados_norma_ph, aes(x = Ambiente, y = BLUP, group = Genotipo, color = Gen
     color = "Genótipo")
 ```
 
-TEXTO
+As normas de reação dos genótipos superiores para PH_R8 mostraram o comportamento dos dez materiais com maior BLUP médio ao longo dos ambientes. De modo geral, os genótipos de maior altura, especialmente G081, G082 e G084, mantiveram valores superiores em grande parte dos ambientes avaliados. Embora existam mudanças na magnitude dos BLUPs entre ambientes, as linhas apresentaram comportamento mais consistente do que o observado para produtividade de grãos. Isso indica que a altura de planta possui maior estabilidade relativa e menor sensibilidade ambiental. Ainda assim, a presença de variações entre as linhas mostra que o ambiente também influencia a expressão de PH_R8.
 
 ```{r}
 # Top 30 genótipos com maior BLUP médio
@@ -895,9 +899,11 @@ ggplot(heat_data_ph, aes(x = Ambiente, y = Genotipo, fill = BLUP)) +
     axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 7))
 ```
 
-TEXTO
+O heatmap dos BLUPs para PH_R8 evidenciou padrões de desempenho dos genótipos ao longo dos ambientes. Os tons mais intensos indicam diferenças na altura predita, permitindo identificar genótipos que mantiveram valores elevados em vários ensaios. Em comparação com o heatmap de produtividade, o padrão para PH_R8 foi mais consistente, reforçando a maior estabilidade relativa da altura de planta. Alguns genótipos apresentaram valores altos de BLUP em diversos ambientes, indicando maior regularidade para essa característica. Ainda assim, a presença de variação entre ambientes mostra que a expressão da altura de planta também pode ser influenciada pelas condições ambientais.
 
 ## Comparação da classificações entre os ensaios
+
+Após as análises individuais por ambiente, foi realizada a comparação das classificações genotípicas entre os ensaios. Para isso, utilizou-se a correlação de Spearman entre os BLUPs dos genótipos em diferentes ambientes. Essa análise permite avaliar se os genótipos mantêm posições semelhantes no ranking ou se há mudança de classificação entre os ambientes. Correlações altas indicam maior estabilidade da classificação genotípica, enquanto correlações baixas sugerem maior influência da interação GxE.
 
 ```{r}
 # Formato largo: genótipos nas linhas e ambientes nas colunas
@@ -919,8 +925,6 @@ corrplot(cor_GY, method = "color", type = "upper",
          mar = c(0, 0, 2, 0))
 ```
 
-TEXTO
-
 ```{r}
 wide_PH = blups_PH_ind %>%
   select(Ambiente, Genotipo, BLUP) %>%
@@ -939,15 +943,13 @@ corrplot(cor_PH, method = "color", type = "upper",
          mar = c(0, 0, 2, 0))
 ```
 
-TEXTO
-
 ```{r}
 media_cor_GY = mean(cor_GY[upper.tri(cor_GY)], na.rm = TRUE); media_cor_GY
 media_cor_PH = mean(cor_PH[upper.tri(cor_PH)], na.rm = TRUE); media_cor_PH
 ```
 
-TEXTO
+A média das correlações de Spearman foi de aproximadamente 0,15 para GY e 0,45 para PH_R8. O valor baixo observado para produtividade de grãos indica pouca concordância na classificação dos genótipos entre os ambientes, reforçando a presença de interação GxE para essa característica. Em termos práticos, isso significa que a seleção de genótipos superiores para GY depende fortemente do ambiente considerado, e que um genótipo bem classificado em um ensaio pode não apresentar o mesmo desempenho relativo em outro. Para PH_R8, a correlação média foi moderada, indicando maior consistência dos rankings entre ambientes. Assim, a altura de planta apresentou maior estabilidade relativa do que a produtividade, embora a correlação não seja alta o suficiente para descartar completamente a influência ambiental sobre a classificação dos genótipos.
 
 ## Conclusão 
 
-TEXTO
+A análise individual por ambiente permitiu caracterizar a variabilidade genética, a precisão experimental e o desempenho predito dos genótipos para produtividade de grãos e altura de planta. Para GY, foi detectada variabilidade genética significativa nos ambientes avaliados, mas a característica apresentou forte influência ambiental e baixa estabilidade de classificação entre ensaios. Os genótipos G141, G149, G137, G115 e G002 apresentaram os maiores BLUPs médios para produtividade, sendo candidatos promissores para seleção. Para PH_R8, as estimativas de herdabilidade foram elevadas e os valores de CVe foram menores, indicando maior precisão experimental. Os genótipos G081, G082, G084, G149 e G115 apresentaram os maiores BLUPs médios para altura de planta. A seleção para PH_R8 tende a ser mais confiável do que para GY. De modo geral, os resultados indicam que há variabilidade genética explorável para as duas características avaliadas.
