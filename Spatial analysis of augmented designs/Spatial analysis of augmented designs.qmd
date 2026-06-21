@@ -1,0 +1,43 @@
+---
+title: "Spatial analysis of augmented designs"
+author: "Ana Matiussi"
+date: last-modified
+format:
+  html:
+    toc: true
+    code-links: repo    # adicionar link do GitHub
+    toc-location: left
+    toc-depth: 5
+    fig-align: center
+    fig-width: 10
+    self-contained: true
+    embed-resources: true 
+    number-sections: true
+    theme: 
+      light: flatly
+      dark: darkly
+    code-overflow: wrap  # quebrar linhas de código 
+    code-tools: true
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{=html}
+<style>
+  p {
+    text-align: justify;
+    text-justify: inter-word;
+    text-indent: 1.25cm;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+</style>
+```
+
+
+## Introdução
+
+
+##
