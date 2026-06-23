@@ -2,6 +2,7 @@
 title: "Spatial analysis of augmented designs"
 author: "Ana Matiussi"
 date: last-modified
+date-format: DD/MM/YYYY
 format:
   html:
     toc: true
@@ -36,8 +37,595 @@ execute:
 </style>
 ```
 
+## Atividade
 
-## Introdução
+The dataset available [here](https://github.com/ufv-molecular-breeding-lab/schaves_sweetpotato_two_stage) has six trials laid out in an augmented row-column design (more details about this design [here](https://doi.org/10.2134/agronj2016.06.0325)). Analyse each trial individually with increasing order of spatial adjustment. Report the improvement of the modelling (if any) when spatial trends are dealt with. Your report should have differences in the variance components, broad-sense heritabilities, and rankings. For each trial, determine the best model using semivariograms and the AIC. Don't forget that models with different fixed effects must be compared using the adjusted version of the AIC available on the lmmtools package.
 
 
-##
+## Pacotes
+```{r}
+#| message: false
+#| warning: false
+#| output: false
+
+library(tidyverse)
+library(asreml)
+library(lmmtools)  # para icREML 
+library(gridExtra)
+```
+
+
+## Preparação dos dados 
+Os dados fenotípicos foram importados diretamente do repositório disponibilizado para o exercício e organizados para a análise individual dos seis ambientes. Inicialmente, as variáveis relacionadas aos genótipos, ambientes, linhas, colunas, grupos de linhas e colunas, blocos e classificação dos materiais foram convertidas para fatores. 
+
+Após essa etapa, os dados foram ordenados por ambiente, linha e coluna, preservando a estrutura espacial do experimento. Essa organização foi necessária porque os modelos espaciais ajustados posteriormente dependem da posição das parcelas no campo. A identificação dos ambientes confirmou a presença de seis trials: OT1NAM22, OT1RWE21, OT1RWE22, OT1SER22, OT2NAM21 e OT2SER21.
+
+```{r}
+#| message: false
+#| warning: false
+
+# Dados brutos
+data = read.csv("https://raw.githubusercontent.com/ufv-molecular-breeding-lab/schaves_sweetpotato_two_stage/refs/heads/main/Data/Phenotype.csv")
+
+# Ajustar fatores
+data = data %>% 
+  mutate(
+    across(
+      c(geno, env, rn, cn, colgroup, rowgroup, rc.group, pool, check,
+        geno.cod, check.cod), as.factor))
+
+# Ordenar os dados pelas coordenadas espaciais
+data = data %>% arrange(env, rn, cn)
+
+# Verificar os 6 ambientes
+ambientes = levels(data$env); ambientes
+
+```
+
+
+## Preparação para as análises
+
+Antes do ajuste dos modelos, foram criadas funções auxiliares para extrair as principais métricas utilizadas na comparação entre modelos e na interpretação dos resultados. A primeira função foi utilizada para obter a variância genética dos genótipos candidatos a partir dos componentes de variância estimados pelo modelo. 
+
+Também foi criada uma função para gerar o ranking dos candidatos com base nos valores preditos pelo modelo. Essa foi feita porque um dos objetivos do exercício era avaliar se o ajuste espacial alteraria a classificação dos genótipos em comparação com o modelo sem correção espacial.
+
+Outra função foi utilizada para calcular a herdabilidade no sentido amplo, considerando a variância genética dos candidatos e a média dos erros das diferenças entre os valores preditos. O que permitiu avaliar a precisão relativa da seleção genotípica em cada modelo.
+
+Por fim, foi criada uma função para organizar os valores de AIC ajustado obtidos pelo pacote `lmmtools`. Essa etapa foi necessária porque os modelos comparados apresentam diferentes estruturas de efeitos fixos e aleatórios, e a comparação direta deve considerar o AIC ajustado. Assim, a **preparação das análises permitiu automatizar** a extração das métricas de interesse para todos os ambientes avaliados.
+
+```{r}
+#| message: false
+#| warning: false
+#| output: false
+
+# Função para extrair a variância genética dos candidatos
+get_vg_candidate = function(modelo) {
+  
+  vc = summary(modelo)$varcomp
+  
+  linha_vg = grep("Candidate.*geno", rownames(vc), value = TRUE)
+  
+  if (length(linha_vg) == 0) {
+    return(NA_real_)}
+  
+  vg = vc[linha_vg[1], "component"]
+  
+  return(as.numeric(vg))}
+
+# Função para gerar ranking dos candidatos
+get_ranking_candidate = function(modelo, nome_modelo = NA) {
+  
+  pred = predict(modelo, classify = "check:geno", pworkspace = "2gb")
+  pvals = pred$pvals
+  
+  ranking = pvals %>%
+    as_tibble() %>%
+    filter(as.character(check) == "Candidate",status == "Estimable") %>%
+    
+    arrange(desc(predicted.value)) %>%
+    mutate(modelo = nome_modelo, rank = row_number())
+  
+  return(ranking)
+}
+
+# Função para calcular H2
+calc_h2_candidate = function(modelo) {
+  
+  vg = get_vg_candidate(modelo)
+  
+  if (is.na(vg) || vg <= 0) {
+    return(NA_real_)}
+  
+  pred = predict(modelo, classify = "check:geno", sed = TRUE, pworkspace = "2gb")
+  
+  pvals = pred$pvals %>% 
+    as_tibble() %>%
+    mutate(.id_pred = row_number())
+  
+  candidatos = pvals %>%
+    filter(as.character(check) == "Candidate",
+      status == "Estimable") %>%
+    
+    pull(.id_pred)
+  
+  if (length(candidatos) < 2) {
+    return(NA_real_)}
+  
+  sed_mat = as.matrix(pred$sed)
+  sed_cand = sed_mat[candidatos, candidatos]
+  
+  mean_sed2 = mean(sed_cand[upper.tri(sed_cand)]^2, na.rm = TRUE)
+  
+  h2 = 1 - mean_sed2 / (2 * vg)
+  
+  return(as.numeric(h2))
+}
+
+# Função para organizar AIC e escolher melhor modelo
+get_aic_models = function(modelos) {
+  
+  aic_tab = as.data.frame(
+    icREML(modelos, logdet = TRUE))
+  
+  aic_tab$modelo = names(modelos)
+  
+  aic_tab = aic_tab %>%
+    arrange(AIC) %>%
+    mutate(delta_AIC = AIC - min(AIC, na.rm = TRUE))
+  
+  return(aic_tab)
+}
+
+```
+
+
+## Ajuste dos modelos e extração de métricas (ambiente por ambiente)
+
+Para cada ambiente, foram ajustados **quatro modelos com níveis crescentes de complexidade espacial**. O modelo M1 foi considerado como modelo base, assumindo erros independentes. O modelo M2 incorporou uma estrutura residual espacial do tipo AR1 × AR1, considerando a dependência entre linhas e colunas. O modelo M3 adicionou ao modelo espacial um componente de erro independente, enquanto o modelo M4 incluiu, além da estrutura AR1 × AR1 e do erro independente, efeitos adicionais de linha e coluna.
+
+A comparação desses modelos permitiu avaliar se a inclusão da estrutura espacial melhorava o ajuste em relação ao modelo base. **Para cada ambiente**, foram extraídos o **AIC ajustado**, os **componentes de variância**, a **herdabilidade no sentido amplo** e os **rankings dos genótipos** candidatos. Além disso, foram gerados **variogramas** para avaliar visualmente a presença de estrutura espacial residual e auxiliar na escolha do melhor modelo.
+
+```{r}
+#| message: false
+#| warning: false
+#| results: hide
+
+# Listas para armazenar os resultados de cada ambiente
+lista_modelos = list()
+resultados_aic = list()
+var_components = list()
+rankings_blups = list()
+herdabilidades = list()
+melhores_modelos = list()
+
+asreml.options(workspace = "1gb", pworkspace = "2gb", trace = FALSE)
+
+for (amb in ambientes) {
+  
+  cat("\n----------------------------------\n")
+  cat("Ambiente:", amb, "\n")
+  cat("------------------------------------\n")
+  
+  # Filtrar para o ambiente atual e remover níveis vazios
+  testenv = droplevels(subset(data, env == amb))
+  
+  # Ajuste dos modelos
+  
+  # M1: independente
+  m1 = asreml(
+    fixed = rytha ~ at(check, "Check"):geno,
+    random = ~ at(check, "Candidate"):geno,
+    residual = ~ units,
+    na.action = na.method(x = "include"),
+    data = testenv)
+  
+  # M2: Tendência espacial AR1 x AR1
+  m2 = asreml(
+    fixed = rytha ~ at(check, "Check"):geno,
+    random = ~ at(check, "Candidate"):geno,
+    residual = ~ ar1v(rn):ar1(cn),
+    na.action = na.method(x = "include"),
+    data = testenv)
+  
+  # M3: Espacial + erro independente 
+  m3 = asreml(
+    fixed = rytha ~ at(check, "Check"):geno,
+    random = ~ at(check, "Candidate"):geno + units,
+    residual = ~ ar1v(rn):ar1(cn),
+    na.action = na.method(x = "include"),
+    data = testenv)
+  
+  # M4: Espacial + efeitos de linha e coluna
+  m4 = asreml(
+    fixed = rytha ~ at(check, "Check"):geno,
+    random = ~ at(check, "Candidate"):geno + units + rn + cn,
+    residual = ~ ar1v(rn):ar1(cn),
+    na.action = na.method(x = "include"),
+    data = testenv)
+  
+  # Guardar modelos 
+  modelos_amb = list(M1 = m1, M2 = m2, M3 = m3, M4 = m4)
+  
+  lista_modelos[[amb]] = modelos_amb
+  
+  # 1. AIC
+  aic_amb = get_aic_models(modelos_amb)
+  
+  resultados_aic[[amb]] = aic_amb
+  
+  melhor_nome = aic_amb$modelo[which.min(aic_amb$AIC)]
+  melhor_modelo = modelos_amb[[melhor_nome]]
+  
+  melhores_modelos[[amb]] = data.frame(
+    env = amb,
+    melhor_modelo = melhor_nome,
+    AIC = min(aic_amb$AIC, na.rm = TRUE))
+  
+  # 2. Componentes de variância
+  var_components[[amb]] = list(
+    M1_var = summary(m1)$varcomp,
+    M2_var = summary(m2)$varcomp,
+    M3_var = summary(m3)$varcomp,
+    M4_var = summary(m4)$varcomp)
+  
+  # 3. Herdabilidade dos quatro modelos
+  h2_m1 = calc_h2_candidate(m1)
+  h2_m2 = calc_h2_candidate(m2)
+  h2_m3 = calc_h2_candidate(m3)
+  h2_m4 = calc_h2_candidate(m4)
+  
+  herdabilidades[[amb]] = data.frame(env = amb, M1 = h2_m1, M2 = h2_m2, M3 = h2_m3, M4 = h2_m4, 
+  melhor_modelo = melhor_nome,
+  H2_melhor_modelo = c(M1 = h2_m1, M2 = h2_m2,  M3 = h2_m3, M4 = h2_m4) 
+  [melhor_nome])
+  
+  # 4. Rankings dos quatro modelos
+  rankings_blups[[amb]] = list(
+    M1 = get_ranking_candidate(m1, "M1"),
+    M2 = get_ranking_candidate(m2, "M2"),
+    M3 = get_ranking_candidate(m3, "M3"),
+    M4 = get_ranking_candidate(m4, "M4"))
+
+  cat("Melhor modelo:", melhor_nome, "\n")
+  cat("H2 do melhor modelo:", herdabilidades[[amb]]$H2_melhor_modelo, "\n")
+}
+
+```
+
+De forma geral, a inclusão da modelagem espacial melhorou o ajuste dos modelos em todos os ambientes, pois o modelo M1 não foi selecionado como melhor modelo em nenhum dos seis trials. Isso indica que a suposição de independência dos resíduos não foi suficiente para representar adequadamente a variação observada nos experimentos.
+
+### Resultados
+
+A seleção dos melhores modelos foi realizada com base no AIC ajustado. Os modelos selecionados foram M4 para OT1NAM22, M3 para OT1RWE21, M4 para OT1RWE22, M3 para OT1SER22, M2 para OT2NAM21 e M3 para OT2SER21.
+
+```{r}
+#| message: false
+#| warning: false
+
+# AIC de todos os ambientes (considerando os 4 modelos)
+tab_aic = bind_rows(
+  lapply(names(resultados_aic), function(amb) {
+    resultados_aic[[amb]] %>%
+      mutate(env = amb, .before = 1)
+  })
+); tab_aic
+
+# Melhor modelo por ambiente
+melh_mod = bind_rows(melhores_modelos); melh_mod
+
+# Herdabilidade por ambiente e por modelo
+tab_h2 = bind_rows(herdabilidades); tab_h2
+
+```
+
+No ambiente **OT1NAM22**, o melhor modelo foi o M4, com AIC de 7979,197. A diferença em relação ao modelo M1 foi de aproximadamente 172 unidades de AIC, indicando forte melhoria no ajuste com a inclusão da estrutura espacial, do erro independente e dos efeitos adicionais de linha e coluna.
+
+Para **OT1RWE21**, o modelo M3 apresentou o menor AIC, com valor de 8680,542. A diferença em relação ao M1 foi de aproximadamente 118 unidades de AIC. Embora o M4 tenha apresentado AIC muito próximo ao M3, a escolha do M3 é adequada por apresentar menor AIC e menor complexidade relativa.
+
+Em **OT1RWE22**, o melhor modelo foi o M4, com AIC de 8477,927. Nesse ambiente, a diferença em relação ao modelo base foi menor do que em outros trials, mas ainda indicou melhoria com a inclusão do ajuste espacial. O modelo M3 apresentou AIC próximo ao M4, sugerindo que a melhoria adicional do modelo mais complexo foi mais moderada.
+
+No ambiente **OT1SER22**, o modelo M3 foi selecionado como melhor modelo, com AIC de 6919,861. A diferença em relação ao M1 foi de aproximadamente 139 unidades de AIC, evidenciando forte melhoria do ajuste com a modelagem espacial.
+
+Para **OT2NAM21**, o melhor modelo foi o M2, com AIC de 5441,916. Os modelos M3 e M4 apresentaram valores muito próximos, com diferenças menores que uma unidade. Nesse caso, a escolha do M2 é justificável por parcimônia, já que a estrutura AR1 × AR1 foi suficiente para melhorar o ajuste em relação ao modelo base.
+
+Em **OT2SER21**, o modelo M3 foi o melhor, com AIC de 3546,817. A diferença em relação ao M1 foi de aproximadamente 51 unidades de AIC, indicando que a inclusão da estrutura espacial também foi significativo nesse ambiente.
+
+### Ranking do melhor modelo em cada ambiente
+
+Após a escolha do melhor modelo para cada ambiente, foram obtidos os rankings dos genótipos candidatos com base nos valores preditos. Essa etapa permitiu identificar quais genótipos apresentaram melhor desempenho dentro de cada trial após a correção espacial.
+
+```{r}
+#| message: false
+#| warning: false
+
+ranking = bind_rows(
+  lapply(ambientes, function(amb) {
+    
+    melhor = melh_mod %>%
+      filter(env == amb) %>%
+      pull(melhor_modelo)
+    
+    rankings_blups[[amb]][[melhor]] %>%
+      mutate(
+        env = amb,
+        melhor_modelo = melhor,
+        .before = 1
+      )
+  })
+); ranking
+
+```
+
+### Comparação de ranking: M1 vs melhor modelo
+
+A comparação entre o ranking do modelo M1 e o ranking do melhor modelo espacial mostrou que a ordenação geral dos genótipos foi preservada, mas com mudanças nas posições individuais. As correlações de Spearman foram altas em todos os ambientes, variando de 0,858 a 0,974. 
+
+```{r}
+#| message: false
+#| warning: false
+
+mudanca_ranking = dplyr::bind_rows(
+  lapply(ambientes, function(amb) {
+    
+    melhor = melh_mod %>%
+      dplyr::filter(as.character(env) == as.character(amb)) %>%
+      dplyr::pull(melhor_modelo) %>%
+      as.character()
+    
+    melhor = melhor[1]
+    
+    if (is.na(melhor) || !(melhor %in% names(rankings_blups[[amb]]))) {
+      warning(paste("Melhor modelo não encontrado para o ambiente:", amb))
+      return(NULL)
+    }
+    
+    ranking_m1 = rankings_blups[[amb]][["M1"]] %>%
+      dplyr::mutate(geno = as.character(geno)) %>%
+      dplyr::select(geno, pred_M1 = predicted.value, se_M1 = std.error, rank_M1 = rank)
+    
+    ranking_best = rankings_blups[[amb]][[melhor]] %>%
+      dplyr::mutate(geno = as.character(geno)) %>%
+      dplyr::select(geno, pred_best = predicted.value, se_best = std.error, rank_best = rank)
+    
+    dplyr::full_join(ranking_m1, ranking_best, by = "geno") %>%
+      dplyr::mutate(
+        env = as.character(amb),
+        melhor_modelo = melhor,
+        delta_pred = pred_best - pred_M1,
+        delta_rank = rank_best - rank_M1) %>%
+      dplyr::select(env, melhor_modelo, geno, pred_M1, pred_best, delta_pred, rank_M1, rank_best, delta_rank, se_M1, se_best)
+  }))
+
+mud_ranking = mudanca_ranking %>%
+  dplyr::group_by(env, melhor_modelo) %>%
+  dplyr::summarise(
+    n_genotipos = sum(!is.na(rank_M1) & !is.na(rank_best)),
+    cor_spearman = cor(rank_M1, rank_best, method = "spearman", use = "complete.obs"),
+    media_abs_delta_rank = mean(abs(delta_rank), na.rm = TRUE),
+    max_abs_delta_rank = max(abs(delta_rank), na.rm = TRUE),
+    .groups = "drop"
+  ); mud_ranking
+```
+
+O ambiente OT1NAM22 apresentou a menor correlação de Spearman, com valor de 0,858. Nesse ambiente, a mudança média absoluta no ranking foi de aproximadamente 131 posições, com deslocamento máximo de 653 posições. Esse resultado indica que a correção espacial teve impacto na classificação dos genótipos.
+
+Em OT1RWE21, a correlação entre rankings foi de 0,926, com mudança média absoluta de aproximadamente 91 posições e deslocamento máximo de 586 posições. Em OT1SER22, a correlação foi de 0,917, com mudança média de aproximadamente 99 posições e deslocamento máximo de 652 posições. Esses resultados mostram que, embora a classificação geral tenha sido semelhante, vários genótipos mudaram substancialmente de posição após o ajuste espacial.
+
+O ambiente OT1RWE22 apresentou maior estabilidade, com correlação de Spearman de 0,974 e mudança média de aproximadamente 48 posições. Em OT2NAM21, a correlação foi de 0,957, com mudança média de aproximadamente 63 posições. Já em OT2SER21, a correlação foi de 0,922, com mudança média de aproximadamente 89 posições e deslocamento máximo de 716 posições.
+
+Essas alterações demonstram que a modelagem espacial pode ter impacto direto na seleção dos genótipos. Mesmo quando a correlação geral entre rankings é alta, alguns materiais podem mudar muitas posições, o que pode alterar decisões de seleção em programas de melhoramento.
+
+### Componentes de variância 
+
+A análise dos componentes de variância mostrou que a inclusão da estrutura espacial alterou a estimativa da variância genética dos candidatos. Porem, o comportamento não foi igual em todos os ambientes, o que pode indicar que a influência da variação espacial sobre a partição da variância depende das características de cada trial.
+
+```{r}
+#| message: false
+#| warning: false
+
+tab_comp = dplyr::bind_rows(
+  lapply(names(var_components), function(amb) {
+    
+    dplyr::bind_rows(
+      lapply(names(var_components[[amb]]), function(nome_var) {
+        
+        modelo = stringr::str_replace(nome_var, "_var", "")
+        
+        vc = var_components[[amb]][[nome_var]] %>%
+          as.data.frame() %>%
+          tibble::rownames_to_column("componente")
+        
+        vc %>%
+          dplyr::mutate(env = amb, modelo = modelo) %>%
+          dplyr::select(env,modelo,dplyr::everything())
+      }))
+  }))
+
+# Componentes ligados à variância genética dos candidatos
+comp_gen = tab_comp %>%
+  dplyr::filter(
+    stringr::str_detect(componente, "Candidate") &
+      stringr::str_detect(componente, "geno")); comp_gen
+```
+
+Em OT1NAM22, a variância genética dos candidatos foi ligeiramente reduzida, passando de 31,10 no M1 para 30,31 no M4. Apesar dessa redução, o M4 apresentou melhor ajuste pelo AIC, indicando que a modelagem espacial permitiu representar melhor a variação residual do experimento.
+
+No ambiente OT1RWE21, a variância genética aumentou de 56,63 no M1 para 62,37 no M3. Esse aumento sugere que a correção espacial permitiu recuperar parte da variação genética que poderia estar confundida com a variação residual no modelo base.
+
+Em OT1RWE22, a variância genética diminuiu de 85,00 no M1 para 81,07 no M4. Esse resultado indica que parte da variação inicialmente atribuída aos genótipos foi redistribuída após a inclusão da estrutura espacial.
+
+Para OT1SER22, a variância genética aumentou de 27,04 no M1 para 30,26 no M3. Esse resultado mostra que a correção espacial contribuiu para melhorar a estimação da variabilidade genética nesse ambiente.
+
+Em OT2NAM21, a variância genética foi semelhante entre os modelos, passando de 27,49 no M1 para 26,77 no M2. Isso indica que o ajuste espacial melhorou o modelo, mas sem provocar grande alteração na variância genética estimada.
+
+No ambiente OT2SER21, a variância genética reduziu de 3,89 no M1 para 3,52 no M3. Essa redução sugere que parte da variação capturada inicialmente como genética no modelo base estava associada à estrutura espacial residual.
+
+Em geral, os resultados mostram que a correção espacial não necessariamente aumenta a variância genética. O principal efeito da modelagem espacial é redistribuir a variação entre os componentes do modelo, reduzindo o erro entre efeitos genéticos e ambientais.
+
+### Resultados resumidos por ambiente
+```{r}
+#| message: false
+#| warning: false
+
+resumo_final = melh_mod %>%
+  dplyr::left_join(tab_h2 %>%
+      dplyr::select(env, H2_melhor_modelo), by = "env") %>%
+  dplyr::left_join(mud_ranking, by = c("env", "melhor_modelo")); resumo_final
+```
+
+### Variogramas por ambiente
+
+Os variogramas foram utilizados para avaliar a presença de dependência espacial nos resíduos dos modelos.
+
+#### Ambiente OT1NAM22
+
+```{r}
+#| message: false
+#| warning: false
+#| output: false
+
+amb = "OT1NAM22"
+
+p1 = plot(varioGram(lista_modelos[[amb]]$M1), main = "M1: Base")
+p2 = plot(varioGram(lista_modelos[[amb]]$M2), main = "M2: AR1 x AR1")
+p3 = plot(varioGram(lista_modelos[[amb]]$M3), main = "M3: AR1 x AR1 + units")
+p4 = plot(varioGram(lista_modelos[[amb]]$M4), main = "M4: AR1 x AR1 + units + rn + cn")
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+gridExtra::grid.arrange(
+  p1, p2, p3, p4,
+  ncol = 2, nrow = 2,
+  top = paste("Variogramas -", amb))
+```
+
+
+#### Ambiente OT1RWE21
+```{r}
+#| message: false
+#| warning: false
+#| output: false
+
+amb = "OT1RWE21"
+
+p5 = plot(varioGram(lista_modelos[[amb]]$M1), main = "M1: Base")
+p6 = plot(varioGram(lista_modelos[[amb]]$M2), main = "M2: AR1 x AR1")
+p7 = plot(varioGram(lista_modelos[[amb]]$M3), main = "M3: AR1 x AR1 + units")
+p8 = plot(varioGram(lista_modelos[[amb]]$M4), main = "M4: AR1 x AR1 + units + rn + cn")
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+gridExtra::grid.arrange(
+  p5, p6, p7, p8,
+  ncol = 2, nrow = 2,
+  top = paste("Variogramas -", amb))
+```
+
+
+#### Ambiente OT1RWE22
+```{r}
+#| message: false
+#| warning: false
+#| output: false
+
+amb = "OT1RWE22"
+
+p9 = plot(varioGram(lista_modelos[[amb]]$M1), main = "M1: Base")
+p10 = plot(varioGram(lista_modelos[[amb]]$M2), main = "M2: AR1 x AR1")
+p11 = plot(varioGram(lista_modelos[[amb]]$M3), main = "M3: AR1 x AR1 + units")
+p12 = plot(varioGram(lista_modelos[[amb]]$M4), main = "M4: AR1 x AR1 + units + rn + cn")
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+gridExtra::grid.arrange(
+  p9, p10, p11, p12,
+  ncol = 2, nrow = 2,
+  top = paste("Variogramas -", amb))
+```
+
+
+#### Ambiente OT1SER22
+```{r}
+#| message: false
+#| warning: false
+#| output: false
+#| 
+amb = "OT1SER22"
+
+p13 = plot(varioGram(lista_modelos[[amb]]$M1), main = "M1: Base")
+p14 = plot(varioGram(lista_modelos[[amb]]$M2), main = "M2: AR1 x AR1")
+p15 = plot(varioGram(lista_modelos[[amb]]$M3), main = "M3: AR1 x AR1 + units")
+p16 = plot(varioGram(lista_modelos[[amb]]$M4), main = "M4: AR1 x AR1 + units + rn + cn")
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+gridExtra::grid.arrange(
+  p13, p14, p15, p16,
+  ncol = 2, nrow = 2,
+  top = paste("Variogramas -", amb))
+```
+
+
+#### Ambiente OT2NAM21
+```{r}
+#| message: false
+#| warning: false
+#| output: false
+#| 
+amb = "OT2NAM21"
+
+p17 = plot(varioGram(lista_modelos[[amb]]$M1), main = "M1: Base")
+p18 = plot(varioGram(lista_modelos[[amb]]$M2), main = "M2: AR1 x AR1")
+p19 = plot(varioGram(lista_modelos[[amb]]$M3), main = "M3: AR1 x AR1 + units")
+p20 = plot(varioGram(lista_modelos[[amb]]$M4), main = "M4: AR1 x AR1 + units + rn + cn")
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+gridExtra::grid.arrange(
+  p17, p18, p19, p20,
+  ncol = 2, nrow = 2,
+  top = paste("Variogramas -", amb))
+```
+
+
+#### Ambiente OT2SER21
+```{r}
+#| message: false
+#| warning: false
+#| output: false
+#| 
+amb = "OT2SER21"
+
+p21 = plot(varioGram(lista_modelos[[amb]]$M1), main = "M1: Base")
+p22 = plot(varioGram(lista_modelos[[amb]]$M2), main = "M2: AR1 x AR1")
+p23 = plot(varioGram(lista_modelos[[amb]]$M3), main = "M3: AR1 x AR1 + units")
+p24 = plot(varioGram(lista_modelos[[amb]]$M4), main = "M4: AR1 x AR1 + units + rn + cn")
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+gridExtra::grid.arrange(
+  p21, p22, p23, p24,
+  ncol = 2, nrow = 2,
+  top = paste("Variogramas -", amb))
+```
+
+Os variogramas indicaram presença de estrutura espacial residual nos modelos sem ajuste espacial, representado por gráficos de pontos. Nos modelos espaciais, representados por superfícies 3D, a redução de picos, ondas e irregularidades indicou melhor controle da dependência espacial entre parcelas. De modo geral, os modelos espaciais apresentaram superfícies mais homogêneas e com menor variação residual em comparação ao modelo base, embora a intensidade dessa melhora tenha variado entre os ambientes.
+
