@@ -1,1 +1,1955 @@
 
+---
+title: "Análise Multinível e Modelagem Ambiental de Soja no Zimbabwe"
+author: "Ana, Paula e Thiago"
+date: today
+lang: pt
+format:
+  html:
+    code-fold: true
+    toc: true
+    toc-depth: 3
+    toc-title: "Sumário"
+    number-sections: true
+    theme: flatly
+    code-tools: true
+    code-overflow: wrap
+    embed-resources: true
+    fig-width: 8
+    fig-height: 5
+    highlight-style: github
+    df-print: paged
+execute:
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup-asreml
+#| include: true
+#| output: false
+
+library(asreml)
+
+   
+
+
+```
+
+# Introdução
+
+Este relatório apresenta uma análise integrada dos ensaios da Pan-African Soybean Trials Network para o Zimbabwe. Os dados utilizados são públicos e foram obtidos do repositório da rede (`Pan_African_Trials_Network`, GitHub). Foram avaliados componentes de produtividade, interação genótipo × ambiente (G×E), estabilidade fenotípica, acurácia seletiva e relações entre caracteres agronômicos. Adicionalmente, foi realizada modelagem de nicho ecológico para identificar áreas potencialmente adequadas ao cultivo de soja sob condições climáticas atuais e futuras.
+
+# Objetivos
+
+- Caracterizar a variabilidade fenotípica da produtividade de grãos (GY).
+- Quantificar os componentes de variância associados a genótipos, ambientes e interação G×E.
+- Estimar BLUPs genotípicos utilizando modelos mistos.
+- Avaliar estabilidade por WAASB.
+- Investigar correlações entre caracteres.
+- Projetar adequabilidade climática atual e futura para o Zimbabwe.
+
+# Dados e Métodos
+
+Os dados fenotípicos utilizados neste estudo correspondem ao subconjunto de ambientes localizados no Zimbabwe da Pan-African Soybean Trials Network, contendo informações de produtividade de grãos (GY), dias para maturidade (NDM), dias para florescimento (FLW_DAYS), altura de plantas na maturidade (PH_R8), massa de cem grãos (W100G), teor de proteína (PROT), teor de óleo (OIL), além de coordenadas geográficas e altitude dos ambientes experimentais (LAT, LON e ELEV).
+
+A análise foi conduzida em três etapas complementares. Inicialmente, realizou-se a caracterização exploratória dos dados, incluindo estatísticas descritivas, distribuição da produtividade entre ambientes e comparação entre genótipos experimentais e testemunhas. Em seguida, foram ajustados modelos lineares mistos utilizando o método REML/BLUP no software ASReml-R. A estrutura analítica incluiu: M0, modelo nulo contendo apenas o efeito aleatório de ambiente para estimativa do coeficiente de correlação intraclasse (ICC); M1, ambiente e bloco (repetição dentro de ambiente) como efeitos fixos e genótipo como efeito aleatório; M2, modelo principal contendo ambiente e bloco (repetição dentro de ambiente) como efeitos fixos e os efeitos aleatórios de genótipo e interação genótipo × ambiente (G×E); M3, modelo com estrutura Factor Analytic de primeira ordem (FA1), mantendo ambiente e bloco como efeitos fixos; M_cov, incluindo elevação, latitude e longitude padronizadas como covariáveis ambientais; e M_check, incorporando o efeito de testemunha (check) como fator fixo. A partir desses modelos foram obtidos componentes de variância, BLUPs genotípicos, acurácia seletiva e parâmetros de estabilidade.
+
+A estabilidade fenotípica foi avaliada por meio do índice WAASB (Weighted Average of Absolute Scores from the BLUP Matrix), obtido a partir da decomposição em valores singulares da matriz de efeitos BLUP da interação G×E. A combinação entre produtividade predita e estabilidade permitiu identificar genótipos com adaptação ampla e desempenho consistente em múltiplos ambientes.
+
+Paralelamente, foi realizada modelagem de adequabilidade climática utilizando o pacote `ENMTML`. Os modelos foram calibrados com locais que apresentaram produtividade superior a 2.000 kg ha⁻¹ e variáveis bioclimáticas do WorldClim 2.1. Foram empregados os algoritmos MaxEnt, Random Forest, GLM e SVM, posteriormente combinados em um ensemble por média. As projeções climáticas futuras foram realizadas para os cenários SSP1-2.6 e SSP2-4.5 nos períodos de 2021–2040 e 2041–2060, utilizando a média dos modelos climáticos globais EC-Earth3-Veg e MPI-ESM1-2-HR. Adicionalmente, mapas de extrapolação ambiental (MOP) foram gerados para identificar regiões sujeitas a condições climáticas fora do domínio de calibração dos modelos.
+
+Por fim, os resultados agronômicos e climáticos foram integrados por meio de um Índice de Priorização Espacial (IPS), desenvolvido para combinar desempenho produtivo, acurácia seletiva dos ambientes, adequabilidade climática atual e adequabilidade climática futura. Os ambientes foram posteriormente agrupados em mega-ambientes climáticos por análise de agrupamento multivariada, permitindo identificar genótipos prioritários para recomendação sob condições atuais e futuras de cultivo de soja no Zimbabwe.
+
+# Resultados
+
+## Distribuição de produtividade entre ambientes
+
+Os ambientes apresentaram ampla variação de produtividade, evidenciando forte heterogeneidade ambiental. Alguns ambientes apresentaram medianas superiores a 5.000 kg ha⁻¹, enquanto outros permaneceram abaixo de 2.000 kg ha⁻¹. Essa amplitude sugere elevada influência das condições edafoclimáticas e reforça a necessidade de modelos que incorporem G×E (Script 2, Seções 2.3 e 2.6).
+
+## Testados versus testemunhas
+
+As testemunhas apresentaram desempenho competitivo em diversos ambientes, indicando boa calibração experimental. Entretanto, vários genótipos testados alcançaram produtividades equivalentes ou superiores às testemunhas, demonstrando potencial de ganho genético (Script 2, Seção 2.9).
+
+## Acurácia seletiva
+
+As correlações entre BLUPs e médias observadas foram elevadas na maioria dos ambientes (>0,90), indicando alta confiabilidade das estimativas genéticas. Apenas poucos ambientes apresentaram redução moderada na acurácia, possivelmente devido a maior variabilidade residual (Script 2, Seção 2.10).
+
+## Correlação entre caracteres
+
+As correlações fenotípicas (Script 2, Seção 2.11) indicaram:
+
+- Associação positiva forte entre NDM e FLW_DAYS.
+- Correlação negativa entre proteína e óleo.
+- Relação praticamente nula entre produtividade e maturidade.
+- Associação fraca entre produtividade e peso de 100 grãos.
+
+Esses resultados sugerem relativa independência entre produtividade e diversos componentes agronômicos.
+
+## Produtividade versus ciclo
+
+A dispersão entre GY e NDM mostrou ausência de tendência forte. Assim, genótipos mais tardios não necessariamente apresentaram maiores produtividades, permitindo seleção simultânea para rendimento e ciclo.
+
+## Produtividade versus peso de grãos
+
+A correlação negativa observada foi de baixa magnitude, indicando que aumento do peso individual dos grãos não garante incremento na produtividade total.
+
+## Estabilidade (WAASB)
+
+O biplot WAASB (Script 2, Seção 2.12) identificou genótipos simultaneamente produtivos e estáveis. Os materiais posicionados no quadrante superior esquerdo (Quadrante I) representam os candidatos mais promissores para recomendação ampla.
+
+## BLUPs genotípicos
+
+Os BLUPs (Script 2, Seções 2.6 e 2.15) permitiram ordenar os genótipos com correção para efeitos ambientais e desbalanceamento dos dados. Os melhores materiais apresentaram desempenho consistente e elevada produtividade predita.
+
+## Heatmap G×E
+
+O padrão observado (Script 2, Seção 2.15) confirma interação G×E expressiva. Alguns genótipos exibiram adaptação específica, enquanto outros apresentaram desempenho consistente em praticamente todos os ambientes.
+
+## Partição da variância
+
+A decomposição dos componentes (Script 2, Seção 2.6) indicou:
+
+- Genótipo: ~19,9%
+- Interação G×E: ~25,9%
+- Resíduo: ~54,3%
+
+A contribuição da interação G×E foi superior à do efeito genotípico principal, justificando o emprego de modelos mistos e análises de estabilidade.
+
+# Discussão
+
+## Componentes de variância e a magnitude da interação G×E
+
+A partição da variância obtida no modelo principal (M2), com blocos considerados como efeito fixo dentro de ambiente, mostrou que a interação G×E (25,9%) superou o componente genotípico principal (19,9%), enquanto o resíduo concentrou a maior parte da variação total (54,3%). Esse padrão é consistente com o que é tipicamente observado em redes multiambientais de soja conduzidas em condições de campo heterogêneas, indicando que a superioridade de um genótipo não é fixa, mas depende fortemente do ambiente em que é avaliado. A elevada proporção residual chama atenção para fontes de variação não controladas: variabilidade de solo dentro dos ensaios, diferenças de manejo entre estações experimentais, erros de mensuração ou número limitado de repetições em alguns ambientes. Isso sugere que ganhos adicionais de precisão poderiam vir tanto do refinamento do delineamento experimental (blocos incompletos, ajuste espacial) quanto da incorporação de covariáveis ambientais que expliquem parte dessa heterogeneidade, como discutido a seguir.
+
+## BLUPs, modelo FA1 e confiabilidade das estimativas
+
+A comparação entre os modelos M1 (sem G×E), M2 (G×E simples) e M3 (estrutura Factor Analytic, FA1) permite avaliar se a interação G×E possui estrutura, isto é, se alguns ambientes compartilham padrões de resposta genotípica semelhantes. Caso o modelo FA1 apresente AIC/BIC sensivelmente menores que M2, isso indica que a interação não é puramente aleatória, mas reflete agrupamentos de ambientes com comportamento correlacionado, informação valiosa para o delineamento de mega-ambientes de recomendação. A acurácia seletiva superior a 0,90 na maioria dos ambientes reforça que os BLUPs de M2 são estimativas confiáveis da ordem de mérito genotípico. Os ambientes com acurácia reduzida merecem atenção: rankings obtidos neles devem ser interpretados com cautela e podem indicar a necessidade de mais repetições ou de revisão dos dados de campo nesses locais específicos.
+
+## Covariáveis ambientais e efeito de testemunhas
+
+A inclusão de elevação, latitude e longitude como covariáveis (M_cov) tem dois papéis complementares. Primeiro, quantifica quanto da variância entre ambientes pode ser explicada por gradientes geográficos de macroescala, como gradientes altitudinais associados a temperatura e duração do ciclo. Segundo, ao absorver parte dessa variância nos efeitos fixos, ajuda a isolar o componente de G×E que é genuinamente genético-ambiental e não apenas geográfico. Uma redução expressiva na variância de ambiente após a inclusão dessas covariáveis sugeriria que boa parte da heterogeneidade observada nos ensaios do Zimbabwe segue um gradiente espacial previsível, o que tem implicações diretas para o desenho de futuras redes de ensaios, por exemplo, priorizando amplitude altitudinal e latitudinal na escolha de locais. O efeito de *check* (M_check), por sua vez, funciona como referência de calibração entre ambientes: testemunhas com desempenho estável fortalecem a comparabilidade dos BLUPs entre locais, enquanto testemunhas com comportamento errático podem sinalizar problemas experimentais localizados.
+
+## Estabilidade (WAASB) e estratégias de recomendação
+
+A combinação de produtividade (BLUP de GY) e estabilidade (WAASB) no índice de seleção (SI) permite segmentar os genótipos em estratégias de recomendação distintas. Materiais do Quadrante I (alta produtividade e alta estabilidade) são os candidatos naturais para recomendação ampla, por apresentarem desempenho previsível em múltiplos ambientes, característica desejável para programas com recursos limitados de testagem. Genótipos do Quadrante II (alta produtividade, mas instáveis) não devem ser descartados: podem representar adaptação específica a ambientes favoráveis ou a nichos particulares, como regiões de maior altitude ou maior pluviosidade, sendo direcionados para recomendação regionalizada. Genótipos dos Quadrantes III e IV, por outro lado, tendem a ter prioridade reduzida nas próximas etapas de seleção, exceto quando carregam características agronômicas complementares, como resistência a doenças ou qualidade de grão, que justifiquem sua manutenção no programa.
+
+## Relações entre caracteres agronômicos
+
+As correlações fenotípicas reforçam padrões biologicamente esperados e abrem oportunidades de seleção. A associação positiva forte entre NDM e FLW_DAYS é coerente, já que o ciclo total é, em grande medida, determinado pela duração da fase reprodutiva. A correlação negativa entre proteína e óleo reflete o conhecido *trade-off* fisiológico na partição de fotoassimilados entre as rotas de síntese proteica e lipídica durante o enchimento de grãos, um desafio recorrente em programas de melhoramento de soja que buscam ganhos simultâneos em ambos os componentes de qualidade. De maior relevância prática, a ausência de associação forte entre GY e NDM, e a correlação fraca entre GY e W100G, indicam que ganhos em produtividade não estão necessariamente condicionados a alterações no ciclo ou no tamanho do grão, ampliando a flexibilidade do programa na escolha de genótipos-alvo.
+
+## Modelagem de nicho ecológico: cenários atuais e futuros
+
+A modelagem de adequabilidade (`ENMTML`) complementa a análise agronômica ao situar o desempenho observado dentro de um contexto espacial e temporal mais amplo. O mapa de adequabilidade atual indica as regiões do Zimbabwe climaticamente mais próximas às condições onde a soja já é cultivada com sucesso, servindo como referência para expansão de área. As projeções para os cenários SSP126 e SSP245 (períodos 2021–2040 e 2041–2060) permitem antecipar como essas áreas podem se contrair, deslocar ou expandir sob diferentes trajetórias de mudança climática. Cenários de menor forçante radiativa (SSP126) tendem a preservar mais a adequabilidade atual, enquanto SSP245 representa uma trajetória intermediária de maior pressão climática. Os mapas de extrapolação (MOP) são componente essencial dessa análise: delimitam onde as projeções futuras extrapolam para combinações ambientais não observadas nos dados de calibração, sinalizando áreas em que as previsões de adequabilidade devem ser interpretadas com maior cautela. A leitura conjunta de adequabilidade e extrapolação é o que torna a projeção climática útil para planejamento, evitando recomendações de expansão em regiões onde o modelo opera fora do seu domínio de validade.
+
+## Integração entre desempenho agronômico e adequabilidade climática
+A integração entre os resultados da modelagem agronômica e da modelagem ambiental permitiu identificar padrões espaciais que não seriam evidentes quando ambas as abordagens são analisadas separadamente. O Índice de Priorização Espacial (IPS) sintetizou informações de desempenho produtivo, acurácia experimental e adequabilidade climática atual e futura, permitindo classificar os ambientes de acordo com seu potencial estratégico para avaliação e recomendação de genótipos.
+
+O mapa de IPS evidenciou concentração dos ambientes prioritários nas regiões central e nordeste do Zimbabwe, áreas que coincidem com os maiores valores de adequabilidade climática observados nos modelos de nicho ecológico. Esse resultado sugere que os ambientes que historicamente apresentaram melhor desempenho experimental também tendem a estar inseridos em regiões climaticamente mais favoráveis para a cultura. Por outro lado, alguns ambientes localizados em regiões de menor adequabilidade apresentaram IPS reduzido, refletindo simultaneamente menor produtividade observada e menor potencial climático futuro.
+
+A análise da variação da adequabilidade climática indicou redução da adequabilidade em todos os ambientes avaliados quando comparados aos cenários futuros. Embora a magnitude da redução varie entre locais, o padrão geral sugere aumento da pressão ambiental sobre a cultura nas próximas décadas. Esse resultado é consistente com projeções climáticas para regiões subtropicais da África Austral, onde alterações no regime térmico e hídrico tendem a modificar a aptidão agrícola de diversas culturas. Entretanto, a intensidade dessa redução não foi uniforme, indicando que alguns ambientes poderão manter condições relativamente favoráveis mesmo sob cenários futuros.
+
+A relação entre desempenho agronômico e adequabilidade climática futura revelou que os ambientes não respondem de forma homogênea às mudanças climáticas projetadas. Alguns locais combinaram elevados valores de produtividade predita (BLUP) e alta adequabilidade futura, representando ambientes estratégicos para manutenção e expansão da cultura. Em contraste, outros ambientes apresentaram boa produtividade atual, mas baixa adequabilidade futura, sugerindo maior vulnerabilidade às mudanças climáticas. Essa distinção é particularmente relevante para programas de melhoramento e planejamento agrícola, pois permite identificar ambientes que permanecem promissores mesmo sob cenários climáticos menos favoráveis.
+
+A decomposição dos componentes do IPS demonstrou que diferentes ambientes alcançam classificações semelhantes por mecanismos distintos. Enquanto alguns locais se destacaram principalmente pelo elevado desempenho agronômico, outros obtiveram posições favoráveis devido à combinação entre adequabilidade climática e alta confiabilidade experimental. Esse resultado reforça a importância de abordagens multicritério na priorização de ambientes, evitando que decisões sejam baseadas exclusivamente em produtividade observada.
+
+A análise de agrupamento identificou cinco mega-ambientes climáticos, definidos pela similaridade entre adequabilidade atual, adequabilidade futura e características geográficas dos locais experimentais. A existência desses grupos sugere que o Zimbabwe apresenta regiões com perfis climáticos distintos, capazes de influenciar a resposta dos genótipos. A comparação dos rankings de BLUP dentro de cada mega-ambiente mostrou que determinados genótipos mantiveram desempenho superior em múltiplos grupos, indicando adaptação relativamente ampla. Em contraste, alguns materiais apresentaram desempenho destacado apenas em grupos específicos, sugerindo adaptação regionalizada.
+
+Os resultados obtidos para os genótipos mais bem classificados em cada mega-ambiente também evidenciaram a utilidade da estabilidade fenotípica na tomada de decisão. Genótipos com baixos valores de WAASB e elevado desempenho produtivo tendem a representar alternativas mais seguras para recomendação em ambientes heterogêneos, enquanto materiais altamente produtivos, porém menos estáveis, podem ser direcionados para regiões específicas onde seu potencial produtivo seja maximizado.
+
+Por fim, a estimativa da área climaticamente adequada para a cultura demonstrou tendência de redução sob todos os cenários futuros avaliados. A perda projetada de área adequada foi particularmente expressiva nos cenários mais severos e nos horizontes temporais mais distantes, indicando que a mudança climática poderá representar um importante fator limitante para a expansão da soja no Zimbabwe. Esse resultado reforça a necessidade de estratégias simultâneas de adaptação, incluindo seleção de genótipos mais resilientes, identificação de regiões prioritárias para cultivo e monitoramento contínuo das condições ambientais que sustentam a produção da cultura.
+## Limitações e perspectivas futuras
+
+Algumas limitações merecem destaque. Primeiro, a rede de ensaios do Zimbabwe é desbalanceada em número de genótipos e repetições por ambiente, o que reforça a importância do uso de BLUPs em vez de médias simples para comparações justas, mas ainda impõe limites à precisão das estimativas em ambientes com menor quantidade de observações. Segundo, a análise considera um recorte transversal dos ambientes disponíveis, sem informação explícita sobre anos ou safras. A incorporação de estruturas temporais permitiria separar os componentes de variação espacial e interanual, refinando a interpretação da interação genótipo × ambiente e aumentando a precisão das estimativas de estabilidade.
+
+Embora tenha sido realizada uma integração entre desempenho agronômico e adequabilidade climática por meio do Índice de Priorização Espacial (IPS), os modelos de nicho ecológico foram calibrados utilizando a ocorrência da cultura como um todo, sem distinção entre genótipos. Dessa forma, os resultados obtidos devem ser interpretados principalmente como uma ferramenta de priorização de ambientes e identificação de regiões estratégicas para cultivo, e não como uma medida direta de adaptação genética específica aos cenários climáticos futuros.
+
+Além disso, a definição dos pesos utilizados no IPS foi baseada em critérios heurísticos para combinar desempenho produtivo, acurácia experimental e adequabilidade climática. Estudos futuros poderão explorar abordagens alternativas de ponderação, incluindo métodos multicritério ou estratégias baseadas em otimização estatística, visando aumentar a objetividade do índice.
+
+Outra perspectiva promissora consiste em incorporar variáveis ambientais mais detalhadas, como atributos de solo, manejo agronômico e séries históricas climáticas, permitindo modelar de forma mais abrangente os fatores que condicionam a produtividade da soja. Da mesma forma, a utilização de modelos genótipo-específicos de adequabilidade climática poderá fornecer estimativas mais precisas de adaptação futura, integrando diretamente informações de desempenho agronômico, estabilidade fenotípica e mudanças climáticas projetadas.
+
+Por fim, a abordagem proposta demonstra o potencial da integração entre modelos mistos, análises de estabilidade e modelagem ambiental para apoiar a identificação de ambientes prioritários e direcionar estratégias de melhoramento e expansão da cultura da soja sob cenários de mudança climática.
+---
+
+# Script 1 — Modelagem Ambiental
+
+Este script realiza três grandes etapas: 1. Pré-processamento dos rasters climáticos futuros e leitura/filtragem dos dados fenotípicos de soja para o Zimbabwe. 2. Recorte das variáveis climáticas atuais e futuras para a extensão do Zimbabwe e modelagem de nicho ecológico (`ENMTML`). 3. Geração dos mapas de adequabilidade e de extrapolação (MOP).
+
+**Objetivo geral do Script 1.** O objetivo deste script é construir a base ambiental usada no relatório. Para isso, o código organiza os arquivos climáticos atuais e futuros, filtra os dados fenotípicos de soja para o Zimbabwe, seleciona pontos de ocorrência associados a produtividade mínima de 2000, executa a modelagem de adequabilidade climática com o pacote `ENMTML` e gera mapas finais de adequabilidade e extrapolação ambiental. O script foi estruturado para trabalhar com arquivos locais armazenados em `E:/Thiago/Estatistica`, usando dados fenotípicos da Pan-African Soybean Trials Network e variáveis bioclimáticas em formato raster.
+
+**Principais entradas do script.** As entradas são: arquivos `.tif` de variáveis bioclimáticas atuais (`CurrentConditions`), arquivos `.tif` de condições futuras (`FutureConditions`), o limite geográfico do Zimbabwe em `zw.json`, e o banco fenotípico obtido do repositório público da Pan-African Soybean Trials Network.
+
+**Principais saídas do script.** As saídas incluem: `dados_zimbabwe.csv`, arquivo de coordenadas `coordenadas_zimbabwe_GY2000.txt`, pastas com rasters recortados para o Zimbabwe (`CurrentConditions_ZW` e `FutureConditions_ZW`), resultados do `ENMTML`, mapas de adequabilidade climática atual e futura e mapas MOP de extrapolação ambiental.
+
+
+
+## Configuração dos caminhos de trabalho
+
+Esta primeira etapa define todos os diretórios usados ao longo do script. A variável `base_dir` representa a pasta principal do projeto. A partir dela, são construídos os caminhos para as pastas de condições climáticas atuais, condições futuras, resultados do `ENMTML`, arquivos de projeção, mapa vetorial do Zimbabwe e arquivo de coordenadas das ocorrências.
+
+**Parâmetros principais.**  
+- `base_dir`: diretório principal do projeto.  
+- `dir_current`: pasta com rasters climáticos atuais.  
+- `dir_future`: pasta com rasters climáticos futuros.  
+- `dir_current_zw` e `dir_future_zw`: pastas onde serão salvos os rasters recortados para o Zimbabwe.  
+- `dir_resultados`: pasta em que o `ENMTML` gravará os resultados.  
+- `dir_ensemble_atual`: raster final de adequabilidade atual gerado pelo ensemble.  
+- `dir_projection`: pasta com as projeções futuras do modelo.  
+- `dir_extrap_atual`: raster MOP atual.  
+- `zw_path`: arquivo vetorial com o limite do Zimbabwe.  
+- `coords_path`: arquivo com coordenadas de ocorrência usado pelo `ENMTML`.
+
+**Observação.** Nenhuma análise é executada neste bloco; ele apenas centraliza os caminhos para evitar repetição e facilitar alterações posteriores.
+
+```{r}
+#| label: s1-0-config-caminhos
+#| output: false
+base_dir       <- "E:/Thiago/Estatistica"
+
+dir_current    <- file.path(base_dir, "CurrentConditions")
+dir_current_zw <- file.path(base_dir, "CurrentConditions_ZW")
+dir_future     <- file.path(base_dir, "FutureConditions")
+dir_future_zw  <- file.path(base_dir, "FutureConditions_ZW")
+
+# >>> Ajuste aqui caso o `ENMTML` grave em pasta com nome diferente <<<
+dir_resultados <- file.path(base_dir, "resultados_boot")
+
+dir_ensemble_atual <- file.path(dir_resultados, "Ensemble/MEAN/Glycine_max.tif")
+dir_projection     <- file.path(dir_resultados, "Projection")
+dir_extrap_atual   <- file.path(dir_resultados, "Extrapolation/Glycine_max_MOP.tif")
+
+zw_path        <- file.path(base_dir, "zw.json")
+coords_path    <- file.path(base_dir, "coordenadas_zimbabwe_GY2000.txt")
+```
+
+## Preparação dos rasters de condições futuras (WorldClim 2.1)
+
+Esta etapa prepara os arquivos climáticos futuros para uso no `ENMTML`. Muitos arquivos do WorldClim são disponibilizados como rasters multibanda, nos quais cada banda representa uma variável bioclimática. O código separa cada banda em arquivos individuais nomeados como `Bio1.tif`, `Bio2.tif`, ..., preservando a organização por cenário, modelo climático global e período futuro.
+
+**Pacote utilizado.** O pacote `raster` é usado para ler arquivos multibanda com `stack()` e salvar cada camada separadamente com `writeRaster()`.
+
+**Entradas.** Arquivos `.tif` armazenados em `dir_future`.
+
+**Processamento.** Para cada arquivo `.tif`, o script cria uma subpasta com o nome do arquivo original sem extensão. Em seguida, percorre todas as bandas do raster (`nlayers(r)`) e grava cada banda como um arquivo independente.
+
+**Saída.** Subpastas dentro de `FutureConditions`, cada uma contendo os arquivos `Bio1.tif`, `Bio2.tif`, etc. Essa organização é necessária porque o `ENMTML` espera diretórios com camadas climáticas individuais.
+
+```{r}
+#| label: s1-1-separar-bandas-futuras
+#| output: false
+setwd(dir_future)
+
+library(raster)
+
+arquivos <- list.files(pattern = "\\.tif$")
+cat("Arquivos encontrados:\n")
+print(arquivos)
+
+for (arquivo in arquivos) {
+  cat("\nProcessando:", arquivo, "\n")
+  r <- stack(arquivo)
+  nome_base <- tools::file_path_sans_ext(arquivo)
+  dir.create(nome_base, showWarnings = FALSE)
+  for (i in 1:nlayers(r)) {
+    writeRaster(
+      r[[i]],
+      filename  = file.path(nome_base, paste0("Bio", i, ".tif")),
+      overwrite = TRUE
+    )
+  }
+  cat("  Bandas salvas em:", nome_base, "\n")
+}
+
+setwd(base_dir)
+cat("\nEtapa concluída!\n")
+```
+
+## Leitura dos dados fenotípicos e filtro para o Zimbabwe
+
+Esta etapa importa os dados fenotípicos da Pan-African Soybean Trials Network diretamente do GitHub e filtra apenas as observações correspondentes ao Zimbabwe. O objetivo é gerar uma base fenotípica específica do país, contendo os ambientes, locais, genótipos, coordenadas e valores de produtividade que serão usados nas análises posteriores.
+
+**Entrada.** Arquivo `data.csv` obtido por URL pública. O separador utilizado é `;`, por isso o argumento `sep = ";"` é necessário.
+
+**Processamento.** O código inspeciona a estrutura do banco (`str(dat)`), lista os nomes das colunas, resume a quantidade de registros por país e contabiliza ambientes, locais e coordenadas únicas. Em seguida, filtra o banco para `COUNTRY == "Zimbabwe"`.
+
+**Saída.** O arquivo `dados_zimbabwe.csv`, salvo no diretório principal, contendo apenas os dados do Zimbabwe.
+
+
+```{r}
+#| label: s1-2-leitura-filtro-zimbabwe
+#| output: false
+setwd(base_dir)
+
+dat <- read.csv(
+  "https://raw.githubusercontent.com/mauricioaraujj/Pan_African_Trials_Network/refs/heads/main/data/data.csv",
+  sep = ";"
+)
+
+str(dat)
+names(dat)
+
+sort(table(dat$COUNTRY), decreasing = TRUE)
+length(unique(dat$env))
+length(unique(dat$loc))
+nrow(unique(dat[, c("LON", "LAT")]))
+
+dat_zimbabwe <- subset(dat, COUNTRY == "Zimbabwe")
+write.csv(dat_zimbabwe, "dados_zimbabwe.csv", row.names = FALSE)
+
+cat("=== Zimbabwe (sem filtro GY) ===\n")
+cat("Observações       :", nrow(dat_zimbabwe), "\n")
+cat("Ambientes únicos  :", length(unique(dat_zimbabwe$env)), "\n")
+cat("Locais únicos     :", length(unique(dat_zimbabwe$loc)), "\n")
+cat("Coordenadas únicas:", nrow(unique(dat_zimbabwe[, c("LON", "LAT")])), "\n")
+```
+
+## Estatísticas descritivas de produtividade (GY)
+
+Esta etapa resume a variável produtividade de grãos (`GY`) para o subconjunto do Zimbabwe. O objetivo é caracterizar a amplitude de variação da produtividade antes da modelagem ambiental.
+
+**Variável analisada.** `GY`, que representa a produtividade de grãos registrada na base fenotípica.
+
+**Estatísticas calculadas.** Número de observações válidas, mínimo, primeiro quartil, média, mediana, terceiro quartil, máximo, desvio-padrão, variância e coeficiente de variação percentual. Todos os cálculos usam `na.rm = TRUE` para ignorar valores ausentes.
+
+**Gráficos gerados.** Um histograma para visualizar a distribuição geral da produtividade e um boxplot para observar mediana, dispersão e possíveis valores extremos.
+
+
+```{r}
+#| label: s1-3-estatisticas-descritivas
+
+prod_zimbabwe <- dat_zimbabwe$GY
+
+estatisticas_prod <- data.frame(
+  n             = sum(!is.na(prod_zimbabwe)),
+  minimo        = min(prod_zimbabwe, na.rm = TRUE),
+  q1            = quantile(prod_zimbabwe, 0.25, na.rm = TRUE),
+  media         = mean(prod_zimbabwe, na.rm = TRUE),
+  mediana       = median(prod_zimbabwe, na.rm = TRUE),
+  q3            = quantile(prod_zimbabwe, 0.75, na.rm = TRUE),
+  maximo        = max(prod_zimbabwe, na.rm = TRUE),
+  desvio_padrao = sd(prod_zimbabwe, na.rm = TRUE),
+  variancia     = var(prod_zimbabwe, na.rm = TRUE),
+  cv_percentual = sd(prod_zimbabwe, na.rm = TRUE) / mean(prod_zimbabwe, na.rm = TRUE) * 100
+)
+
+print(estatisticas_prod)
+
+hist(
+  prod_zimbabwe,
+  main   = "Distribuição da produtividade - Zimbabwe",
+  xlab   = "GY (g/parcela)",
+  col    = "gray80",
+  border = "white"
+)
+
+boxplot(
+  prod_zimbabwe,
+  main = "Produtividade - Zimbabwe",
+  ylab = "GY (g/parcela)"
+)
+```
+
+## Filtro GY ≥ 2000 e exportação das coordenadas de ocorrência
+
+Esta etapa define os pontos de ocorrência utilizados na modelagem de adequabilidade climática. Em vez de usar todas as coordenadas dos ensaios, o script seleciona apenas observações com produtividade igual ou superior a 2000, considerando esses pontos como locais onde a cultura apresentou desempenho agronômico satisfatório.
+
+**Critério de filtro.** `GY >= 2000`. Esse limiar foi usado para restringir os pontos de ocorrência a ambientes com produtividade mínima relevante, evitando calibrar o modelo com locais de desempenho muito baixo.
+
+**Processamento.** O script calcula quantas observações foram mantidas e removidas, resume a amplitude de latitude, longitude e elevação, contabiliza ambientes, locais e coordenadas únicas e exporta apenas pares únicos de coordenadas.
+
+**Formato de saída.** O arquivo final é salvo como `.txt` separado por tabulação, contendo três colunas: `spp`, `x` e `y`. A coluna `spp` recebe o nome `Glycine max`; `x` corresponde à longitude; e `y` corresponde à latitude. Esse formato é o esperado pelo pacote `ENMTML`.
+
+
+```{r}
+#| label: s1-4-filtro-gy2000-coords
+#| output: false
+dat_zimbabwe_2000 <- subset(dat_zimbabwe, GY >= 2000)
+
+n_original <- nrow(dat_zimbabwe)
+n_restante  <- nrow(dat_zimbabwe_2000)
+n_removido  <- n_original - n_restante
+
+cat("\n=== Filtro GY >= 2000 ===\n")
+cat("Total original              :", n_original, "\n")
+cat("Total após filtro GY >= 2000:", n_restante, "\n")
+cat("Removidos                   :", n_removido, "\n")
+cat("Percentual removido         :", round(100 * n_removido / n_original, 2), "%\n")
+
+cat("\nAmplitude LAT:", paste(range(dat_zimbabwe_2000$LAT, na.rm = TRUE), collapse = " a "), "\n")
+cat("Amplitude LON:", paste(range(dat_zimbabwe_2000$LON, na.rm = TRUE), collapse = " a "), "\n")
+cat("Altitude (ELEV):\n")
+print(summary(dat_zimbabwe_2000$ELEV))
+
+cat("\nAmbientes únicos (GY>=2000) :", length(unique(dat_zimbabwe_2000$env)), "\n")
+cat("Locais únicos    (GY>=2000) :", length(unique(dat_zimbabwe_2000$loc)), "\n")
+cat("Coordenadas únicas (GY>=2000):", nrow(unique(dat_zimbabwe_2000[, c("LON", "LAT")])), "\n")
+
+# Exportação — TXT separado por tabulação, no formato esperado pelo `ENMTML`
+coords_unique <- unique(dat_zimbabwe_2000[, c("LON", "LAT")])
+
+coords_out <- data.frame(
+  spp = "Glycine max",
+  x   = coords_unique$LON,
+  y   = coords_unique$LAT
+)
+
+write.table(
+  coords_out,
+  file      = coords_path,
+  sep       = "\t",
+  row.names = FALSE,
+  quote     = FALSE
+)
+
+cat("\nArquivo 'coordenadas_zimbabwe_GY2000.txt' salvo com", nrow(coords_out), "pontos.\n")
+```
+
+## Recorte das variáveis climáticas para o Zimbabwe
+
+Esta etapa recorta e mascara os rasters climáticos atuais e futuros para o limite geográfico do Zimbabwe. O recorte reduz os arquivos à área de interesse, enquanto a máscara remove pixels que estão fora do polígono do país.
+
+**Pacote utilizado.** O pacote `terra` é usado para leitura, manipulação, recorte e gravação dos rasters.
+
+**Entradas.** O arquivo vetorial `zw.json`, os rasters atuais em `CurrentConditions` e os rasters futuros em subpastas de `FutureConditions`.
+
+**Processamento.** Primeiro, o limite do Zimbabwe é lido com `vect()`. Depois, os rasters atuais são carregados com `rast()`, recortados com `crop()` e mascarados com `mask()`. O mesmo processo é repetido para cada subpasta de condições futuras. O código também verifica se o sistema de coordenadas dos rasters e do polígono são iguais; se não forem, o polígono é reprojetado.
+
+**Saída.** Rasters atuais recortados em `CurrentConditions_ZW` e rasters futuros recortados em `FutureConditions_ZW`, mantendo a organização por cenário/período.
+
+```{r}
+#| label: s1-5-recorte-climatico-zw
+#| output: false
+library(terra)
+
+zw <- vect(zw_path)
+
+# --- CurrentConditions ---
+dir.create(dir_current_zw, showWarnings = FALSE, recursive = TRUE)
+
+files <- list.files(dir_current, pattern = "\\.tif$", full.names = TRUE)
+r <- rast(files)
+if (!same.crs(r, zw)) zw <- project(zw, crs(r))
+r_zw <- mask(crop(r, zw), zw)
+
+for (i in 1:nlyr(r_zw)) {
+  nm <- names(r_zw)[i]
+  if (is.na(nm) || nm == "") nm <- paste0("Bio", i)
+  writeRaster(r_zw[[i]],
+              filename  = file.path(dir_current_zw, paste0(nm, ".tif")),
+              overwrite = TRUE)
+}
+cat("CurrentConditions_ZW pronto:", dir_current_zw, "\n")
+
+# --- FutureConditions ---
+dir.create(dir_future_zw, showWarnings = FALSE, recursive = TRUE)
+
+subs <- list.dirs(dir_future, recursive = FALSE, full.names = TRUE)
+
+for (sub in subs) {
+  sub_name <- basename(sub)
+  out_sub  <- file.path(dir_future_zw, sub_name)
+  dir.create(out_sub, showWarnings = FALSE, recursive = TRUE)
+
+  files <- list.files(sub, pattern = "\\.tif$", full.names = TRUE)
+  if (length(files) == 0) next
+
+  r <- rast(files)
+  zw_use <- zw
+  if (!same.crs(r, zw_use)) zw_use <- project(zw_use, crs(r))
+  r_zw <- mask(crop(r, zw_use), zw_use)
+
+  for (i in 1:nlyr(r_zw)) {
+    nm <- names(r_zw)[i]
+    if (is.na(nm) || nm == "") nm <- paste0("Bio", i)
+    writeRaster(r_zw[[i]],
+                filename  = file.path(out_sub, paste0(nm, ".tif")),
+                overwrite = TRUE)
+  }
+  message("Recortado: ", sub_name)
+}
+cat("FutureConditions_ZW pronto:", dir_future_zw, "\n")
+```
+
+## Modelagem de nicho ecológico (`ENMTML`)
+
+Esta etapa executa a modelagem de adequabilidade climática da soja para o Zimbabwe usando o pacote `ENMTML`. O modelo é calibrado com as condições climáticas atuais e com os pontos de ocorrência definidos pelo filtro `GY >= 2000`. Em seguida, o modelo é projetado para cenários climáticos futuros.
+
+**Entradas principais.** `pred_dir` indica a pasta com preditores climáticos atuais recortados para o Zimbabwe; `occ_file` indica o arquivo de ocorrência com colunas `spp`, `x` e `y`; `proj_dir` indica a pasta com condições climáticas futuras; e `result_dir` define onde os resultados serão salvos.
+
+**Algoritmos utilizados.** O script utiliza quatro algoritmos: `MXS` (MaxEnt), `RDF` (Random Forest), `GLM` (Generalized Linear Model) e `SVM` (Support Vector Machine). O resultado final é combinado por ensemble usando a média (`ensemble = c(method = 'MEAN')`).
+
+**Particionamento.** A validação usa bootstrap (`part = c(method = 'BOOT', replicates = '20', proportion = '0.7')`), com 20 repetições e 70% dos dados usados em cada calibração.
+
+**Pseudoausências.** O método `GEO_ENV_CONST` com largura 30 é usado para gerar pseudoausências considerando restrições geográficas e ambientais. A razão presença:pseudoausência é 1:1 (`pres_abs_ratio = 1`).
+
+**Controle de colinearidade.** O argumento `colin_var = c(method = 'PCA')` indica que a colinearidade entre variáveis ambientais é tratada por PCA.
+
+**Limite de classificação.** O limiar de adequabilidade é definido por `MAX_TSS`, que maximiza a estatística TSS.
+
+**Extrapolação.** `extrapolation = TRUE` solicita a geração de mapas MOP, úteis para identificar áreas onde as projeções ocorrem fora do domínio ambiental usado para calibração.
+
+
+```{r}
+#| label: s1-6-`ENMTML`
+#| output: false
+library(`ENMTML`)
+
+`ENMTML`(
+  pred_dir            = dir_current_zw,
+  occ_file            = coords_path,
+  result_dir          = dir_resultados,
+  proj_dir            = dir_future_zw,
+  sp                  = "spp",
+  x                   = "x",
+  y                   = "y",
+  min_occ             = 5,
+  thin_occ            = c(method = 'CELLSIZE'),
+  colin_var           = c(method = 'PCA'),
+  imp_var             = TRUE,
+  eval_occ            = NULL,
+  sp_accessible_area  = NULL,
+  pres_abs_ratio      = 1,
+  pseudoabs_method    = c(method = 'GEO_ENV_CONST', width = '30'),
+  part                = c(method = 'BOOT', replicates = '20', proportion = '0.7'),
+  save_part           = FALSE,
+  save_final          = TRUE,
+  algorithm           = c("MXS", "RDF", "GLM", "SVM"),
+  thr                 = c(type = 'MAX_TSS'),
+  msdm                = NULL,
+  ensemble            = c(method = 'MEAN'),
+  extrapolation       = TRUE,
+  cores               = 2
+)
+```
+
+## Mapas de adequabilidade — atual e cenários futuros
+
+Esta etapa gera mapas de adequabilidade climática atual e futura para soja no Zimbabwe. O código lê o ensemble atual produzido pelo `ENMTML`, calcula a média entre dois modelos climáticos globais para cada cenário futuro e produz mapas padronizados com escala de cores comum.
+
+**Pacotes utilizados.** `terra` manipula rasters; `sf` lê e manipula arquivos vetoriais; `ggplot2` constrói os mapas; `gridExtra` organiza múltiplos mapas em uma grade; `ggspatial` adiciona escala e seta norte; e `rnaturalearth` fornece mapa base para checagens visuais.
+
+**Cenários avaliados.** São considerados dois cenários de emissão (`ssp126` e `ssp245`) e dois períodos futuros (`2021-2040` e `2041-2060`). Para cada combinação, o script calcula a média dos resultados obtidos com os modelos climáticos EC-Earth3-Veg e MPI-ESM1-2-HR.
+
+**Função `media_gcm`.** Essa função recebe o período e o cenário SSP, lê os dois rasters projetados, calcula a média entre eles, recorta para o Zimbabwe e retorna o raster final.
+
+**Função `rast_to_df`.** Converte cada raster em `data.frame` com coordenadas `x`, `y` e valor de adequabilidade (`layer`), permitindo o uso de `geom_raster()` no `ggplot2`.
+
+**Escala unificada.** O script calcula `vmin` e `vmax` considerando todos os mapas para garantir que a mesma escala de cores seja usada nos cenários atual e futuros. Isso permite comparação visual direta entre mapas.
+
+**Saídas.** São salvos mapas individuais em formato `.svg` e uma grade combinada (`grid_mapas_zimbabwe.svg`) com ocorrências, adequabilidade atual e quatro cenários futuros.
+
+```{r}
+#| label: s1-7-mapas-adequabilidade
+
+library(terra)
+library(ggplot2)
+library(sf)
+library(gridExtra)
+library(ggspatial)
+library(rnaturalearth)
+library(rnaturalearthdata)
+
+# 1. Shapefile do Zimbabwe -----------------------------------------------
+zw_sf <- st_read(zw_path)
+
+# Mapa base mundial, recortado para o bbox do Zimbabwe (não utilizado nos
+# mapas finais, mas útil para checagens visuais rápidas)
+mundo   <- ne_countries(scale = "medium", returnclass = "sf")
+zw_crop <- st_crop(mundo, st_bbox(zw_sf))
+
+# 2. Ocorrências ------------------------------------------------------------
+ocorrencias <- read.table(coords_path, header = TRUE, sep = "\t")
+ocorrencias_sf <- st_as_sf(ocorrencias, coords = c("x", "y"), crs = 4326)
+
+# 3. Raster de adequabilidade atual -----------------------------------------
+atual <- rast(dir_ensemble_atual)
+atual <- mask(crop(atual, vect(zw_sf)), vect(zw_sf))
+
+# 4. Função para média de 2 GCMs ---------------------------------------------
+media_gcm <- function(periodo, ssp) {
+  p1 <- file.path(dir_projection,
+                  paste0("wc2.1_5m_bioc_EC-Earth3-Veg_", ssp, "_", periodo),
+                  "Ensemble/MEAN/Glycine_max.tif")
+
+  p2 <- file.path(dir_projection,
+                  paste0("wc2.1_5m_bioc_MPI-ESM1-2-HR_", ssp, "_", periodo),
+                  "Ensemble/MEAN/Glycine_max.tif")
+
+  r1 <- rast(p1)
+  r2 <- rast(p2)
+  med <- mean(c(r1, r2))
+  zw_v <- vect(st_transform(zw_sf, crs(med)))
+  return(mask(crop(med, zw_v), zw_v))
+}
+
+# 5. Carregar os 4 cenários futuros ------------------------------------------
+# Confirme os nomes reais das pastas de projeção antes de seguir:
+pastas <- list.dirs(dir_projection, recursive = FALSE, full.names = FALSE)
+cat(pastas, sep = "\n")
+
+periodo1 <- "2021-2040"   # <-- ajuste conforme necessário
+periodo2 <- "2041-2060"   # <-- ajuste conforme necessário
+
+ssp126_p1 <- media_gcm(periodo1, "ssp126")
+ssp126_p2 <- media_gcm(periodo2, "ssp126")
+ssp245_p1 <- media_gcm(periodo1, "ssp245")
+ssp245_p2 <- media_gcm(periodo2, "ssp245")
+
+# 6. Converter rasters para data.frame ---------------------------------------
+rast_to_df <- function(r) {
+  df <- as.data.frame(r, xy = TRUE)
+  colnames(df)[3] <- "layer"
+  df <- df[!is.na(df$layer), ]
+  return(df)
+}
+
+df_atual  <- rast_to_df(atual)
+df_126_p1 <- rast_to_df(ssp126_p1)
+df_126_p2 <- rast_to_df(ssp126_p2)
+df_245_p1 <- rast_to_df(ssp245_p1)
+df_245_p2 <- rast_to_df(ssp245_p2)
+
+# 7. Escala de cores unificada -----------------------------------------------
+todos_vals <- c(df_atual$layer, df_126_p1$layer, df_126_p2$layer,
+                df_245_p1$layer, df_245_p2$layer)
+vmin <- min(todos_vals, na.rm = TRUE)
+vmax <- max(todos_vals, na.rm = TRUE)
+
+# 8. Função base dos mapas ----------------------------------------------------
+base_mapa <- function(df, titulo) {
+  ggplot(df) +
+    geom_raster(aes(x = x, y = y, fill = layer)) +
+    scale_fill_viridis_c(
+      limits = c(vmin, vmax),
+      name   = "Suitability"
+    ) +
+    geom_sf(data = zw_sf, fill = NA, color = "black", linewidth = 0.5,
+            inherit.aes = FALSE) +
+    annotation_scale(location = "bl", width_hint = 0.3) +
+    annotation_north_arrow(
+      location    = "tl",
+      which_north = "true",
+      style       = north_arrow_fancy_orienteering()
+    ) +
+    labs(title = titulo) +
+    theme_minimal() +
+    theme(
+      axis.title = element_blank(),
+      plot.title = element_text(face = "bold", size = 11)
+    )
+}
+
+# 9. Mapa de ocorrências -------------------------------------------------------
+mapa_occ <- ggplot() +
+  geom_sf(data = zw_sf, fill = "gray90", color = "black", linewidth = 0.5) +
+  geom_sf(data = ocorrencias_sf, color = "blue", size = 2) +
+  annotation_scale(location = "bl", width_hint = 0.3) +
+  annotation_north_arrow(
+    location    = "tl",
+    which_north = "true",
+    style       = north_arrow_fancy_orienteering()
+  ) +
+  labs(title = "Occurrences") +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 11))
+
+# 10. Montar os mapas -----------------------------------------------------------
+mapa_atual  <- base_mapa(df_atual,  "Current suitability")
+mapa_126_p1 <- base_mapa(df_126_p1, paste("SSP126", periodo1))
+mapa_126_p2 <- base_mapa(df_126_p2, paste("SSP126", periodo2))
+mapa_245_p1 <- base_mapa(df_245_p1, paste("SSP245", periodo1))
+mapa_245_p2 <- base_mapa(df_245_p2, paste("SSP245", periodo2))
+
+# 11. Grid combinado -------------------------------------------------------------
+grid_final <- grid.arrange(
+  mapa_occ,
+  mapa_atual,
+  mapa_126_p1,
+  mapa_126_p2,
+  mapa_245_p1,
+  mapa_245_p2,
+  ncol = 3
+)
+
+# 12. Salvar ----------------------------------------------------------------------
+ggsave("mapa_ocorrencias.svg",    plot = mapa_occ,    width = 14, height = 11)
+ggsave("mapa_atual.svg",          plot = mapa_atual,  width = 14, height = 11)
+ggsave("mapa_ssp126_p1.svg",      plot = mapa_126_p1, width = 14, height = 11)
+ggsave("mapa_ssp126_p2.svg",      plot = mapa_126_p2, width = 14, height = 11)
+ggsave("mapa_ssp245_p1.svg",      plot = mapa_245_p1, width = 14, height = 11)
+ggsave("mapa_ssp245_p2.svg",      plot = mapa_245_p2, width = 14, height = 11)
+ggsave("grid_mapas_zimbabwe.svg", plot = grid_final,  width = 30, height = 20)
+```
+
+## Mapas de extrapolação (MOP)
+
+Esta etapa gera mapas MOP (*Mobility-Oriented Parity*), usados para avaliar extrapolação ambiental. O MOP indica regiões em que as condições climáticas projetadas são semelhantes ou diferentes daquelas presentes nos dados usados para calibrar o modelo. Valores indicando extrapolação alertam que a interpretação da adequabilidade climática deve ser feita com maior cautela.
+
+**Entrada principal.** O raster MOP atual (`dir_extrap_atual`) e os rasters MOP futuros gerados pelo `ENMTML` para cada cenário e período.
+
+**Função `media_mop`.** Assim como nos mapas de adequabilidade, essa função calcula a média dos mapas MOP derivados dos dois modelos climáticos globais: EC-Earth3-Veg e MPI-ESM1-2-HR.
+
+**Escala unificada.** O script calcula `vmin_mop` e `vmax_mop` a partir de todos os mapas MOP, garantindo que a comparação entre cenários seja visualmente consistente.
+
+**Paleta de cores.** A função `base_mapa_mop()` usa a paleta `RdYlGn` para diferenciar visualmente os mapas MOP dos mapas de adequabilidade, que usam escala `viridis`.
+
+**Saídas.** O script salva mapas MOP individuais para o cenário atual e para cada cenário futuro, além de uma grade combinada chamada `grid_mop_zimbabwe.svg`.
+
+
+```{r}
+#| label: s1-8-mapas-mop
+
+# 1. MOP atual ----------------------------------------------------------------
+mop_atual <- rast(dir_extrap_atual)
+zw_v <- vect(zw_sf)
+if (!same.crs(mop_atual, zw_v)) zw_v <- project(zw_v, crs(mop_atual))
+mop_atual <- mask(crop(mop_atual, zw_v), zw_v)
+
+# 2. Função para média MOP dos 2 GCMs -----------------------------------------
+media_mop <- function(periodo, ssp) {
+  p1 <- file.path(dir_projection,
+                  paste0("wc2.1_5m_bioc_EC-Earth3-Veg_", ssp, "_", periodo),
+                  "Extrapolation/Glycine_max_MOP.tif")
+
+  p2 <- file.path(dir_projection,
+                  paste0("wc2.1_5m_bioc_MPI-ESM1-2-HR_", ssp, "_", periodo),
+                  "Extrapolation/Glycine_max_MOP.tif")
+
+  r1 <- rast(p1)
+  r2 <- rast(p2)
+  med <- mean(c(r1, r2))
+  zw_v <- vect(st_transform(zw_sf, crs(med)))
+  return(mask(crop(med, zw_v), zw_v))
+}
+
+# 3. Carregar os 4 cenários futuros MOP ----------------------------------------
+mop_126_p1 <- media_mop(periodo1, "ssp126")
+mop_126_p2 <- media_mop(periodo2, "ssp126")
+mop_245_p1 <- media_mop(periodo1, "ssp245")
+mop_245_p2 <- media_mop(periodo2, "ssp245")
+
+# 4. Converter para data.frame ---------------------------------------------------
+df_mop_atual  <- rast_to_df(mop_atual)
+df_mop_126_p1 <- rast_to_df(mop_126_p1)
+df_mop_126_p2 <- rast_to_df(mop_126_p2)
+df_mop_245_p1 <- rast_to_df(mop_245_p1)
+df_mop_245_p2 <- rast_to_df(mop_245_p2)
+
+# 5. Escala unificada MOP ----------------------------------------------------------
+todos_mop <- c(df_mop_atual$layer, df_mop_126_p1$layer, df_mop_126_p2$layer,
+               df_mop_245_p1$layer, df_mop_245_p2$layer)
+vmin_mop <- min(todos_mop, na.rm = TRUE)
+vmax_mop <- max(todos_mop, na.rm = TRUE)
+
+# 6. Função base MOP (paleta diferente para distinguir de suitability) -------------
+base_mapa_mop <- function(df, titulo) {
+  ggplot(df) +
+    geom_raster(aes(x = x, y = y, fill = layer)) +
+    scale_fill_distiller(
+      palette   = "RdYlGn",
+      direction = 1,
+      limits    = c(vmin_mop, vmax_mop),
+      name      = "MOP"
+    ) +
+    geom_sf(data = zw_sf, fill = NA, color = "black", linewidth = 0.5,
+            inherit.aes = FALSE) +
+    annotation_scale(location = "bl", width_hint = 0.3) +
+    annotation_north_arrow(
+      location    = "tl",
+      which_north = "true",
+      style       = north_arrow_fancy_orienteering()
+    ) +
+    labs(title = titulo) +
+    theme_minimal() +
+    theme(
+      axis.title = element_blank(),
+      plot.title = element_text(face = "bold", size = 11)
+    )
+}
+
+# 7. Montar mapas MOP --------------------------------------------------------------
+mapa_mop_atual  <- base_mapa_mop(df_mop_atual,  "MOP - Current")
+mapa_mop_126_p1 <- base_mapa_mop(df_mop_126_p1, paste("MOP SSP126", periodo1))
+mapa_mop_126_p2 <- base_mapa_mop(df_mop_126_p2, paste("MOP SSP126", periodo2))
+mapa_mop_245_p1 <- base_mapa_mop(df_mop_245_p1, paste("MOP SSP245", periodo1))
+mapa_mop_245_p2 <- base_mapa_mop(df_mop_245_p2, paste("MOP SSP245", periodo2))
+
+# 8. Grid MOP -----------------------------------------------------------------------
+grid_mop <- grid.arrange(
+  mapa_mop_atual,
+  mapa_mop_126_p1,
+  mapa_mop_126_p2,
+  mapa_mop_245_p1,
+  mapa_mop_245_p2,
+  ncol = 3
+)
+
+# 9. Salvar -------------------------------------------------------------------------
+ggsave("mapa_mop_atual.svg",     plot = mapa_mop_atual,  width = 14, height = 11)
+ggsave("mapa_mop_ssp126_p1.svg", plot = mapa_mop_126_p1, width = 14, height = 11)
+ggsave("mapa_mop_ssp126_p2.svg", plot = mapa_mop_126_p2, width = 14, height = 11)
+ggsave("mapa_mop_ssp245_p1.svg", plot = mapa_mop_245_p1, width = 14, height = 11)
+ggsave("mapa_mop_ssp245_p2.svg", plot = mapa_mop_245_p2, width = 14, height = 11)
+ggsave("grid_mop_zimbabwe.svg",  plot = grid_mop,        width = 30, height = 20)
+
+cat("Mapas MOP salvos!\n")
+```
+
+
+## Síntese metodológica do Script 1
+
+Em conjunto, este script constrói a camada ambiental do estudo. Primeiro, organiza os rasters climáticos e filtra os dados fenotípicos para o Zimbabwe. Em seguida, seleciona coordenadas de ocorrência associadas a ambientes produtivos (`GY >= 2000`) e usa essas coordenadas para calibrar modelos de adequabilidade climática. Depois, projeta os modelos para cenários futuros e gera mapas de adequabilidade e extrapolação ambiental. Esses produtos são utilizados posteriormente para integrar desempenho agronômico, estabilidade fenotípica e adequabilidade climática na priorização de ambientes e definição de mega-ambientes.
+
+# Script 2 — Modelagem Multinível e G×E
+
+Este script conduz a modelagem mista (REML/BLUP) da produtividade (GY) com ASReml-R, incluindo o modelo nulo (ICC), os modelos hierárquicos M1–M3, os blocos de covariáveis ambientais e efeito de *check*, a acurácia seletiva por ambiente, a análise multitraço (correlações fenotípicas), a estabilidade WAASB e os gráficos finais de síntese.
+
+A lógica geral do script é organizar os dados fenotípicos do Zimbabwe, explorar a produtividade por ambiente e por classe de genótipo, ajustar modelos mistos progressivamente mais complexos e extrair indicadores úteis para seleção e recomendação de cultivares. A análise parte de modelos simples, usados para quantificar a importância do ambiente e do genótipo, e avança para modelos com interação G×E, estrutura fator-analítica, covariáveis ambientais, efeito de testemunhas, estabilidade e integração gráfica dos resultados. O caráter central analisado é a produtividade de grãos (`GY`), expressa no conjunto de dados como kg ha⁻¹.
+
+## Preparação do ambiente, pacotes e função auxiliar de figuras
+
+Nesta etapa são definidos o diretório de trabalho, a pasta de saída das figuras e uma função auxiliar para salvar automaticamente os gráficos produzidos ao longo do script. A função `salvar()` padroniza nome, extensão, resolução e dimensões das figuras, evitando repetição de comandos `ggsave()` em cada etapa.
+
+Os pacotes carregados são usados para manipulação de dados (`tidyverse`, `dplyr`, `tidyr`), visualização gráfica (`ggplot2`), formatação de escalas (`scales`) e identificação visual de genótipos nos gráficos sem sobreposição excessiva de rótulos (`ggrepel`). O pacote `asreml` é utilizado mais adiante para ajuste dos modelos mistos; por depender de licença, ele deve estar previamente instalado e ativado no ambiente R.
+
+```{r}
+#| label: s2-1-setup-pacotes
+
+setwd(base_dir)
+
+dir_figs <- "figuras_zimbabwe"
+if (!dir.exists(dir_figs)) dir.create(dir_figs)
+
+# Função auxiliar: salva o último ggplot com nome padronizado
+salvar <- function(nome, w = 10, h = 7) {
+  ggsave(
+    filename = file.path(dir_figs, paste0(nome, ".png")),
+    width = w, height = h, dpi = 300
+  )
+  message("Salvo: ", file.path(dir_figs, paste0(nome, ".png")))
+}
+
+# Pacotes — instala automaticamente se necessário
+pkgs <- c("tidyverse", "ggplot2", "scales", "ggrepel")
+
+invisible(lapply(pkgs, function(p) {
+  if (!requireNamespace(p, quietly = TRUE)) {
+    message("Instalando pacote: ", p)
+    install.packages(p, dependencies = TRUE)
+  }
+}))
+
+
+library(tidyverse)  # Manipulação e visualização
+library(ggplot2)    # Gráficos
+library(scales)     # Formatação de eixos
+library(ggrepel)    # Labels sem sobreposição
+```
+
+## Leitura e preparação dos dados (Zimbabwe)
+
+Este bloco importa os dados públicos da Pan-African Soybean Trials Network diretamente do GitHub e realiza o filtro para manter apenas os ensaios conduzidos no Zimbabwe. Em seguida, as variáveis categóricas usadas nos modelos mistos são convertidas para fatores (`gen`, `env`, `loc`, `rep` e `check`), enquanto variáveis fenotípicas e geográficas são convertidas para formato numérico.
+
+A variável `GY` é o caráter-resposta principal do script. Observações com produtividade ausente são removidas, pois os modelos ajustados posteriormente dependem de valores observados de produtividade. Ao final, o código imprime o número de observações, genótipos, ambientes, locais e a quantidade de observações classificadas como genótipos testados (`check = 0`) ou testemunhas (`check = 1`). Esses valores servem como diagnóstico inicial da estrutura e do desbalanceamento do banco de dados.
+
+```{r}
+#| label: s2-2-leitura-dados
+
+dat <- read.csv(
+  "https://raw.githubusercontent.com/mauricioaraujj/Pan_African_Trials_Network/refs/heads/main/data/data.csv",
+  sep = ";"
+)
+
+glimpse(dat)
+
+zim <- dat |>
+  filter(COUNTRY == "Zimbabwe") |>
+  mutate(
+    gen      = factor(gen),
+    env      = factor(env),
+    loc      = factor(loc),
+    rep      = factor(rep),
+    check    = factor(check),
+    GY       = as.numeric(GY),
+    NDM      = as.numeric(NDM),
+    FLW_DAYS = as.numeric(FLW_DAYS),
+    PH_R8    = as.numeric(PH_R8),
+    W100G    = as.numeric(W100G),
+    PROT     = as.numeric(PROT),
+    OIL      = as.numeric(OIL),
+    ELEV     = as.numeric(ELEV),
+    LAT      = as.numeric(LAT),
+    LON      = as.numeric(LON)
+  ) |>
+  filter(!is.na(GY))
+
+cat("Dimensões após filtro Zimbabwe:", nrow(zim), "linhas\n")
+cat("Genótipos:", nlevels(zim$gen),
+    "| Ambientes:", nlevels(zim$env),
+    "| Locais:", nlevels(zim$loc), "\n")
+cat("Checks:", sum(zim$check == 1, na.rm = TRUE),
+    "obs | Testados:", sum(zim$check == 0, na.rm = TRUE), "obs\n")
+```
+
+## Análise exploratória
+
+A análise exploratória resume graficamente a distribuição da produtividade de grãos entre ambientes e compara o comportamento dos genótipos experimentais com as testemunhas. O primeiro boxplot mostra a variabilidade de `GY` dentro de cada ambiente, permitindo identificar ambientes mais produtivos, ambientes de baixo rendimento e possíveis valores extremos.
+
+O segundo boxplot separa os materiais testados das testemunhas, permitindo avaliar se as cultivares de referência apresentaram desempenho compatível com os genótipos experimentais. Por fim, o script calcula médias brutas por genótipo, juntamente com desvio-padrão e número de observações. Essa classificação inicial não substitui os BLUPs, pois não corrige os efeitos ambientais nem o desbalanceamento, mas fornece uma primeira visão do desempenho fenotípico observado.
+
+```{r}
+#| label: s2-3-analise-exploratoria
+
+# Fig 01 — Distribuição de GY por ambiente
+ggplot(zim, aes(x = env, y = GY, fill = env)) +
+  geom_boxplot(alpha = 0.7, outlier.colour = "red") +
+  labs(title = "Distribuição de GY por Ambiente — Zimbabwe",
+       x = "Ambiente", y = "Produtividade (kg/ha)") +
+  theme_bw(base_size = 13) +
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 45, hjust = 1))
+salvar("01_boxplot_GY_ambiente")
+
+# Fig 02 — GY por ambiente separando checks de testados
+ggplot(zim, aes(x = env, y = GY, fill = check)) +
+  geom_boxplot(alpha = 0.7, position = position_dodge(0.8)) +
+  scale_fill_manual(values = c("0" = "#4393c3", "1" = "#d73027"),
+                    labels = c("Testado", "Testemunha")) +
+  labs(title = "GY por Ambiente — Testados vs. Testemunhas",
+       x = "Ambiente", y = "GY (kg/ha)", fill = NULL) +
+  theme_bw(base_size = 13) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+salvar("02_boxplot_GY_check")
+
+# Médias brutas por genótipo (console)
+zim |>
+  group_by(gen) |>
+  summarise(mean_GY = mean(GY, na.rm = TRUE),
+            sd_GY   = sd(GY, na.rm = TRUE),
+            n       = n()) |>
+  arrange(desc(mean_GY)) |>
+  print(n = 20)
+```
+
+## Modelo 0 — Modelo nulo / ICC
+
+O modelo nulo (`M0`) é o primeiro modelo misto ajustado. Ele inclui apenas intercepto como efeito fixo e ambiente (`env`) como efeito aleatório. O objetivo é quantificar quanto da variação total da produtividade é explicado pelas diferenças entre ambientes, antes de incluir explicitamente genótipos ou interação G×E.
+
+A partir dos componentes de variância estimados pelo `asreml`, o script calcula o coeficiente de correlação intraclasse (`ICC`). Neste contexto, o ICC é calculado como a razão entre a variância ambiental e a variância total, isto é, `var_env / (var_env + var_res)`. Valores elevados indicam forte estrutura ambiental, justificando o uso de modelos mistos e a necessidade de corrigir os efeitos de ambiente nas etapas seguintes.
+
+```{r}
+#| label: s2-4-modelo-nulo
+  # <-- aqui, bem na hora de usar
+
+m0 <- asreml(
+  fixed = GY ~ 1,
+  random = ~ env,
+  data = zim,
+  na.action = na.method(y = "omit")
+)
+summary(m0)$varcomp
+
+vc0     <- summary(m0)$varcomp
+var_env <- vc0["env",     "component"]
+var_res <- vc0["units!R", "component"]
+icc     <- var_env / (var_env + var_res)
+cat(sprintf("\nICC (ambiente): %.3f — %.1f%% da variância total é entre ambientes\n",
+            icc, icc * 100))
+```
+
+## Modelo 1 — G aleatório, E fixo (sem interação)
+
+O modelo `M1` inclui ambiente e bloco como efeito fixo e genótipo como efeito aleatório. A inclusão de `env` como efeito fixo remove diferenças médias entre ambientes, permitindo estimar a variância genotípica em uma estrutura ainda simples, sem decompor explicitamente a interação genótipo × ambiente.
+
+O termo aleatório `gen` permite predizer os efeitos genotípicos por BLUP. O comando `wald(m1)` testa a significância dos efeitos fixos, enquanto `predict(m1, classify = "gen")` gera as predições genotípicas médias, ajustadas para o efeito de ambiente. O ranking impresso ao final mostra os dez genótipos com maior produtividade predita nesse modelo sem interação G×E.
+
+```{r}
+#| label: s2-5-modelo-m1
+
+m1 <- asreml(
+  fixed = GY ~ env + env:rep,
+  random = ~ gen,
+  data      = zim,
+  na.action = na.method(y = "omit")
+)
+summary(m1)$varcomp
+wald(m1)
+
+blup_gen_m1 <- predict(m1, classify = "gen")$pvals |>
+  arrange(desc(predicted.value))
+
+cat("\nTop 10 genótipos (M1 — sem G×E):\n")
+print(head(blup_gen_m1, 10))
+```
+
+## Modelo 2 — G + G×E aleatórios, E fixo (modelo principal)
+
+O modelo `M2` é tratado como modelo principal para a análise de produtividade. Ele mantém ambiente e bloco como efeito fixo e inclui dois efeitos aleatórios: genótipo (`gen`) e interação genótipo × ambiente (`gen:env`). Essa estrutura permite separar a variação atribuída ao efeito genético médio dos genótipos da variação específica decorrente da mudança de desempenho dos genótipos entre ambientes.
+
+Após o ajuste, o script extrai os componentes de variância de genótipo, G×E e resíduo, calcula a proporção relativa de cada componente e imprime a partição da variância. Também são obtidos os BLUPs médios dos genótipos e os BLUPs específicos para cada combinação `gen:env`. Esses últimos são armazenados em `blup_ge` e utilizados posteriormente na análise de acurácia por ambiente, heatmap G×E e cálculo do WAASB.
+
+```{r}
+#| label: s2-6-modelo-m2
+
+m2 <- asreml(
+  fixed = GY ~ env + env:rep,
+  random = ~ gen + gen:env,
+  data = zim,
+  na.action = na.method(y = "omit")
+)
+summary(m2)$varcomp
+wald(m2)
+
+vc2     <- summary(m2)$varcomp
+var_g   <- vc2["gen",     "component"]
+var_ge  <- vc2["gen:env", "component"]
+var_r   <- vc2["units!R", "component"]
+var_tot <- var_g + var_ge + var_r
+
+cat(sprintf(
+  "\nProporção G:   %.1f%%\nProporção G×E: %.1f%%\nResíduo:       %.1f%%\n",
+  100 * var_g  / var_tot,
+  100 * var_ge / var_tot,
+  100 * var_r  / var_tot
+))
+
+blup_gen_m2 <- predict(m2, classify = "gen")$pvals |>
+  arrange(desc(predicted.value))
+
+cat("\nTop 10 genótipos (M2 — com G×E):\n")
+print(head(blup_gen_m2, 10))
+
+blup_ge <- predict(m2, classify = "gen:env")$pvals
+```
+
+## Modelo 3 — Factor Analytic ordem 1 (FA1)
+
+O modelo `M3` incorpora uma estrutura Factor Analytic de primeira ordem (`fa(env, 1):gen`) para modelar a interação G×E. Diferentemente do modelo `M2`, que trata a interação de forma independente, a estrutura FA1 permite representar correlações entre ambientes por meio de um fator latente. Isso é útil quando os ambientes compartilham padrões semelhantes de resposta genotípica.
+
+O parâmetro `maxit = 30` aumenta o número máximo de iterações disponíveis para o ajuste do modelo, pois estruturas fator-analíticas podem exigir mais iterações para convergir. O modelo é posteriormente comparado aos demais por logLik, AIC e BIC. Quando o FA1 apresenta menor AIC, isso indica que a interação G×E possui estrutura de covariância que melhora o ajuste em relação ao modelo com interação independente.
+
+```{r}
+#| label: s2-7-modelo-fa1
+#| output: false
+m3 <- asreml(
+  fixed = GY ~ env + env:rep,
+  random = ~ gen + fa(env,1):gen,
+  data = zim,
+  na.action = na.method(y = "omit"),
+  maxit = 30
+)
+summary(m3)$varcomp
+wald(m3)
+
+cat("\nFA1 — Componentes de variância:\n")
+print(summary(m3)$varcomp)
+```
+
+## Bloco A — Covariáveis ambientais
+
+Este bloco avalia se características geográficas dos locais experimentais explicam parte da variação ambiental associada à produtividade. Para isso, altitude (`ELEV`), latitude (`LAT`) e longitude (`LON`) são padronizadas por `scale()`, gerando as variáveis `ELEV_z`, `LAT_z` e `LON_z`. A padronização coloca as covariáveis em escala comparável, com média zero e desvio-padrão igual a um.
+
+O modelo `m_cov` inclui essas três covariáveis como efeitos fixos e mantém os efeitos aleatórios de ambiente, genótipo e G×E. A comparação entre a variância de ambiente do modelo nulo e a variância de ambiente após inclusão das covariáveis permite calcular a porcentagem de redução da variância ambiental. Essa redução indica quanto da heterogeneidade entre ambientes pode ser parcialmente explicada por gradientes geográficos simples.
+
+```{r}
+#| label: s2-8-covariaveis-ambientais
+
+zim <- zim |>
+  mutate(
+    ELEV_z = as.numeric(scale(ELEV)),
+    LAT_z  = as.numeric(scale(LAT)),
+    LON_z  = as.numeric(scale(LON))
+  )
+
+m_cov <- asreml(
+  fixed     = GY ~ ELEV_z + LAT_z + LON_z,
+  random    = ~ env + gen + gen:env,
+  data      = zim,
+  na.action = na.method(y = "omit")
+)
+summary(m_cov)$varcomp
+wald(m_cov)
+
+cat("\nEfeitos fixos das covariáveis ambientais:\n")
+print(summary(m_cov, coef = TRUE)$coef.fixed)
+
+vc_cov      <- summary(m_cov)$varcomp
+var_env_cov <- vc_cov["env", "component"]
+reducao_pct <- 100 * (1 - var_env_cov / var_env)
+cat(sprintf(
+  "\nVariância de ambiente (sem cov): %.1f | (com cov): %.1f | Redução: %.1f%%\n",
+  var_env, var_env_cov, reducao_pct
+))
+```
+
+### Relação entre produtividade média e variáveis bioclimáticas
+
+Além das covariáveis geográficas simples, o script também avalia a relação entre a produtividade média por ambiente e duas variáveis bioclimáticas: temperatura média anual (`bio1`) e precipitação anual (`bio12`). A base `bioclimatic.csv` é importada, os nomes das variáveis são padronizados e os dados são unidos às médias ambientais de produtividade.
+
+Em seguida, é ajustado um modelo linear com interação entre temperatura e precipitação (`GY ~ bio1_annual_temp * bio12_annual_precip`). A superfície de resposta gerada a partir desse modelo permite visualizar como diferentes combinações térmicas e hídricas se associam à produtividade média dos ambientes no Zimbabwe.
+
+```{r}
+#| label: s2-9b-leitura-bioclimatic
+library(tidyr)
+library(ggplot2)
+df_bioclim <- read.csv(
+  "https://raw.githubusercontent.com/mauricioaraujj/Pan_African_Trials_Network/refs/heads/main/data/bioclimatic.csv",
+  sep = ";"
+)
+
+names(df_bioclim) <- c("env",
+                       "bio1", "bio10", "bio11", "bio12", "bio13", "bio14", "bio15",
+                       "bio16", "bio17", "bio18", "bio19", "bio2", "bio3", "bio4",
+                       "bio5", "bio6", "bio7", "bio8", "bio9")
+
+str(df_bioclim)#| label: s2-9c-modelo-interacao-bioclim
+
+library(dplyr)
+
+df_env_gy <- zim |>
+  group_by(env) |>
+  summarise(GY = mean(GY, na.rm = TRUE), .groups = "drop") |>
+  mutate(env = as.character(env)) |>
+  left_join(df_bioclim |> mutate(env = as.character(env)), by = "env") |>
+  filter(!is.na(bio1), !is.na(bio12)) |>
+  dplyr::rename(bio1_annual_temp = bio1, bio12_annual_precip = bio12)
+
+cat("\nN ambientes com bioclima:", nrow(df_env_gy), "de", nlevels(zim$env), "\n")
+
+mod_env_interaction <- lm(
+  GY ~ bio1_annual_temp * bio12_annual_precip,
+  data = df_env_gy
+)
+summary(mod_env_interaction)#| label: s2-9d-superficie-resposta
+
+grid_env <- expand_grid(
+  bio1_annual_temp = seq(
+    quantile(df_env_gy$bio1_annual_temp, 0.05),
+    quantile(df_env_gy$bio1_annual_temp, 0.95),
+    length.out = 50
+  ),
+  bio12_annual_precip = seq(
+    quantile(df_env_gy$bio12_annual_precip, 0.05),
+    quantile(df_env_gy$bio12_annual_precip, 0.95),
+    length.out = 50
+  )
+) |>
+  mutate(pred_GY = predict(mod_env_interaction, newdata = pick(everything())))
+
+climatic <- ggplot(grid_env, aes(x = bio1_annual_temp, y = bio12_annual_precip, fill = pred_GY)) +
+  geom_tile() +
+  geom_contour(aes(z = pred_GY), colour = "white", alpha = 0.4, linewidth = 0.3) +
+  scale_fill_viridis_c(name = "GY médio\npredito (kg/ha)", option = "C") +
+  labs(
+    title    = "Superfície de Resposta: Temperatura × Precipitação",
+    subtitle = "Predição da produtividade média (GY) por ambiente — Zimbabwe (n = 50)",
+    x = "BIO1 — Temperatura média anual (°C)",
+    y = "BIO12 — Precipitação anual (mm)"
+  ) +
+  theme_bw(base_size = 12) +
+  theme(legend.position = "right")
+climatic
+salvar("11_superficie_resposta_bioclim")
+```
+
+Os gradientes diagonais observados na superfície de resposta, bem como as variações acentuadas de produtividade ao longo dos dois eixos climáticos, indicam que a interação entre temperatura média anual e precipitação anual exerce influência mais determinante sobre o desempenho da soja do que os efeitos isolados de cada variável. Esse padrão evidencia que a produtividade da cultura é governada pelo efeito combinado dos fatores térmicos e hídricos, refletindo o controle conjunto desses componentes sobre os processos fisiológicos que regulam o crescimento e o acúmulo de biomassa.
+Por ser uma espécie de metabolismo fotossintético C3, a soja responde de maneira previsível a essas interações. Temperaturas mais elevadas, desde que dentro da faixa fisiológica ótima e acompanhadas de adequada disponibilidade hídrica, tendem a favorecer maiores taxas fotossintéticas, crescimento vegetativo mais vigoroso e enchimento de grãos mais eficiente. Em contrapartida, a combinação de altas temperaturas com baixa precipitação intensifica o estresse hídrico, promovendo fechamento estomático, redução da assimilação de carbono e queda na produtividade.
+Em ambientes de temperaturas mais baixas e menor disponibilidade hídrica, a dinâmica fisiológica segue trajetória distinta. A redução das taxas de transpiração minimiza as perdas de água pelos tecidos vegetais, aumentando a eficiência no uso da água. Embora a atividade metabólica e o crescimento sejam intrinsecamente menores em temperaturas reduzidas, a menor demanda evaporativa pode sustentar níveis satisfatórios de fotossíntese líquida, sobretudo em ambientes onde a limitação hídrica é o principal fator restritivo à produção.
+Os padrões observados na superfície de resposta são consistentes com essa interpretação. As maiores produtividades preditas ocorreram tanto em condições de elevada temperatura associada à alta precipitação quanto em cenários de baixa temperatura combinada com baixa precipitação, sugerindo que distintas combinações climáticas podem conduzir a níveis semelhantes de desempenho por meio de mecanismos fisiológicos alternativos. Embora a relação entre essas variáveis não seja estritamente linear, os resultados estão alinhados com o conhecimento atual sobre o balanço entre fotossíntese, transpiração e eficiência no uso da água em culturas C3, reforçando que a produtividade da soja depende fundamentalmente do equilíbrio entre demanda atmosférica e disponibilidade hídrica ao longo do ciclo da cultura
+
+## Bloco B — Efeito de check
+
+Este bloco avalia se existe diferença média entre genótipos experimentais e testemunhas. O modelo `m_check` inclui ambiente e `check` como efeitos fixos, além de genótipo e interação G×E como efeitos aleatórios. A variável `check` indica se a observação pertence a um material testado ou a uma testemunha.
+
+O teste de Wald informa se o efeito fixo de `check` contribui significativamente para explicar a produtividade. Em seguida, o script extrai o coeficiente associado à testemunha e gera um novo ranking de BLUPs genotípicos, unido à classificação `check`. Essa etapa permite verificar se os genótipos experimentais superam, igualam ou ficam abaixo das cultivares de referência incluídas nos ensaios.
+
+```{r}
+#| label: s2-9-efeito-check
+
+m_check <- asreml(
+  fixed     = GY ~ env + check,
+  random    = ~ gen + gen:env,
+  data      = zim,
+  na.action = na.method(y = "omit")
+)
+summary(m_check)$varcomp
+wald(m_check)
+
+coef_check <- summary(m_check, coef = TRUE)$coef.fixed
+cat("\nEfeito de check (testemunha vs. testado):\n")
+print(coef_check[grep("check", rownames(coef_check)), , drop = FALSE])
+
+blup_check <- predict(m_check, classify = "gen")$pvals |>
+  left_join(zim |> distinct(gen, check), by = "gen") |>
+  arrange(desc(predicted.value))
+
+cat("\nTop 10 genótipos (M_check):\n")
+print(head(blup_check, 10))
+```
+
+
+## Bloco C — Acurácia seletiva por ambiente
+
+Neste script, a acurácia por ambiente é calculada como a correlação entre as médias brutas de produtividade por combinação genótipo × ambiente e os BLUPs preditos para as mesmas combinações no modelo `M2`. Portanto, a medida usada aqui representa a concordância entre o ranking fenotípico observado e o ranking ajustado pelo modelo dentro de cada ambiente.
+
+Essa abordagem é diferente da acurácia seletiva clássica baseada no erro de predição dos BLUPs (`PEV`). Assim, a interpretação correta neste relatório é: valores próximos de 1 indicam que, naquele ambiente, os BLUPs de `gen:env` preservam fortemente a ordenação das médias brutas; valores menores indicam maior discrepância entre médias observadas e predições ajustadas. O gráfico de barras resume essa concordância por ambiente.
+
+
+```{r}
+#| label: s2-10-acuracia-selecao
+
+medias_brutas <- zim |>
+  group_by(gen, env) |>
+  summarise(media_bruta = mean(GY, na.rm = TRUE), .groups = "drop")
+
+blup_ge_named <- blup_ge |>
+  select(gen, env, blup = predicted.value)
+
+acuracia_env <- medias_brutas |>
+  left_join(blup_ge_named, by = c("gen", "env")) |>
+  filter(!is.na(blup), !is.na(media_bruta)) |>
+  group_by(env) |>
+  summarise(
+    acuracia = cor(blup, media_bruta, use = "complete.obs"),
+    n_gen    = n(),
+    .groups  = "drop"
+  ) |>
+  arrange(desc(acuracia))
+
+cat("\nAcurácia seletiva por ambiente:\n")
+print(acuracia_env)
+
+# Fig 03 — Acurácia por ambiente
+ggplot(acuracia_env, aes(x = fct_reorder(env, acuracia), y = acuracia, fill = acuracia)) +
+  geom_col(colour = "white") +
+  geom_text(aes(label = sprintf("%.2f", acuracia)), hjust = -0.15, size = 3.5) +
+  scale_fill_gradient2(low = "#d73027", mid = "#ffffbf", high = "#1a9850",
+                       midpoint = 0.5, guide = "none") +
+  coord_flip() +
+  scale_y_continuous(limits = c(0, 1.1)) +
+  labs(title    = "Acurácia Seletiva por Ambiente — Zimbabwe",
+       subtitle = "Correlação entre BLUP (M2) e média bruta de GY",
+       x = "Ambiente", y = "Acurácia") +
+  theme_bw(base_size = 12)
+salvar("03_acuracia_ambiente")
+```
+
+## Bloco D — Análise multi-trait (correlações fenotípicas)
+
+Esta etapa avalia associações fenotípicas entre caracteres agronômicos medidos nos ensaios. Primeiro, o script calcula a média de cada caráter por genótipo. Em seguida, mantém apenas os caracteres com dados suficientes para análise e calcula a matriz de correlação usando `pairwise.complete.obs`, isto é, utilizando todos os pares de observações disponíveis para cada combinação de caracteres.
+
+A matriz inclui produtividade (`GY`), dias para maturidade (`NDM`), dias para florescimento (`FLW_DAYS`), altura de plantas (`PH_R8`), peso de 100 grãos (`W100G`), proteína (`PROT`) e óleo (`OIL`). Além da matriz de correlação, são gerados gráficos de dispersão para `GY × NDM` e `GY × W100G`, com linha de regressão simples. Esses gráficos auxiliam na visualização de possíveis relações entre produtividade, ciclo e peso de grãos.
+
+```{r}
+#| label: s2-11-multi-trait
+
+traits <- c("GY", "NDM", "FLW_DAYS", "PH_R8", "W100G", "PROT", "OIL")
+
+medias_gen <- zim |>
+  group_by(gen) |>
+  summarise(across(all_of(traits), ~ mean(.x, na.rm = TRUE)), .groups = "drop")
+
+traits_validos <- traits[sapply(traits, function(t) {
+  sum(!is.na(medias_gen[[t]])) >= 10
+})]
+
+cat("\nTraits com dados suficientes:", paste(traits_validos, collapse = ", "), "\n")
+
+mat_cor <- medias_gen |>
+  select(all_of(traits_validos)) |>
+  cor(use = "pairwise.complete.obs")
+
+cat("\nCorrelações fenotípicas entre traits:\n")
+print(round(mat_cor, 3))
+
+# Fig 04 — Matriz de correlação
+mat_cor_long <- as.data.frame(as.table(mat_cor)) |>
+  rename(Var1 = Var1, Var2 = Var2, cor = Freq) |>
+  filter(as.integer(Var1) <= as.integer(Var2))
+
+ggplot(mat_cor_long, aes(x = Var1, y = Var2, fill = cor)) +
+  geom_tile(colour = "white", linewidth = 0.5) +
+  geom_text(aes(label = ifelse(!is.na(cor), sprintf("%.2f", cor), "")),
+            size = 3.5, colour = "black") +
+  scale_fill_gradient2(low = "#d73027", mid = "white", high = "#1a9850",
+                       midpoint = 0, limits = c(-1, 1), name = "r") +
+  scale_x_discrete(position = "top") +
+  labs(title = "Correlações Fenotípicas entre Traits — Zimbabwe",
+       x = NULL, y = NULL) +
+  theme_bw(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 0),
+        panel.grid  = element_blank())
+salvar("04_correlacao_traits")
+
+# Fig 05 — Scatter GY × NDM
+medias_gen |>
+  filter(!is.na(GY), !is.na(NDM)) |>
+  ggplot(aes(x = NDM, y = GY, label = gen)) +
+  geom_point(size = 2.5, colour = "#2166ac", alpha = 0.7) +
+  geom_smooth(method = "lm", se = TRUE, colour = "#d73027", linetype = "dashed") +
+  geom_text_repel(size = 2.5, max.overlaps = 15) +
+  labs(title    = "GY × NDM — Trade-off entre Produtividade e Ciclo",
+       subtitle = "Cada ponto = média do genótipo em Zimbabwe",
+       x = "Dias para Maturidade (NDM)", y = "GY médio (kg/ha)") +
+  theme_bw(base_size = 12)
+salvar("05_scatter_GY_NDM")
+
+# Fig 06 — Scatter GY × W100G
+medias_gen |>
+  filter(!is.na(GY), !is.na(W100G), W100G > 0) |>
+  ggplot(aes(x = W100G, y = GY, label = gen)) +
+  geom_point(size = 2.5, colour = "#4393c3", alpha = 0.7) +
+  geom_smooth(method = "lm", se = TRUE, colour = "#d73027", linetype = "dashed") +
+  geom_text_repel(size = 2.5, max.overlaps = 15) +
+  labs(title = "GY × W100G — Produtividade vs. Peso de 100 Grãos",
+       x = "Peso de 100 Grãos (g)", y = "GY médio (kg/ha)") +
+  theme_bw(base_size = 12)
+salvar("06_scatter_GY_W100G")
+```
+
+## Bloco E — Estabilidade WAASB
+
+Este bloco calcula a estabilidade fenotípica dos genótipos com base nos BLUPs da interação G×E obtidos no modelo `M2`. A matriz `blup_matrix` organiza os genótipos nas linhas e os ambientes nas colunas, contendo os valores preditos para cada combinação genótipo × ambiente.
+
+A matriz é centralizada por ambiente e os valores ausentes são substituídos por zero após a centralização. Em seguida, aplica-se decomposição em valores singulares (`svd`) para decompor os padrões principais da interação G×E. O índice WAASB é calculado como a média ponderada dos escores absolutos dos genótipos nos eixos de interação, usando como pesos a proporção de variância explicada por cada eixo. Assim, menores valores de WAASB indicam maior estabilidade.
+
+O script também combina o WAASB com o BLUP médio de produtividade, gerando um índice de seleção simples (`SI`) calculado como a média entre o ranking de estabilidade e o ranking de produtividade. O biplot WAASB × GY divide os genótipos em quatro quadrantes: estáveis e produtivos, instáveis e produtivos, estáveis e improdutivos, e instáveis e improdutivos.
+
+```{r}
+#| label: s2-12-waasb
+
+blup_matrix <- blup_ge |>
+  select(gen, env, predicted.value) |>
+  pivot_wider(names_from = env, values_from = predicted.value) |>
+  column_to_rownames("gen") |>
+  as.matrix()
+
+blup_matrix <- blup_matrix[rowSums(!is.na(blup_matrix)) > 1,
+                           colSums(!is.na(blup_matrix)) > 1]
+
+blup_centered <- scale(blup_matrix, center = TRUE, scale = FALSE)
+blup_centered[is.na(blup_centered)] <- 0
+
+svd_res <- svd(blup_centered)
+var_exp <- (svd_res$d^2) / sum(svd_res$d^2)
+n_axes  <- min(ncol(blup_matrix) - 1, nrow(blup_matrix) - 1, 9)
+
+scores_gen <- svd_res$u[, 1:n_axes, drop = FALSE]
+rownames(scores_gen) <- rownames(blup_matrix)
+
+waasb <- apply(abs(scores_gen), 1, function(x) {
+  weighted.mean(x, w = var_exp[1:n_axes])
+})
+
+blup_medio <- blup_gen_m2 |>
+  select(gen, blup_gy = predicted.value)
+
+waasb_tab <- tibble(gen = names(waasb), WAASB = waasb) |>
+  left_join(blup_medio, by = "gen") |>
+  filter(!is.na(blup_gy)) |>
+  mutate(
+    WAASB_rank = rank(WAASB),
+    GY_rank    = rank(-blup_gy),
+    SI         = (WAASB_rank + GY_rank) / 2
+  ) |>
+  arrange(SI)
+
+cat("\nRanking WAASB — Top 15:\n")
+print(head(waasb_tab, 15))
+
+med_waasb <- median(waasb_tab$WAASB)
+med_gy    <- median(waasb_tab$blup_gy)
+
+# Fig 07 — Biplot WAASB × GY
+ggplot(waasb_tab, aes(x = WAASB, y = blup_gy, label = gen)) +
+  annotate("rect", xmin = -Inf, xmax = med_waasb,
+           ymin = med_gy, ymax = Inf, fill = "#1a9850", alpha = 0.08) +
+  annotate("rect", xmin = med_waasb, xmax = Inf,
+           ymin = med_gy, ymax = Inf, fill = "#fdae61", alpha = 0.08) +
+  annotate("rect", xmin = -Inf, xmax = med_waasb,
+           ymin = -Inf, ymax = med_gy, fill = "#abd9e9", alpha = 0.08) +
+  annotate("rect", xmin = med_waasb, xmax = Inf,
+           ymin = -Inf, ymax = med_gy, fill = "#d73027", alpha = 0.08) +
+  annotate("text", x = min(waasb_tab$WAASB), y = max(waasb_tab$blup_gy),
+           label = "I\nEstável + Produtivo", hjust = 0, vjust = 1,
+           size = 3, colour = "#1a9850", fontface = "bold") +
+  annotate("text", x = max(waasb_tab$WAASB), y = max(waasb_tab$blup_gy),
+           label = "II\nInstável + Produtivo", hjust = 1, vjust = 1,
+           size = 3, colour = "#fdae61", fontface = "bold") +
+  annotate("text", x = min(waasb_tab$WAASB), y = min(waasb_tab$blup_gy),
+           label = "III\nEstável + Improdutivo", hjust = 0, vjust = 0,
+           size = 3, colour = "#4393c3", fontface = "bold") +
+  annotate("text", x = max(waasb_tab$WAASB), y = min(waasb_tab$blup_gy),
+           label = "IV\nInstável + Improdutivo", hjust = 1, vjust = 0,
+           size = 3, colour = "#d73027", fontface = "bold") +
+  geom_vline(xintercept = med_waasb, linetype = "dashed", colour = "grey50") +
+  geom_hline(yintercept = med_gy,    linetype = "dashed", colour = "grey50") +
+  geom_point(size = 2.5, colour = "#333333", alpha = 0.8) +
+  geom_text_repel(size = 2.5, max.overlaps = 20) +
+  labs(title    = "Biplot WAASB × GY — Estabilidade e Produtividade",
+       subtitle = "Quadrante I = genótipos ideais (estáveis e produtivos)",
+       x = "WAASB (menor = mais estável)", y = "BLUP de GY (kg/ha)") +
+  theme_bw(base_size = 12)
+salvar("07_biplot_WAASB")
+```
+
+## Comparação dos modelos
+
+Este bloco reúne os principais critérios de comparação dos modelos ajustados anteriormente: log-verossimilhança (`LogLik`), Akaike Information Criterion (`AIC`) e Bayesian Information Criterion (`BIC`). Esses critérios permitem comparar o ajuste relativo entre modelos com diferentes estruturas, penalizando a complexidade do modelo.
+
+O menor AIC é usado como critério principal para indicar o melhor ajuste estatístico entre as estruturas avaliadas. No contexto deste script, a comparação inclui o modelo nulo, o modelo com genótipo, o modelo com genótipo e G×E, o modelo FA1, o modelo com covariáveis ambientais e o modelo com efeito de testemunha.
+
+```{r}
+#| label: s2-13-comparacao-modelos
+
+model_comparison <- data.frame(
+  Modelo = c("M0: Nulo",
+             "M1: env(fix) + gen",
+             "M2: env(fix) + gen + G×E",
+             "M3: env(fix) + gen + FA1",
+             "M_cov: cov_amb + gen + G×E",
+             "M_check: env(fix) + check + gen + G×E"),
+  LogLik = c(summary(m0)$loglik,    summary(m1)$loglik,
+             summary(m2)$loglik,    summary(m3)$loglik,
+             summary(m_cov)$loglik, summary(m_check)$loglik),
+  AIC    = c(summary(m0)$aic,       summary(m1)$aic,
+             summary(m2)$aic,       summary(m3)$aic,
+             summary(m_cov)$aic,    summary(m_check)$aic),
+  BIC    = c(summary(m0)$bic,       summary(m1)$bic,
+             summary(m2)$bic,       summary(m3)$bic,
+             summary(m_cov)$bic,    summary(m_check)$bic)
+)
+
+cat("\n=== COMPARAÇÃO DOS MODELOS ===\n")
+print(model_comparison)
+cat("Melhor modelo (menor AIC):",
+    model_comparison$Modelo[which.min(model_comparison$AIC)], "\n")
+```
+
+## Herdabilidade (H²)
+
+A herdabilidade ampla é calculada a partir dos componentes de variância estimados no modelo `M2`. O número de ambientes (`q`) corresponde ao número de níveis de `env`, enquanto `r` é calculado como a média da tabela de presença de genótipos por ambiente. A fórmula utilizada ajusta a contribuição da interação G×E pelo número de ambientes e a variância residual pelo número médio de observações.
+
+O resultado indica a proporção da variação relevante para a seleção atribuída às diferenças genéticas entre genótipos, considerando o delineamento multiambiental. Valores mais altos indicam maior confiabilidade para discriminar genótipos quanto à produtividade média.
+
+```{r}
+#| label: s2-14-herdabilidade
+
+q  <- nlevels(zim$env)
+r  <- mean(table(zim$gen, zim$env))
+
+H2 <- var_g / (var_g + var_ge / q + var_r / (q * r))
+cat(sprintf("\nHerdabilidade ampla (H²): %.3f\n", H2))
+```
+
+## Gráficos finais de síntese
+
+A etapa final gera três figuras de síntese. A primeira apresenta os BLUPs genotípicos com intervalos de confiança aproximados de 95%, permitindo visualizar a incerteza associada à produtividade predita de cada genótipo. A segunda é um heatmap dos BLUPs `gen:env`, útil para visualizar padrões de adaptação específica e diferenças de desempenho entre ambientes. A terceira apresenta a partição da variância em formato de gráfico polar, destacando as proporções atribuídas ao genótipo, à interação G×E e ao resíduo.
+
+Ao final, o script imprime o ranking de genótipos considerados ideais com base no índice de seleção `SI`, combinando produtividade média predita e estabilidade WAASB. Essa tabela resume os materiais mais promissores segundo o critério conjunto de produtividade e estabilidade.
+
+```{r}
+#| label: s2-15-graficos-finais
+
+# Fig 08 — BLUPs com IC 95%
+blup_plot <- predict(m2, classify = "gen")$pvals |>
+  mutate(gen = fct_reorder(gen, predicted.value))
+
+ggplot(blup_plot, aes(x = gen, y = predicted.value)) +
+  geom_point(size = 2.5, colour = "#2166ac") +
+  geom_errorbar(aes(ymin = predicted.value - 1.96 * std.error,
+                    ymax = predicted.value + 1.96 * std.error),
+                width = 0.3, colour = "#2166ac", alpha = 0.6) +
+  coord_flip() +
+  labs(title    = "BLUPs de Genótipos para GY — Zimbabwe (M2)",
+       subtitle = "Barras = IC 95%",
+       x = "Genótipo", y = "GY predito (kg/ha)") +
+  theme_bw(base_size = 12)
+salvar("08_BLUPs_genotipo", w = 10, h = 12)
+
+# Fig 09 — Heatmap G×E
+blup_ge |>
+  ggplot(aes(x = env, y = gen, fill = predicted.value)) +
+  geom_tile(colour = "white") +
+  scale_fill_gradient2(low      = "#d73027",
+                       mid      = "#ffffbf",
+                       high     = "#1a9850",
+                       midpoint = mean(blup_ge$predicted.value, na.rm = TRUE),
+                       name     = "GY\n(kg/ha)") +
+  labs(title = "Heatmap G×E — BLUPs de GY por Genótipo e Ambiente",
+       x = "Ambiente", y = "Genótipo") +
+  theme_bw(base_size = 11) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 7))
+salvar("09_heatmap_GxE", w = 12, h = 14)
+
+# Fig 10 — Partição da variância
+data.frame(
+  Componente = c("Genótipo (G)", "Interação G×E", "Resíduo"),
+  Variancia  = c(var_g, var_ge, var_r)
+) |>
+  mutate(Prop  = Variancia / sum(Variancia),
+         Label = sprintf("%s\n%.1f%%", Componente, Prop * 100)) |>
+  ggplot(aes(x = "", y = Variancia, fill = Componente)) +
+  geom_col(width = 1, colour = "white") +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = Label),
+            position = position_stack(vjust = 0.5), size = 4) +
+  scale_fill_manual(values = c("#4393c3", "#f4a582", "#a6d96a")) +
+  labs(title = sprintf("Partição da Variância de GY — Zimbabwe  |  H² = %.2f", H2)) +
+  theme_void(base_size = 13) +
+  theme(legend.position = "none")
+salvar("10_particao_variancia", w = 7, h = 7)
+
+# Ranking final (console)
+cat("\n=== RANKING FINAL — Genótipos ideais (produtivos E estáveis) ===\n")
+waasb_tab |>
+  select(gen, BLUP_GY = blup_gy, WAASB, SI) |>
+  mutate(across(where(is.numeric), ~ round(.x, 2))) |>
+  arrange(SI) |>
+  print()
+
+cat(sprintf("\nTodas as figuras salvas em: %s/%s/\n", base_dir, dir_figs))
+```
+
+
+## Integração GxE × Adequabilidade Climática
+A clusterização dos ambientes em mega-ambientes climáticos é realizada por *k-means* sobre uma matriz composta por oito variáveis: as cinco adequabilidades (cenário atual e quatro cenários futuros), além das coordenadas geográficas (LAT e LON) e da elevação (ELEV). Todas as variáveis são previamente normalizadas utilizando a função `rescale01()`. O número ótimo de grupos (*k*) é determinado pela maximização do coeficiente médio de silhueta, avaliando valores de *k* entre 2 e `min(6, n_ambientes - 1)`, com 50 inicializações aleatórias para cada valor testado (`seed = 42`). Após a seleção do número ótimo de grupos, o modelo final de *k-means* é ajustado utilizando 100 inicializações aleatórias (`nstart = 100`), aumentando a estabilidade e a reprodutibilidade da solução obtida.
+---
+title: "Script 3 — Priorização espacial, mega-ambientes e ranking genotípico"
+format: html
+editor: visual
+---
+
+## Objetivo geral do script
+
+Este documento explica o Script 3, mantendo o código original sem alterações. O objetivo do script é integrar dados climáticos, coordenadas ambientais, BLUPs genotípicos e métricas de estabilidade para: calcular um Índice de Priorização Espacial (`IPS`), definir mega-ambientes climáticos, ranquear genótipos dentro desses mega-ambientes, gerar figuras e exportar tabelas finais.
+
+## Preparação inicial
+
+A primeira parte carrega os pacotes necessários, define o diretório de saída das figuras, cria a função `salvar()` para padronizar a exportação dos gráficos e faz a compatibilização dos nomes dos rasters climáticos gerados no Script 1. Também calcula as coordenadas médias de cada ambiente a partir do banco `zim`, usando latitude, longitude e elevação.
+
+```{r}
+suppressPackageStartupMessages({
+  library(terra)
+  library(sf)
+  library(tidyverse)
+  library(ggrepel)
+  library(scales)
+  library(cluster)
+  library(tidytext)
+})
+
+# ── Diretórios ────────────────────────────────────────────────────────────────
+dir_figs <- "figuras_zimbabwe"
+dir.create(file.path(base_dir, dir_figs), showWarnings = FALSE, recursive = TRUE)
+
+salvar <- function(nome, w = 10, h = 7, dpi = 300) {
+  ggsave(
+    filename = file.path(base_dir, dir_figs, paste0(nome, ".png")),
+    width = w, height = h, dpi = dpi, bg = "white"
+  )
+}
+
+# ── Compatibilidade com nomes do Script 1 ─────────────────────────────────────
+suit_atual  <- atual
+suit_126_21 <- ssp126_p1
+suit_126_41 <- ssp126_p2
+suit_245_21 <- ssp245_p1
+suit_245_41 <- ssp245_p2
+
+# Coordenadas dos ambientes
+env_coords <- zim |>
+  group_by(env) |>
+  summarise(
+    LAT  = mean(LAT, na.rm = TRUE),
+    LON  = mean(LON, na.rm = TRUE),
+    ELEV = mean(ELEV, na.rm = TRUE),
+    .groups = "drop"
+  )
+```
+
+## Bloco 1 — Extração de adequabilidade nos locais
+
+Nesta etapa, as coordenadas médias dos ambientes são convertidas para objeto espacial (`sf`) e usadas para extrair os valores de adequabilidade climática em cada local. O script junta os cinco rasters de adequabilidade — cenário atual e quatro cenários futuros — em um único objeto, nomeia cada camada e extrai os valores correspondentes aos pontos dos ambientes. Em seguida, calcula `suit_futura`, que representa a média da adequabilidade nos quatro cenários futuros.
+
+```{r}
+# =============================================================================
+# BLOCO 1 — Extração de adequabilidade nos locais
+# =============================================================================
+
+env_sf <- env_coords |>
+  st_as_sf(coords = c("LON", "LAT"), crs = 4326)
+
+suit_stack <- c(
+  suit_atual,
+  suit_126_21,
+  suit_126_41,
+  suit_245_21,
+  suit_245_41
+)
+
+names(suit_stack) <- c(
+  "atual",
+  "ssp126_2021",
+  "ssp126_2041",
+  "ssp245_2021",
+  "ssp245_2041"
+)
+
+suit_pts <- terra::extract(suit_stack, vect(env_sf), ID = FALSE) |>
+  bind_cols(env_coords)
+
+suit_pts <- suit_pts |>
+  mutate(
+    suit_futura = rowMeans(
+      across(c(ssp126_2021, ssp126_2041, ssp245_2021, ssp245_2041)),
+      na.rm = TRUE
+    )
+  )
+```
+
+## Bloco 2 — Desempenho agronômico e acurácia por ambiente
+
+Este bloco resume o desempenho agronômico por ambiente a partir dos BLUPs. Primeiro, calcula-se o BLUP médio de produtividade (`blup_gy_env`) e a média dos cinco melhores genótipos por ambiente (`blup_gy_top5`). Depois, os dados observados de produtividade são agregados por genótipo e ambiente, permitindo calcular a acurácia ambiental como a correlação entre valores preditos (`predicted.value`) e valores observados (`GY_obs`). Também é definida a função `rescale01()`, usada para normalizar variáveis em escala de 0 a 1. Por fim, o Índice de Priorização Espacial (`IPS`) é calculado como uma média ponderada entre desempenho produtivo, acurácia, adequabilidade atual e adequabilidade futura.
+
+```{r}
+# =============================================================================
+# BLOCO 2 — Desempenho agronômico e acurácia por ambiente
+# =============================================================================
+
+blup_env <- blup_ge |>
+  group_by(env) |>
+  summarise(
+    blup_gy_env  = mean(predicted.value, na.rm = TRUE),
+    blup_gy_top5 = mean(sort(predicted.value, decreasing = TRUE)[1:min(5, n())],
+                        na.rm = TRUE),
+    .groups = "drop"
+  )
+
+obs_ge <- zim |>
+  group_by(gen, env) |>
+  summarise(GY_obs = mean(GY, na.rm = TRUE), .groups = "drop")
+
+acc_env_tab <- blup_ge |>
+  left_join(obs_ge, by = c("gen", "env")) |>
+  group_by(env) |>
+  summarise(
+    acuracia_env = cor(predicted.value, GY_obs, use = "complete.obs"),
+    .groups = "drop"
+  ) |>
+  mutate(
+    acuracia_env = ifelse(is.na(acuracia_env), median(acuracia_env, na.rm = TRUE), acuracia_env)
+  )
+
+rescale01 <- function(x) {
+  if (length(unique(na.omit(x))) <= 1) return(rep(0.5, length(x)))
+  scales::rescale(x, to = c(0, 1), na.rm = TRUE)
+}
+
+# Pesos do IPS
+w_blup  <- 0.35
+w_est   <- 0.25
+w_atual <- 0.20
+w_fut   <- 0.20
+
+tab_master <- suit_pts |>
+  left_join(blup_env, by = "env") |>
+  left_join(acc_env_tab, by = "env") |>
+  mutate(
+    n_blup  = rescale01(blup_gy_env),
+    n_est   = rescale01(acuracia_env),
+    n_atual = rescale01(atual),
+    n_fut   = rescale01(suit_futura),
+    IPS = w_blup  * n_blup +
+          w_est   * n_est +
+          w_atual * n_atual +
+          w_fut   * n_fut
+  ) |>
+  arrange(desc(IPS))
+
+print(tab_master |> select(env, LAT, LON, blup_gy_env, acuracia_env, atual, suit_futura, IPS))
+```
+
+## Bloco 3 — Mega-ambientes climáticos
+
+Aqui é feita a clusterização dos ambientes em mega-ambientes climáticos. A matriz de agrupamento usa oito variáveis: adequabilidade atual, quatro adequabilidades futuras, latitude, longitude e elevação. Todas são normalizadas com `rescale01()`. O número ótimo de clusters é escolhido pelo maior coeficiente médio de silhueta, testando valores de `k` entre 2 e `min(6, n_ambientes - 1)`. A solução final usa `kmeans()` com `nstart = 100`, aumentando a estabilidade da classificação.
+
+```{r}
+# =============================================================================
+# BLOCO 3 — Mega-ambientes climáticos
+# =============================================================================
+
+feat_clust <- tab_master |>
+  select(atual, ssp126_2021, ssp126_2041, ssp245_2021, ssp245_2041, LAT, LON, ELEV) |>
+  mutate(across(everything(), rescale01)) |>
+  as.matrix()
+
+rownames(feat_clust) <- tab_master$env
+
+k_max <- min(6, nrow(feat_clust) - 1)
+
+set.seed(42)
+sil_scores <- map_dbl(2:k_max, function(k) {
+  km <- kmeans(feat_clust, centers = k, nstart = 50)
+  sil <- silhouette(km$cluster, dist(feat_clust))
+  mean(sil[, 3])
+})
+
+k_opt <- which.max(sil_scores) + 1
+
+km_final <- kmeans(feat_clust, centers = k_opt, nstart = 100)
+
+tab_master <- tab_master |>
+  mutate(cluster = factor(km_final$cluster, labels = paste0("MA-", seq_len(k_opt))))
+```
+
+## Bloco 4 — Ranking de genótipos por mega-ambiente
+
+Este bloco ranqueia os genótipos dentro de cada mega-ambiente climático. Os BLUPs são combinados com a classificação dos ambientes (`cluster`) e o IPS. Depois, calcula-se a média dos BLUPs por genótipo dentro de cada mega-ambiente (`blup_ma`) e o número de ambientes representados. Em seguida, são selecionados os cinco melhores genótipos por mega-ambiente e adicionadas métricas globais de estabilidade e desempenho, como `WAASB`, `SI` e `blup_gy_global`.
+
+```{r}
+# =============================================================================
+# BLOCO 4 — Ranking de genótipos por mega-ambiente
+# =============================================================================
+
+ranking_ma <- blup_ge |>
+  left_join(tab_master |> select(env, cluster, IPS), by = "env") |>
+  group_by(cluster, gen) |>
+  summarise(
+    blup_ma = mean(predicted.value, na.rm = TRUE),
+    n_envs  = n_distinct(env),
+    .groups = "drop"
+  ) |>
+  arrange(cluster, desc(blup_ma))
+
+top5_ma <- ranking_ma |>
+  group_by(cluster) |>
+  slice_max(blup_ma, n = 5, with_ties = FALSE) |>
+  mutate(rank = row_number()) |>
+  ungroup()
+
+top5_ma_full <- top5_ma |>
+  left_join(
+    waasb_tab |> select(gen, WAASB, SI, blup_gy_global = blup_gy),
+    by = "gen"
+  )
+
+print(top5_ma_full)
+```
+
+## Bloco 5 — Figuras
+
+Nesta seção, o script gera as figuras principais da análise. As figuras incluem o mapa do IPS, a mudança de adequabilidade climática futura em relação ao presente, a relação entre desempenho agronômico e adequabilidade futura, a decomposição dos componentes do IPS, o ranking dos cinco melhores genótipos por mega-ambiente e a área adequada por cenário climático. Todas as figuras são salvas com a função `salvar()`, definida no início do script.
+
+```{r}
+# =============================================================================
+# BLOCO 5 — Figuras
+# =============================================================================
+
+# Fig 11 — Mapa IPS
+suit_df <- as.data.frame(suit_atual, xy = TRUE)
+names(suit_df)[3] <- "suit"
+suit_df <- suit_df |> filter(!is.na(suit))
+
+ggplot() +
+  geom_raster(data = suit_df, aes(x = x, y = y, fill = suit)) +
+  scale_fill_viridis_c(name = "Adequabilidade\natual") +
+  geom_point(data = tab_master, aes(x = LON, y = LAT, size = IPS, colour = cluster), alpha = 0.9) +
+  geom_text_repel(data = tab_master, aes(x = LON, y = LAT, label = env), size = 3) +
+  scale_size_continuous(range = c(3, 10), name = "IPS") +
+  labs(
+    title = "Fig 11 — Índice de Priorização Espacial por local",
+    x = "Longitude",
+    y = "Latitude",
+    colour = "Mega-ambiente"
+  ) +
+  theme_bw()
+
+salvar("11_mapa_IPS", w = 10, h = 8)
+
+# Fig 12 — Delta adequabilidade
+tab_master |>
+  mutate(delta_suit = suit_futura - atual) |>
+  ggplot(aes(x = reorder(env, delta_suit), y = delta_suit, fill = delta_suit > 0)) +
+  geom_col(show.legend = FALSE) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  coord_flip() +
+  labs(
+    title = "Fig 12 — Variação da adequabilidade climática futura",
+    x = NULL,
+    y = "Futuro médio − atual"
+  ) +
+  theme_bw()
+
+salvar("12_delta_adequabilidade", w = 9, h = 7)
+
+# Fig 13 — BLUP × Suit futura
+tab_master |>
+  ggplot(aes(x = blup_gy_env, y = suit_futura, size = IPS, colour = cluster, label = env)) +
+  geom_point(alpha = 0.85) +
+  geom_text_repel(size = 3) +
+  geom_vline(xintercept = median(tab_master$blup_gy_env, na.rm = TRUE), linetype = "dashed") +
+  geom_hline(yintercept = median(tab_master$suit_futura, na.rm = TRUE), linetype = "dashed") +
+  labs(
+    title = "Fig 13 — Desempenho agronômico × adequabilidade futura",
+    x = "BLUP médio de GY",
+    y = "Adequabilidade climática futura",
+    colour = "Mega-ambiente"
+  ) +
+  theme_bw()
+
+salvar("13_blup_vs_suit_futura", w = 10, h = 7)
+
+# Fig 14 — Componentes do IPS
+tab_master |>
+  select(env, cluster, n_blup, n_est, n_atual, n_fut, IPS) |>
+  pivot_longer(c(n_blup, n_est, n_atual, n_fut),
+               names_to = "componente", values_to = "valor") |>
+  mutate(
+    componente = recode(
+      componente,
+      n_blup  = "BLUP GY",
+      n_est   = "Acurácia",
+      n_atual = "Suit. atual",
+      n_fut   = "Suit. futura"
+    ),
+    env = reorder(env, IPS)
+  ) |>
+  ggplot(aes(x = componente, y = env, fill = valor)) +
+  geom_tile(colour = "white") +
+  scale_fill_viridis_c(name = "Score\nnormalizado") +
+  facet_grid(cluster ~ ., scales = "free_y", space = "free_y") +
+  labs(
+    title = "Fig 14 — Decomposição do IPS por componente",
+    x = NULL,
+    y = NULL
+  ) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
+
+salvar("14_heatmap_IPS_componentes", w = 9, h = 10)
+
+# Fig 15 — Top 5 genótipos por mega-ambiente
+top5_ma_full |>
+  mutate(gen = tidytext::reorder_within(gen, blup_ma, cluster)) |>
+  ggplot(aes(x = blup_ma, y = gen, colour = WAASB)) +
+  geom_segment(aes(x = min(blup_ma, na.rm = TRUE), xend = blup_ma, yend = gen), colour = "grey70") +
+  geom_point(size = 4) +
+  tidytext::scale_y_reordered() +
+  facet_wrap(~ cluster, scales = "free_y") +
+  scale_colour_viridis_c(name = "WAASB\nmenor = mais estável", direction = -1) +
+  labs(
+    title = "Fig 15 — Top-5 genótipos por mega-ambiente climático",
+    x = "BLUP médio no mega-ambiente",
+    y = NULL
+  ) +
+  theme_bw()
+
+salvar("15_top5_gen_por_megaambiente", w = 12, h = 9)
+
+# Fig 16 — Área adequada com cálculo correto por célula
+thr <- 0.5
+
+calc_area_adequada <- function(r, thr = 0.5) {
+  area_r <- terra::cellSize(r, unit = "km")
+  adequadas <- r >= thr
+  sum(values(area_r)[values(adequadas) == 1], na.rm = TRUE)
+}
+
+area_df <- tibble(
+  cenario = c(
+    "Atual",
+    "SSP1-2.6 (2021-2040)",
+    "SSP1-2.6 (2041-2060)",
+    "SSP2-4.5 (2021-2040)",
+    "SSP2-4.5 (2041-2060)"
+  ),
+  raster = list(
+    suit_atual,
+    suit_126_21,
+    suit_126_41,
+    suit_245_21,
+    suit_245_41
+  )
+) |>
+  mutate(
+    area_km2 = map_dbl(raster, calc_area_adequada, thr = thr),
+    baseline = first(area_km2),
+    delta = area_km2 - baseline,
+    pct = delta / baseline * 100,
+    cenario = factor(cenario, levels = cenario)
+  )
+
+ggplot(area_df, aes(x = cenario, y = area_km2, fill = pct)) +
+  geom_col(colour = "white") +
+  geom_text(aes(label = sprintf("%.0f km²\n(%+.1f%%)", area_km2, pct)),
+            vjust = -0.3, size = 3.2) +
+  scale_y_continuous(labels = comma, expand = expansion(mult = c(0, 0.15))) +
+  scale_fill_viridis_c(name = "Δ% vs.\natual") +
+  labs(
+    title = "Fig 16 — Área adequada para soja no Zimbabwe",
+    subtitle = paste0("Limiar de adequabilidade ≥ ", thr),
+    x = NULL,
+    y = "Área adequada (km²)"
+  ) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 25, hjust = 1))
+
+salvar("16_area_adequada_por_cenario", w = 10, h = 6)
+```
+
+## Bloco 6 — Exportação
+
+O último bloco exporta as tabelas finais da análise em formato `.csv`. São geradas três saídas: a tabela com IPS por local, a tabela com os cinco melhores genótipos por mega-ambiente e a tabela de área adequada por cenário climático. Ao final, o script imprime no console uma mensagem de finalização com o número de mega-ambientes definidos, o número de locais analisados e os nomes dos arquivos exportados.
+
+```{r}
+# =============================================================================
+# BLOCO 6 — Exportação
+# =============================================================================
+
+write.csv(
+  tab_master |>
+    select(env, cluster, LAT, LON, ELEV,
+           blup_gy_env, blup_gy_top5,
+           acuracia_env,
+           suit_atual = atual,
+           suit_futura,
+           IPS),
+  file = file.path(base_dir, "tabela_IPS_por_local.csv"),
+  row.names = FALSE
+)
+
+write.csv(
+  top5_ma_full,
+  file = file.path(base_dir, "tabela_top5_genotipos_por_megaambiente.csv"),
+  row.names = FALSE
+)
+
+write.csv(
+  area_df |> select(-raster),
+  file = file.path(base_dir, "tabela_area_adequada_por_cenario.csv"),
+  row.names = FALSE
+)
+
+cat("\n=== SCRIPT 3 FINALIZADO ===\n")
+cat("Mega-ambientes definidos:", k_opt, "\n")
+cat("Locais analisados:", nrow(tab_master), "\n")
+cat("Tabelas exportadas:\n")
+cat("- tabela_IPS_por_local.csv\n")
+cat("- tabela_top5_genotipos_por_megaambiente.csv\n")
+cat("- tabela_area_adequada_por_cenario.csv\n")
+cat("Figuras salvas em:", file.path(base_dir, dir_figs), "\n")
+```
+
+
+# Conclusões
+Os resultados demonstraram que a produtividade da soja no Zimbabwe é fortemente influenciada pela interação genótipo × ambiente, cuja contribuição para a variância total foi superior ao efeito genotípico principal. Esse padrão evidencia a necessidade de abordagens analíticas capazes de considerar simultaneamente desempenho médio, estabilidade e adaptação específica dos genótipos.
+
+Os modelos mistos baseados em REML/BLUP forneceram estimativas robustas do mérito genético dos materiais avaliados, enquanto a análise WAASB permitiu identificar genótipos que combinaram alta produtividade e estabilidade fenotípica. As elevadas acurácias seletivas observadas na maioria dos ambientes reforçam a confiabilidade dos rankings obtidos e a consistência das inferências realizadas.
+
+A modelagem de adequabilidade climática indicou que a distribuição potencial da cultura no Zimbabwe é condicionada principalmente pela interação entre temperatura e disponibilidade hídrica. As projeções futuras sugerem alterações espaciais na adequabilidade climática, com potenciais ganhos e perdas regionais dependendo do cenário de mudança climática considerado. Os mapas de extrapolação ambiental indicaram que a maior parte das projeções foi realizada dentro de condições ambientais compatíveis com o domínio de calibração dos modelos, aumentando a confiabilidade das previsões.
+
+A integração entre desempenho agronômico e adequabilidade climática por meio do Índice de Priorização Espacial permitiu identificar ambientes estratégicos para expansão da cultura e selecionar genótipos com maior potencial de adaptação futura. Além disso, a definição de mega-ambientes climáticos possibilitou direcionar recomendações específicas para diferentes regiões de produção, aproximando os resultados da aplicação prática em programas de melhoramento e planejamento agrícola.
+
+De forma geral, este estudo demonstra que a combinação de modelos mistos, análise de estabilidade e modelagem ambiental constitui uma abordagem eficiente para apoiar a seleção de genótipos e a tomada de decisão frente aos desafios impostos pela variabilidade ambiental e pelas mudanças climáticas, contribuindo para o desenvolvimento de sistemas de produção de soja mais resilientes e sustentáveis no Zimbabwe.
