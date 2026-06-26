@@ -1,7 +1,6 @@
-
 ---
 title: "Análise Multinível e Modelagem Ambiental de Soja no Zimbabwe"
-author: "Ana, Paula e Thiago"
+author: "Ana Matiussi, Paula Cardoso e Thiago Ludwig"
 date: today
 lang: pt
 format:
@@ -24,16 +23,24 @@ execute:
   message: false
 ---
 
+```{=html}
+<style>
+  p {
+    text-align: justify;
+    text-justify: inter-word;
+    text-indent: 1.25cm;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+</style>
+```
+
 ```{r}
 #| label: setup-asreml
 #| include: true
 #| output: false
 
 library(asreml)
-
-   
-
-
 ```
 
 # Introdução
@@ -204,6 +211,7 @@ Esta primeira etapa define todos os diretórios usados ao longo do script. A var
 ```{r}
 #| label: s1-0-config-caminhos
 #| output: false
+
 base_dir       <- "E:/Thiago/Estatistica"
 
 dir_current    <- file.path(base_dir, "CurrentConditions")
