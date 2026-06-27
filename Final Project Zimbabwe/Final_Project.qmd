@@ -23,115 +23,253 @@ execute:
   message: false
 ---
 
-```{=html}
-<style>
-  p {
-    text-align: justify;
-    text-justify: inter-word;
-    text-indent: 1.25cm;
-    margin-top: 0;
-    margin-bottom: 0;
-  }
-</style>
-```
-
 ```{r}
 #| label: setup-asreml
 #| include: true
 #| output: false
 
 library(asreml)
+
+   
+
+
 ```
 
 # Introdução
 
-Este relatório apresenta uma análise integrada dos ensaios da Pan-African Soybean Trials Network para o Zimbabwe. Os dados utilizados são públicos e foram obtidos do repositório da rede (`Pan_African_Trials_Network`, GitHub). Foram avaliados componentes de produtividade, interação genótipo × ambiente (G×E), estabilidade fenotípica, acurácia seletiva e relações entre caracteres agronômicos. Adicionalmente, foi realizada modelagem de nicho ecológico para identificar áreas potencialmente adequadas ao cultivo de soja sob condições climáticas atuais e futuras.
+A soja (*Glycine max* [L.] Merr.) é uma das principais culturas agrícolas do mundo, desempenhando papel estratégico na produção de proteína vegetal, óleo comestível e ração animal, além de contribuir para a sustentabilidade dos sistemas agrícolas por meio da fixação biológica de nitrogênio (FAO, 2024; Hartman et al., 2011). Na África Subsaariana, a cultura vem adquirindo importância crescente como alternativa para o fortalecimento da segurança alimentar, geração de renda e intensificação sustentável da produção agrícola. Nesse contexto, o Zimbabwe destaca-se entre os países que vêm ampliando investimentos na expansão da sojicultura, impulsionado pelo aumento da demanda interna e pela necessidade de reduzir a dependência de importações de óleo e farelo de soja (Khojely et al., 2018).
+
+Apesar desse potencial, a produtividade da soja apresenta elevada variabilidade espacial e temporal, sendo fortemente influenciada pelas condições ambientais nas quais os genótipos são cultivados. Fatores como temperatura, precipitação, altitude e características edáficas afetam diretamente o desenvolvimento da cultura e a expressão do potencial genético dos materiais, tornando indispensável a condução de ensaios multiambientais antes da recomendação de cultivares em escala regional (Cooper & Hammer, 1996).
+
+Em programas de melhoramento vegetal, ensaios conduzidos em múltiplos locais e anos, como os da Pan-African Soybean Trials Network, permitem avaliar simultaneamente produtividade, adaptabilidade e estabilidade dos genótipos frente à diversidade ambiental representativa da população-alvo de ambientes (*Target Population of Environments* — TPE). Entretanto, a interação genótipo × ambiente (G×E), caracterizada pela alteração do desempenho relativo dos genótipos entre diferentes condições ambientais, constitui um dos principais desafios para a recomendação de cultivares, pois dificulta a identificação de materiais com superioridade ampla e consistente, reduzindo a eficiência da seleção baseada exclusivamente em médias fenotípicas (Cruz et al., 2025; Smith et al., 2005; Yan & Kang, 2002).
+
+Nas últimas décadas, modelos lineares mistos baseados na estimação por máxima verossimilhança restrita (REML) e na predição de valores genéticos por *Best Linear Unbiased Prediction* (BLUP) tornaram-se amplamente utilizados para análise de ensaios multiambientais. Essas abordagens permitem decompor componentes de variância, acomodar dados desbalanceados e predizer o mérito genético dos materiais considerando simultaneamente os efeitos ambientais e a interação G×E (Henderson, 1975; Patterson & Thompson, 1971). Complementarmente, o índice WAASB (*Weighted Average of Absolute Scores from the BLUP Matrix*), derivado da decomposição em valores singulares da matriz de interação G×E, permite classificar genótipos segundo a combinação entre produtividade predita e consistência de desempenho entre ambientes, fornecendo subsídios mais sólidos para a recomendação de cultivares do que critérios baseados exclusivamente em médias (Olivoto et al., 2019).
+
+Paralelamente aos avanços na avaliação agronômica, as mudanças climáticas impõem novos desafios aos programas de melhoramento vegetal. Projeções indicam alterações significativas nos regimes de temperatura e precipitação em diversas regiões produtoras, com potencial para modificar a distribuição geográfica das áreas aptas ao cultivo e alterar o desempenho das cultivares atualmente recomendadas (IPCC, 2023). Nesse contexto, modelos de nicho ecológico e outras abordagens de modelagem de adequabilidade climática vêm sendo utilizados para identificar áreas favoráveis ao cultivo sob condições atuais e antecipar deslocamentos espaciais dessa aptidão sob diferentes cenários de emissão, fornecendo subsídios para estratégias de adaptação da agricultura às mudanças climáticas (Araújo & New, 2007; Araújo & Peterson, 2012).
+
+Embora modelos mistos e modelagem de adequabilidade climática tenham evoluído substancialmente nas últimas décadas, essas abordagens ainda são, na maioria das vezes, aplicadas de forma independente. Consequentemente, programas de melhoramento frequentemente recomendam cultivares com base exclusivamente no desempenho observado em ensaios de campo, sem considerar explicitamente a persistência da favorabilidade climática dos ambientes avaliados ao longo do tempo. A integração entre informações agronômicas, estabilidade fenotípica e projeções climáticas representa, portanto, uma oportunidade para aprimorar a definição de genótipos superiores e ambientes prioritários, tornando as recomendações mais robustas frente aos cenários futuros de mudanças climáticas.
+
+Diante desse contexto, o presente trabalho integra análise de componentes de variância, predição de valores genéticos por BLUP, avaliação de estabilidade fenotípica por WAASB e modelagem de nicho ecológico utilizando dados da Pan-African Soybean Trials Network conduzidos no Zimbabwe (Araújo et al., 2025). O objetivo foi identificar genótipos superiores, caracterizar padrões de interação genótipo × ambiente, definir mega-ambientes e priorizar ambientes experimentais considerando simultaneamente o desempenho agronômico, a estabilidade fenotípica e a adequabilidade climática atual e futura sob os cenários SSP1-2.6 e SSP2-4.5 para os períodos de 2021–2040 e 2041–2060.
 
 # Objetivos
 
-- Caracterizar a variabilidade fenotípica da produtividade de grãos (GY).
-- Quantificar os componentes de variância associados a genótipos, ambientes e interação G×E.
-- Estimar BLUPs genotípicos utilizando modelos mistos.
-- Avaliar estabilidade por WAASB.
-- Investigar correlações entre caracteres.
-- Projetar adequabilidade climática atual e futura para o Zimbabwe.
+## Geral
 
-# Dados e Métodos
+Integrar modelos lineares mistos, análise de estabilidade fenotípica e modelagem ambiental para caracterizar o desempenho de genótipos de soja avaliados em ensaios multiambientais no Zimbabwe, considerando simultaneamente produtividade, interação genótipo × ambiente e adequabilidade climática atual e futura.
 
-Os dados fenotípicos utilizados neste estudo correspondem ao subconjunto de ambientes localizados no Zimbabwe da Pan-African Soybean Trials Network, contendo informações de produtividade de grãos (GY), dias para maturidade (NDM), dias para florescimento (FLW_DAYS), altura de plantas na maturidade (PH_R8), massa de cem grãos (W100G), teor de proteína (PROT), teor de óleo (OIL), além de coordenadas geográficas e altitude dos ambientes experimentais (LAT, LON e ELEV).
+## Específicos
 
-A análise foi conduzida em três etapas complementares. Inicialmente, realizou-se a caracterização exploratória dos dados, incluindo estatísticas descritivas, distribuição da produtividade entre ambientes e comparação entre genótipos experimentais e testemunhas. Em seguida, foram ajustados modelos lineares mistos utilizando o método REML/BLUP no software ASReml-R. A estrutura analítica incluiu: M0, modelo nulo contendo apenas o efeito aleatório de ambiente para estimativa do coeficiente de correlação intraclasse (ICC); M1, ambiente e bloco (repetição dentro de ambiente) como efeitos fixos e genótipo como efeito aleatório; M2, modelo principal contendo ambiente e bloco (repetição dentro de ambiente) como efeitos fixos e os efeitos aleatórios de genótipo e interação genótipo × ambiente (G×E); M3, modelo com estrutura Factor Analytic de primeira ordem (FA1), mantendo ambiente e bloco como efeitos fixos; M_cov, incluindo elevação, latitude e longitude padronizadas como covariáveis ambientais; e M_check, incorporando o efeito de testemunha (check) como fator fixo. A partir desses modelos foram obtidos componentes de variância, BLUPs genotípicos, acurácia seletiva e parâmetros de estabilidade.
+- Caracterizar a variabilidade fenotípica da produtividade de grãos e de caracteres agronômicos associados nos ambientes avaliados no Zimbabwe.
+- Quantificar os componentes de variância associados a genótipos, ambientes e interação genótipo × ambiente por meio de modelos lineares mistos REML/BLUP.
+- Estimar valores genéticos preditos via BLUP e identificar genótipos superiores para produtividade de grãos.
+- Avaliar a estabilidade fenotípica dos genótipos por meio do índice WAASB.
+- Estimar a adequabilidade climática atual e futura para o cultivo da soja no Zimbabwe por meio de modelagem de nicho ecológico.
+- Integrar desempenho agronômico, acurácia seletiva e adequabilidade climática no Índice de Priorização Espacial.
+- Definir mega-ambientes climáticos e propor recomendações de genótipos por grupo ambiental.
 
-A estabilidade fenotípica foi avaliada por meio do índice WAASB (Weighted Average of Absolute Scores from the BLUP Matrix), obtido a partir da decomposição em valores singulares da matriz de efeitos BLUP da interação G×E. A combinação entre produtividade predita e estabilidade permitiu identificar genótipos com adaptação ampla e desempenho consistente em múltiplos ambientes.
+# Materiais e Métodos
 
-Paralelamente, foi realizada modelagem de adequabilidade climática utilizando o pacote `ENMTML`. Os modelos foram calibrados com locais que apresentaram produtividade superior a 2.000 kg ha⁻¹ e variáveis bioclimáticas do WorldClim 2.1. Foram empregados os algoritmos MaxEnt, Random Forest, GLM e SVM, posteriormente combinados em um ensemble por média. As projeções climáticas futuras foram realizadas para os cenários SSP1-2.6 e SSP2-4.5 nos períodos de 2021–2040 e 2041–2060, utilizando a média dos modelos climáticos globais EC-Earth3-Veg e MPI-ESM1-2-HR. Adicionalmente, mapas de extrapolação ambiental (MOP) foram gerados para identificar regiões sujeitas a condições climáticas fora do domínio de calibração dos modelos.
+## Conjunto de dados
 
-Por fim, os resultados agronômicos e climáticos foram integrados por meio de um Índice de Priorização Espacial (IPS), desenvolvido para combinar desempenho produtivo, acurácia seletiva dos ambientes, adequabilidade climática atual e adequabilidade climática futura. Os ambientes foram posteriormente agrupados em mega-ambientes climáticos por análise de agrupamento multivariada, permitindo identificar genótipos prioritários para recomendação sob condições atuais e futuras de cultivo de soja no Zimbabwe.
+Os dados fenotípicos utilizados neste estudo foram obtidos do repositório público da Pan-African Soybean Trials Network (Araújo et al., 2025), sendo extraído o subconjunto referente aos ambientes experimentais localizados no Zimbabwe. As variáveis analisadas incluíram produtividade de grãos (GY, kg ha^-1^), dias para florescimento (FLW_DAYS), dias para maturidade (NDM), altura de plantas na maturidade (PH_R8), massa de cem grãos (W100G), teor de proteína (PROT) e teor de óleo (OIL). Cada ambiente foi georreferenciado por meio de coordenadas de latitude (LAT), longitude (LON) e altitude (ELEV), informações utilizadas tanto na caracterização ambiental quanto na integração entre desempenho agronômico e adequabilidade climática.
+
+## Recorte dos dados para o Zimbabwe
+
+A base original foi filtrada para manter apenas as observações correspondentes aos ensaios conduzidos no Zimbabwe. Após a filtragem, foram preservados os ambientes experimentais, genótipos, testemunhas e variáveis fenotípicas associados ao país. Esse recorte permitiu concentrar a análise em uma única população-alvo de ambientes, reduzindo a interferência de variações regionais mais amplas entre países e permitindo uma avaliação mais detalhada da interação genótipo × ambiente dentro do Zimbabwe.
+
+## Variáveis fenotípicas e ambientais avaliadas
+
+A produtividade de grãos (GY, kg ha^-1^) foi considerada a variável principal do estudo, por representar o principal critério agronômico de interesse em programas de melhoramento de soja. As demais variáveis fenotípicas foram utilizadas para caracterização complementar dos materiais e para análise de correlações entre caracteres agronômicos. As variáveis ambientais utilizadas na modelagem climática foram obtidas a partir das camadas bioclimáticas do WorldClim 2.1, representando dimensões relacionadas à temperatura, precipitação, sazonalidade e extremos climáticos.
+
+## Análise exploratória
+
+Inicialmente, realizou-se a caracterização descritiva dos dados, com obtenção de estatísticas de posição e dispersão para cada variável e ambiente. A distribuição da produtividade entre ambientes foi visualizada por meio de boxplots, e o desempenho dos genótipos experimentais foi comparado ao das testemunhas incluídas nos ensaios. Correlações fenotípicas entre os caracteres agronômicos foram calculadas e representadas graficamente para identificar associações entre produtividade, ciclo, componentes de produção e qualidade de grãos.
+
+## Modelagem ambiental
+
+### Definição dos registros de presença
+
+A adequabilidade climática atual e futura para o cultivo de soja no Zimbabwe foi estimada por meio de modelagem de nicho ecológico utilizando o pacote `ENMTML` no ambiente R (Andrade et al., 2020). Os registros de presença utilizados na calibração dos modelos foram definidos com base nos ambientes experimentais que apresentaram produtividade superior a 2.000 kg ha^-1^, adotados como proxy de condições edafoclimáticas favoráveis à cultura. Essa abordagem permitiu que o modelo capturasse o espaço ambiental associado ao bom desempenho agronômico da soja, em vez de simplesmente modelar a ocorrência geográfica da cultura independentemente de sua produtividade.
+
+### Variáveis bioclimáticas
+
+As variáveis preditoras utilizadas foram as 19 camadas bioclimáticas do WorldClim 2.1 (BIO1–BIO19), disponíveis na resolução espacial de 5 minutos de arco e representativas do período de referência 1970–2000 (Fick & Hijmans, 2017). Essas camadas descrevem dimensões centrais do clima, incluindo médias de longo prazo de temperatura e precipitação, indicadores de variabilidade intra-anual e medidas de extremos ambientais.
+
+### Redução da multicolinearidade
+
+Para reduzir a multicolinearidade entre os preditores, foi realizada uma análise de componentes principais (PCA), sendo retidos os componentes que explicaram acumuladamente ao menos 95% da variância total para a calibração dos modelos. Essa etapa evitou redundância excessiva entre variáveis climáticas correlacionadas e contribuiu para maior estabilidade das predições.
+
+### Algoritmos de modelagem de nicho ecológico
+
+Foram empregados algoritmos representando diferentes estratégias de modelagem da relação espécie-ambiente, incluindo métodos de presença, presença-ausência e presença-background. Os algoritmos utilizados incluíram MaxEnt, Random Forest, GLM e SVM, posteriormente combinados em um ensemble por média. As pseudoausências foram geradas de modo a representar áreas ambientalmente contrastantes em relação aos pontos de presença.
+
+### Avaliação dos modelos e construção do ensemble
+
+Cada algoritmo foi avaliado por procedimento de bootstrap com partição de 70% para treino e 30% para teste. A performance dos modelos foi aferida pelas métricas AUC, TSS e Kappa. O ensemble final foi calculado como a média das predições dos algoritmos individuais, estratégia que reduz a incerteza associada a cada algoritmo isoladamente e evita a dependência excessiva de uma única técnica de modelagem.
+
+### Projeções climáticas futuras
+
+As projeções futuras foram geradas para dois cenários de emissão do IPCC: SSP1-2.6, correspondente a uma trajetória de mitigação mais intensa, e SSP2-4.5, representativo de uma trajetória intermediária de estabilização climática. As variáveis climáticas futuras foram obtidas como média de dois modelos climáticos globais, EC-Earth3-Veg e MPI-ESM1-2-HR, para dois horizontes temporais: 2021–2040 e 2041–2060.
+
+### Avaliação da extrapolação ambiental
+
+Para avaliar o risco de extrapolação ambiental nas projeções futuras, foram gerados mapas de paridade ambiental por mobilidade orientada (MOP). Esses mapas identificam regiões sujeitas a condições climáticas fora do domínio de calibração dos modelos. Valores baixos de MOP indicam áreas em que ao menos uma variável climática projetada extrapola os limites observados no conjunto de treino, sinalizando que as predições de adequabilidade nessas regiões devem ser interpretadas com maior cautela.
+
+## Modelagem multinível e análise genotípica
+
+### Modelos lineares mistos REML/BLUP
+
+Os componentes de variância foram estimados pelo método da máxima verossimilhança restrita (REML), e as predições genotípicas foram obtidas via BLUP (*Best Linear Unbiased Prediction*) (Henderson, 1975; Patterson & Thompson, 1971), utilizando o pacote `asreml` no ambiente R (Butler et al., 2023). De forma geral, os modelos lineares mistos foram representados por:
+
+$$
+\mathbf{y} = \mathbf{Xb} + \mathbf{Zu} + \mathbf{e}
+$$
+
+em que $\mathbf{y}$ é o vetor de observações fenotípicas; $\mathbf{b}$ é o vetor de efeitos fixos; $\mathbf{u}$ é o vetor de efeitos aleatórios; $\mathbf{X}$ e $\mathbf{Z}$ são matrizes de incidência associadas aos efeitos fixos e aleatórios, respectivamente; e $\mathbf{e}$ é o vetor de resíduos. Assumiu-se $\mathbf{u} \sim N(0, \mathbf{G})$ e $\mathbf{e} \sim N(0, \mathbf{R})$.
+
+### Modelo nulo e coeficiente de correlação intraclasse
+
+O modelo nulo incluiu apenas o efeito aleatório de ambiente, sendo utilizado para estimar o coeficiente de correlação intraclasse (ICC), que quantifica a proporção da variância total explicada pelas diferenças entre ambientes:
+
+$$
+y_{ij} = \mu + a_j + e_{ij}
+$$
+
+em que $a_j \sim N(0, \sigma_a^2)$ e $e_{ij} \sim N(0, \sigma_e^2)$. O ICC foi calculado por:
+
+$$
+ICC = \frac{\sigma_a^2}{\sigma_a^2 + \sigma_e^2}
+$$
+
+### Modelo com efeito genotípico
+
+O modelo M1 incluiu ambiente e bloco como efeitos fixos e genótipo como efeito aleatório, permitindo estimar a variância genotípica sem modelar explicitamente a interação genótipo × ambiente:
+
+$$
+y_{ijk} = \mu + A_j + B_{k(j)} + g_i + e_{ijk}
+$$
+
+### Modelo com interação genótipo × ambiente
+
+O modelo M2 foi considerado o modelo principal para obtenção dos BLUPs genotípicos, partição dos componentes de variância e estimativa da acurácia seletiva. Esse modelo incluiu ambiente e bloco como efeitos fixos, e genótipo e interação genótipo × ambiente como efeitos aleatórios:
+
+$$
+y_{ijk} = \mu + A_j + B_{k(j)} + g_i + (ga)_{ij} + e_{ijk}
+$$
+
+em que $g_i \sim N(0, \sigma_g^2)$, $(ga)_{ij} \sim N(0, \sigma_{ga}^2)$ e $e_{ijk} \sim N(0, \sigma_e^2)$.
+
+### Modelo Factor Analytic
+
+O modelo M3 incorporou uma estrutura *Factor Analytic* de primeira ordem (FA1) para modelar a interação genótipo × ambiente. Essa estrutura permite representar a covariância genética entre ambientes por meio de fatores latentes. A interação genótipo × ambiente sob estrutura FA1 pode ser representada por:
+
+$$
+(ga)_{ij} = \lambda_j f_i + \delta_{ij}
+$$
+
+A matriz de covariância entre ambientes pode ser representada por:
+
+$$
+\mathbf{\Sigma}_{FA1} = \mathbf{\Lambda}\mathbf{\Lambda}' + \mathbf{\Psi}
+$$
+
+### Modelo com covariáveis ambientais
+
+O modelo com covariáveis ambientais incluiu latitude, longitude e elevação padronizadas como covariáveis contínuas, com o objetivo de avaliar se características geográficas dos locais explicam parte da variação ambiental não capturada pelos efeitos principais:
+
+$$
+y_{ijk} = \mu + A_j + B_{k(j)} + \beta_1 LAT_j + \beta_2 LON_j + \beta_3 ELEV_j + g_i + (ga)_{ij} + e_{ijk}
+$$
+
+### Modelo com efeito de testemunha
+
+Por fim, foi ajustado um modelo com o status do genótipo, experimental ou testemunha, como fator fixo adicional:
+
+$$
+y_{ijk} = \mu + A_j + B_{k(j)} + C_i + g_i + (ga)_{ij} + e_{ijk}
+$$
+
+em que $C_i$ representa o efeito fixo associado ao status do genótipo $i$.
+
+### Componentes de variância, BLUPs e acurácia seletiva
+
+A partir dos modelos ajustados, foram obtidos componentes de variância, BLUPs genotípicos, predições específicas para combinações genótipo × ambiente, herdabilidade em sentido amplo e acurácia seletiva por ambiente. A herdabilidade em sentido amplo foi representada por:
+
+$$
+H^2 = \frac{\sigma_g^2}{\sigma_g^2 + \frac{\sigma_{ga}^2}{a} + \frac{\sigma_e^2}{ra}}
+$$
+
+em que $a$ é o número de ambientes e $r$ é o número médio de repetições.
+
+### Estabilidade fenotípica via WAASB
+
+A estabilidade fenotípica dos genótipos foi avaliada pelo índice WAASB (*Weighted Average of Absolute Scores from the BLUP Interaction Matrix*), obtido a partir da decomposição em valores singulares da matriz de efeitos BLUP da interação genótipo × ambiente:
+
+$$
+\mathbf{GE} = \mathbf{U}\mathbf{D}\mathbf{V}'
+$$
+
+O índice WAASB para o genótipo $i$ foi calculado por:
+
+$$
+WAASB_i = \frac{\sum_{k=1}^{p} |IPCA_{ik}| \times EP_k}{\sum_{k=1}^{p} EP_k}
+$$
+
+Menores valores de WAASB indicam maior estabilidade fenotípica.
+
+## Índice de Priorização Espacial e mega-ambientes
+
+### Integração entre desempenho agronômico e adequabilidade climática
+
+Os valores preditos de produtividade, a acurácia seletiva dos ambientes e os índices de adequabilidade climática atual e futura foram integrados para avaliar simultaneamente o potencial agronômico e a persistência climática dos locais de avaliação.
+
+### Cálculo do Índice de Priorização Espacial
+
+O Índice de Priorização Espacial (IPS) combinou quatro componentes normalizados: BLUP médio de produtividade estimado para o ambiente, acurácia seletiva, adequabilidade climática atual e adequabilidade climática futura média entre os cenários avaliados:
+
+$$
+IPS_j = w_1BLUP_{j}^{*} + w_2ACC_{j}^{*} + w_3S_{atual,j}^{*} + w_4S_{futuro,j}^{*}
+$$
+
+A normalização dos componentes foi realizada pela transformação min–max:
+
+$$
+X_j^{*} = \frac{X_j - X_{min}}{X_{max} - X_{min}}
+$$
+
+### Agrupamento dos ambientes em mega-ambientes climáticos
+
+Os ambientes foram agrupados em mega-ambientes climáticos por meio de análise de agrupamento multivariada, utilizando variáveis geográficas, índices de adequabilidade climática atual e projeções futuras como base de similaridade entre locais.
+
+### Recomendação de genótipos por mega-ambiente
+
+Para cada mega-ambiente identificado, foram selecionados os genótipos com maior BLUP médio dentro do grupo, considerando adicionalmente o WAASB como critério de estabilidade. Essa etapa permitiu gerar recomendações regionais mais alinhadas às diferenças climáticas e aos padrões de interação genótipo × ambiente observados.
 
 # Resultados
 
-## Distribuição de produtividade entre ambientes
+Os resultados foram organizados em dois blocos principais. O primeiro apresenta a modelagem ambiental, incluindo a preparação dos dados climáticos, os mapas de adequabilidade atual e futura, as projeções sob cenários de mudanças climáticas e a avaliação de extrapolação ambiental. O segundo bloco apresenta a modelagem multinível, a predição genotípica por BLUP, a estabilidade fenotípica via WAASB, a integração entre desempenho agronômico e adequabilidade climática, o Índice de Priorização Espacial e a definição dos mega-ambientes.
 
-Os ambientes apresentaram ampla variação de produtividade, evidenciando forte heterogeneidade ambiental. Alguns ambientes apresentaram medianas superiores a 5.000 kg ha⁻¹, enquanto outros permaneceram abaixo de 2.000 kg ha⁻¹. Essa amplitude sugere elevada influência das condições edafoclimáticas e reforça a necessidade de modelos que incorporem G×E (Script 2, Seções 2.3 e 2.6).
+## Resultados da modelagem ambiental
 
-## Testados versus testemunhas
+### Preparação dos dados ambientais e definição dos pontos de presença
 
-As testemunhas apresentaram desempenho competitivo em diversos ambientes, indicando boa calibração experimental. Entretanto, vários genótipos testados alcançaram produtividades equivalentes ou superiores às testemunhas, demonstrando potencial de ganho genético (Script 2, Seção 2.9).
+A primeira etapa consistiu na definição dos diretórios de trabalho, incluindo as pastas com as condições climáticas atuais, projeções futuras, resultados do `ENMTML`, arquivos de ocorrência e limite geográfico do Zimbabwe. Para executar o relatório, o caminho definido em `base_dir` deve apontar para a pasta principal que contém os arquivos e subpastas utilizados na análise.
 
-## Acurácia seletiva
-
-As correlações entre BLUPs e médias observadas foram elevadas na maioria dos ambientes (>0,90), indicando alta confiabilidade das estimativas genéticas. Apenas poucos ambientes apresentaram redução moderada na acurácia, possivelmente devido a maior variabilidade residual (Script 2, Seção 2.10).
-
-## Correlação entre caracteres
-
-As correlações fenotípicas (Script 2, Seção 2.11) indicaram:
-
-- Associação positiva forte entre NDM e FLW_DAYS.
-- Correlação negativa entre proteína e óleo.
-- Relação praticamente nula entre produtividade e maturidade.
-- Associação fraca entre produtividade e peso de 100 grãos.
-
-Esses resultados sugerem relativa independência entre produtividade e diversos componentes agronômicos.
-
-## Produtividade versus ciclo
-
-A dispersão entre GY e NDM mostrou ausência de tendência forte. Assim, genótipos mais tardios não necessariamente apresentaram maiores produtividades, permitindo seleção simultânea para rendimento e ciclo.
-
-## Produtividade versus peso de grãos
-
-A correlação negativa observada foi de baixa magnitude, indicando que aumento do peso individual dos grãos não garante incremento na produtividade total.
-
-## Estabilidade (WAASB)
-
-O biplot WAASB (Script 2, Seção 2.12) identificou genótipos simultaneamente produtivos e estáveis. Os materiais posicionados no quadrante superior esquerdo (Quadrante I) representam os candidatos mais promissores para recomendação ampla.
-
-## BLUPs genotípicos
-
-Os BLUPs (Script 2, Seções 2.6 e 2.15) permitiram ordenar os genótipos com correção para efeitos ambientais e desbalanceamento dos dados. Os melhores materiais apresentaram desempenho consistente e elevada produtividade predita.
-
-## Heatmap G×E
-
-O padrão observado (Script 2, Seção 2.15) confirma interação G×E expressiva. Alguns genótipos exibiram adaptação específica, enquanto outros apresentaram desempenho consistente em praticamente todos os ambientes.
-
-## Partição da variância
-
-A decomposição dos componentes (Script 2, Seção 2.6) indicou:
-
-- Genótipo: ~19,9%
-- Interação G×E: ~25,9%
-- Resíduo: ~54,3%
-
-A contribuição da interação G×E foi superior à do efeito genotípico principal, justificando o emprego de modelos mistos e análises de estabilidade.
-
-# Discussão
+**Parâmetros principais.**  
+- `base_dir`: diretório principal do projeto.  
+- `dir_current`: pasta com rasters climáticos atuais.  
+- `dir_future`: pasta com rasters climáticos futuros.  
+- `dir_current_zw` e `dir_future_zw`: pastas onde serão salvos os rasters recortados para o Zimbabwe.  
+- `dir_resultados`: pasta em que o `ENMTML` gravará os resultados.  
+- `dir_ensemble_atual`: raster final de adequabilidade atual gerado pelo ensemble.  
+- `dir_projection`: pasta com as projeções futuras do modelo.  
+- `dir_extrap_atual`: raster MOP atual.  
+- `zw_path`: arquivo vetorial com o limite do Zimbabwe.  
+- `coords_path`: arquivo com coordenadas de ocorrência usado pelo `ENMTML`.
 
 ## Componentes de variância e a magnitude da interação G×E
 
 A partição da variância obtida no modelo principal (M2), com blocos considerados como efeito fixo dentro de ambiente, mostrou que a interação G×E (25,9%) superou o componente genotípico principal (19,9%), enquanto o resíduo concentrou a maior parte da variação total (54,3%). Esse padrão é consistente com o que é tipicamente observado em redes multiambientais de soja conduzidas em condições de campo heterogêneas, indicando que a superioridade de um genótipo não é fixa, mas depende fortemente do ambiente em que é avaliado. A elevada proporção residual chama atenção para fontes de variação não controladas: variabilidade de solo dentro dos ensaios, diferenças de manejo entre estações experimentais, erros de mensuração ou número limitado de repetições em alguns ambientes. Isso sugere que ganhos adicionais de precisão poderiam vir tanto do refinamento do delineamento experimental (blocos incompletos, ajuste espacial) quanto da incorporação de covariáveis ambientais que expliquem parte dessa heterogeneidade, como discutido a seguir.
-
-## BLUPs, modelo FA1 e confiabilidade das estimativas
-
-A comparação entre os modelos M1 (sem G×E), M2 (G×E simples) e M3 (estrutura Factor Analytic, FA1) permite avaliar se a interação G×E possui estrutura, isto é, se alguns ambientes compartilham padrões de resposta genotípica semelhantes. Caso o modelo FA1 apresente AIC/BIC sensivelmente menores que M2, isso indica que a interação não é puramente aleatória, mas reflete agrupamentos de ambientes com comportamento correlacionado, informação valiosa para o delineamento de mega-ambientes de recomendação. A acurácia seletiva superior a 0,90 na maioria dos ambientes reforça que os BLUPs de M2 são estimativas confiáveis da ordem de mérito genotípico. Os ambientes com acurácia reduzida merecem atenção: rankings obtidos neles devem ser interpretados com cautela e podem indicar a necessidade de mais repetições ou de revisão dos dados de campo nesses locais específicos.
 
 ## Covariáveis ambientais e efeito de testemunhas
 
@@ -176,7 +314,7 @@ Além disso, a definição dos pesos utilizados no IPS foi baseada em critérios
 Outra perspectiva promissora consiste em incorporar variáveis ambientais mais detalhadas, como atributos de solo, manejo agronômico e séries históricas climáticas, permitindo modelar de forma mais abrangente os fatores que condicionam a produtividade da soja. Da mesma forma, a utilização de modelos genótipo-específicos de adequabilidade climática poderá fornecer estimativas mais precisas de adaptação futura, integrando diretamente informações de desempenho agronômico, estabilidade fenotípica e mudanças climáticas projetadas.
 
 Por fim, a abordagem proposta demonstra o potencial da integração entre modelos mistos, análises de estabilidade e modelagem ambiental para apoiar a identificação de ambientes prioritários e direcionar estratégias de melhoramento e expansão da cultura da soja sob cenários de mudança climática.
----
+
 
 # Script 1 — Modelagem Ambiental
 
@@ -211,7 +349,6 @@ Esta primeira etapa define todos os diretórios usados ao longo do script. A var
 ```{r}
 #| label: s1-0-config-caminhos
 #| output: false
-
 base_dir       <- "E:/Thiago/Estatistica"
 
 dir_current    <- file.path(base_dir, "CurrentConditions")
@@ -688,6 +825,11 @@ ggsave("mapa_ssp245_p1.svg",      plot = mapa_245_p1, width = 14, height = 11)
 ggsave("mapa_ssp245_p2.svg",      plot = mapa_245_p2, width = 14, height = 11)
 ggsave("grid_mapas_zimbabwe.svg", plot = grid_final,  width = 30, height = 20)
 ```
+**Figura 1.** Registros de ocorrência utilizados na modelagem de nicho ecológico (Occurrences) e mapas de adequabilidade climática para o cultivo da soja no Zimbabwe sob as condições climáticas atuais (Current suitability) e sob os cenários futuros SSP1-2.6 e SSP2-4.5 para os períodos de 2021–2040 e 2041–2060. Os valores de adequabilidade variam de 0 (baixa adequabilidade) a 1 (alta adequabilidade), estimados por meio do modelo ensemble obtido com o pacote `ENMTML`.
+
+A adequabilidade climática atual foi maior nas regiões norte e centro-leste do Zimbabwe, onde foram observados valores superiores a 0,75. Em contraste, as regiões sudoeste e parte do sul apresentaram menor adequabilidade, indicando condições menos favoráveis ao cultivo da soja.
+
+As projeções futuras mantiveram o padrão espacial de distribuição da adequabilidade climática, porém indicaram redução progressiva das áreas mais favoráveis. As alterações foram discretas no cenário SSP1-2.6, enquanto o cenário SSP2-4.5 apresentou perdas mais acentuadas, principalmente no período de 2041–2060, caracterizadas pela redução das áreas com alta adequabilidade e expansão das áreas com adequabilidade intermediária e baixa.
 
 ## Mapas de extrapolação (MOP)
 
@@ -802,11 +944,13 @@ ggsave("grid_mop_zimbabwe.svg",  plot = grid_mop,        width = 30, height = 20
 
 cat("Mapas MOP salvos!\n")
 ```
+**Figura 2.** Mapas de *Mobility-Oriented Parity* (MOP) utilizados para avaliar o grau de extrapolação ambiental das projeções de adequabilidade climática da soja no Zimbabwe sob as condições atuais e nos cenários futuros SSP1-2.6 e SSP2-4.5 para os períodos de 2021–2040 e 2041–2060. Valores elevados de MOP indicam maior similaridade entre as condições ambientais projetadas e aquelas utilizadas na calibração do modelo, enquanto valores baixos representam áreas de extrapolação ambiental.
 
+Os mapas de *Mobility-Oriented Parity* (MOP) evidenciaram elevada similaridade ambiental entre as condições utilizadas na calibração dos modelos e aquelas projetadas para os cenários futuros (Figura 2). Em praticamente todo o território do Zimbabwe foram observados valores elevados de MOP, indicando que a maior parte das projeções foi realizada dentro do domínio ambiental representado pelos dados de treinamento.
 
-## Síntese metodológica do Script 1
+As menores similaridades ambientais concentraram-se em uma estreita faixa na porção leste do país, próxima à fronteira com Moçambique, onde ocorreram valores reduzidos de MOP em todos os cenários avaliados. Essas regiões representam áreas de extrapolação ambiental, nas quais as projeções apresentam maior incerteza.
 
-Em conjunto, este script constrói a camada ambiental do estudo. Primeiro, organiza os rasters climáticos e filtra os dados fenotípicos para o Zimbabwe. Em seguida, seleciona coordenadas de ocorrência associadas a ambientes produtivos (`GY >= 2000`) e usa essas coordenadas para calibrar modelos de adequabilidade climática. Depois, projeta os modelos para cenários futuros e gera mapas de adequabilidade e extrapolação ambiental. Esses produtos são utilizados posteriormente para integrar desempenho agronômico, estabilidade fenotípica e adequabilidade climática na priorização de ambientes e definição de mega-ambientes.
+A comparação entre os cenários revelou poucas alterações na distribuição espacial dos valores de MOP. Tanto no SSP1-2.6 quanto no SSP2-4.5, os padrões permaneceram semelhantes entre os períodos de 2021–2040 e 2041–2060, indicando que as mudanças climáticas projetadas não promovem expansão expressiva das áreas de extrapolação ambiental. Dessa forma, as projeções de adequabilidade climática foram realizadas, em sua maior parte, dentro de condições ambientais compatíveis com aquelas utilizadas na calibração dos modelos, conferindo maior robustez às estimativas obtidas.
 
 # Script 2 — Modelagem Multinível e G×E
 
@@ -908,7 +1052,7 @@ O segundo boxplot separa os materiais testados das testemunhas, permitindo avali
 ```{r}
 #| label: s2-3-analise-exploratoria
 
-# Fig 01 — Distribuição de GY por ambiente
+#  Distribuição de GY por ambiente
 ggplot(zim, aes(x = env, y = GY, fill = env)) +
   geom_boxplot(alpha = 0.7, outlier.colour = "red") +
   labs(title = "Distribuição de GY por Ambiente — Zimbabwe",
@@ -917,8 +1061,13 @@ ggplot(zim, aes(x = env, y = GY, fill = env)) +
   theme(legend.position = "none",
         axis.text.x = element_text(angle = 45, hjust = 1))
 salvar("01_boxplot_GY_ambiente")
+```
+**Figura 3.** Distribuição da produtividade de grãos (GY, kg ha⁻¹) nos diferentes ambientes experimentais avaliados no Zimbabwe. As caixas representam o intervalo interquartil, a linha central corresponde à mediana, os bigodes representam 1,5 vezes o intervalo interquartil e os pontos indicam observações discrepantes.
 
-# Fig 02 — GY por ambiente separando checks de testados
+A produtividade de grãos apresentou elevada variabilidade entre os ambientes avaliados (Figura 3). Enquanto alguns ambientes apresentaram medianas superiores a 5.000 kg ha⁻¹, outros registraram produtividades inferiores a 2.000 kg ha⁻¹. Também foram observadas diferenças na dispersão dos dados, indicando variação na estabilidade produtiva entre os ambientes e evidenciando a importância de considerar os efeitos ambientais e a interação genótipo × ambiente nas análises subsequentes.
+
+```{r}
+# GY por ambiente separando checks de testados
 ggplot(zim, aes(x = env, y = GY, fill = check)) +
   geom_boxplot(alpha = 0.7, position = position_dodge(0.8)) +
   scale_fill_manual(values = c("0" = "#4393c3", "1" = "#d73027"),
@@ -938,6 +1087,9 @@ zim |>
   arrange(desc(mean_GY)) |>
   print(n = 20)
 ```
+**Figura 4.** Distribuição da produtividade de grãos (GY, kg ha⁻¹) por ambiente experimental no Zimbabwe, comparando os genótipos experimentais (Testados) e as cultivares testemunhas. As caixas representam o intervalo interquartil, a linha central corresponde à mediana, os bigodes representam 1,5 vezes o intervalo interquartil e os pontos indicam valores discrepantes.
+
+Os genótipos experimentais e as testemunhas apresentaram ampla variação de produtividade entre os ambientes avaliados (Figura 4). Em diversos ambientes, os genótipos experimentais exibiram distribuição semelhante ou superior à das testemunhas, indicando a presença de materiais com elevado potencial produtivo. Entretanto, a magnitude dessas diferenças variou entre os ambientes, evidenciando a influência da interação genótipo × ambiente sobre o desempenho relativo dos materiais.
 
 ## Modelo 0 — Modelo nulo / ICC
 
@@ -1030,11 +1182,19 @@ print(head(blup_gen_m2, 10))
 blup_ge <- predict(m2, classify = "gen:env")$pvals
 ```
 
-## Modelo 3 — Factor Analytic ordem 1 (FA1)
+## Modelo 3 — Factor Analytic de primeira ordem (FA1)
 
-O modelo `M3` incorpora uma estrutura Factor Analytic de primeira ordem (`fa(env, 1):gen`) para modelar a interação G×E. Diferentemente do modelo `M2`, que trata a interação de forma independente, a estrutura FA1 permite representar correlações entre ambientes por meio de um fator latente. Isso é útil quando os ambientes compartilham padrões semelhantes de resposta genotípica.
+O modelo `M3` incorpora uma estrutura **Factor Analytic de primeira ordem** (`fa(env, 1):gen`) para modelar a interação genótipo × ambiente. Diferentemente do modelo `M2`, que assume uma única estrutura de variância para a interação G×E, o FA1 representa explicitamente a covariância entre ambientes por meio de um fator latente comum. Essa abordagem é particularmente útil quando diferentes ambientes apresentam padrões semelhantes de resposta dos genótipos, permitindo que a informação de ambientes correlacionados contribua para a predição dos efeitos genotípicos.
 
-O parâmetro `maxit = 30` aumenta o número máximo de iterações disponíveis para o ajuste do modelo, pois estruturas fator-analíticas podem exigir mais iterações para convergir. O modelo é posteriormente comparado aos demais por logLik, AIC e BIC. Quando o FA1 apresenta menor AIC, isso indica que a interação G×E possui estrutura de covariância que melhora o ajuste em relação ao modelo com interação independente.
+Do ponto de vista estatístico, o modelo FA1 decompõe a matriz de covariâncias da interação G×E em dois componentes: as **cargas fatoriais** (*loadings*), que descrevem a associação de cada ambiente ao fator latente, e as **variâncias específicas** (*specific variances*), que representam a parcela da variação não explicada pelo fator comum. Essa parametrização é mais parcimoniosa do que estimar livremente todas as covariâncias entre ambientes, mantendo maior flexibilidade do que modelos que assumem independência da interação G×E.
+
+Devido à maior complexidade da estrutura fator-analítica, o ajuste foi realizado com `maxit = 100`, seguido de atualizações sucessivas (`update()`) até a estabilização da log-verossimilhança. O modelo foi comparado aos demais por meio do log-likelihood, AIC e BIC. Embora o FA1 tenha apresentado melhor ajuste estatístico, evidenciado pela redução do AIC, ele foi utilizado apenas como modelo de comparação. Para as análises subsequentes foi adotado o modelo `M2`, por fornecer uma decomposição direta dos componentes de variância, estimativas de herdabilidade em sentido amplo (H²) e uma interpretação mais simples e adequada aos objetivos aplicados deste estudo.
+
+Devido à forma como a interação G×E é parametrizada no modelo FA1, a decomposição clássica dos componentes de variância em variância genética ($\sigma_g^2$), variância da interação genótipo × ambiente ($\sigma_{G \times E}^2$) e variância residual ($\sigma_e^2$) deixa de estar disponível na forma utilizada pelo modelo `M2`. Consequentemente, a estimativa da herdabilidade em sentido amplo (H²) pela expressão clássica baseada nesses componentes não pode ser obtida diretamente a partir do modelo FA1.
+
+Por esse motivo, as estimativas de H² e a partição dos componentes de variância foram apresentadas utilizando o modelo `M2`. Adicionalmente, a análise da concordância entre os BLUPs e as médias observadas por ambiente, utilizada neste trabalho como medida diagnóstica da confiabilidade das predições, também foi baseada nos BLUPs do modelo `M2`, cuja parametrização preserva a decomposição clássica dos componentes de variância e facilita a interpretação dos resultados.
+
+O modelo `M3` foi mantido na comparação entre modelos, permitindo verificar se a incorporação de uma estrutura fator-analítica melhorava o ajuste aos dados. A redução do AIC em relação ao `M2` indicou a presença de estrutura de covariância na interação G×E, justificando sua consideração na discussão e corroborando a existência de relações entre ambientes que podem subsidiar análises posteriores, como a identificação de mega-ambientes.
 
 ```{r}
 #| label: s2-7-modelo-fa1
@@ -1159,11 +1319,11 @@ climatic <- ggplot(grid_env, aes(x = bio1_annual_temp, y = bio12_annual_precip, 
 climatic
 salvar("11_superficie_resposta_bioclim")
 ```
+**Figura 5.** Superfície de resposta da produtividade média predita de grãos (GY, kg ha⁻¹) em função da temperatura média anual (BIO1) e da precipitação anual (BIO12) para os ambientes experimentais avaliados no Zimbabwe. As cores representam a produtividade média predita pelo modelo, variando de menores valores (roxo) a maiores valores (amarelo), enquanto as linhas de contorno indicam regiões de igual produtividade.
 
-Os gradientes diagonais observados na superfície de resposta, bem como as variações acentuadas de produtividade ao longo dos dois eixos climáticos, indicam que a interação entre temperatura média anual e precipitação anual exerce influência mais determinante sobre o desempenho da soja do que os efeitos isolados de cada variável. Esse padrão evidencia que a produtividade da cultura é governada pelo efeito combinado dos fatores térmicos e hídricos, refletindo o controle conjunto desses componentes sobre os processos fisiológicos que regulam o crescimento e o acúmulo de biomassa.
-Por ser uma espécie de metabolismo fotossintético C3, a soja responde de maneira previsível a essas interações. Temperaturas mais elevadas, desde que dentro da faixa fisiológica ótima e acompanhadas de adequada disponibilidade hídrica, tendem a favorecer maiores taxas fotossintéticas, crescimento vegetativo mais vigoroso e enchimento de grãos mais eficiente. Em contrapartida, a combinação de altas temperaturas com baixa precipitação intensifica o estresse hídrico, promovendo fechamento estomático, redução da assimilação de carbono e queda na produtividade.
-Em ambientes de temperaturas mais baixas e menor disponibilidade hídrica, a dinâmica fisiológica segue trajetória distinta. A redução das taxas de transpiração minimiza as perdas de água pelos tecidos vegetais, aumentando a eficiência no uso da água. Embora a atividade metabólica e o crescimento sejam intrinsecamente menores em temperaturas reduzidas, a menor demanda evaporativa pode sustentar níveis satisfatórios de fotossíntese líquida, sobretudo em ambientes onde a limitação hídrica é o principal fator restritivo à produção.
-Os padrões observados na superfície de resposta são consistentes com essa interpretação. As maiores produtividades preditas ocorreram tanto em condições de elevada temperatura associada à alta precipitação quanto em cenários de baixa temperatura combinada com baixa precipitação, sugerindo que distintas combinações climáticas podem conduzir a níveis semelhantes de desempenho por meio de mecanismos fisiológicos alternativos. Embora a relação entre essas variáveis não seja estritamente linear, os resultados estão alinhados com o conhecimento atual sobre o balanço entre fotossíntese, transpiração e eficiência no uso da água em culturas C3, reforçando que a produtividade da soja depende fundamentalmente do equilíbrio entre demanda atmosférica e disponibilidade hídrica ao longo do ciclo da cultura
+A superfície de resposta evidenciou que a produtividade da soja é influenciada pela interação entre temperatura média anual e precipitação anual, não apresentando resposta linear em relação a nenhuma das variáveis isoladamente (Figura 5). As maiores produtividades preditas ocorreram em condições de temperaturas mais elevadas associadas à maior precipitação, bem como em ambientes de temperaturas mais baixas combinadas com menor disponibilidade hídrica. Em contraste, a combinação de altas temperaturas e baixa precipitação resultou nas menores produtividades preditas.
+
+Esse padrão indica que o desempenho da cultura depende do efeito conjunto das condições térmicas e hídricas, evidenciando que diferentes combinações climáticas podem proporcionar níveis semelhantes de produtividade. Esses resultados reforçam a importância de considerar simultaneamente múltiplas variáveis ambientais na caracterização dos ambientes de cultivo e na interpretação da interação genótipo × ambiente.
 
 ## Bloco B — Efeito de check
 
@@ -1241,6 +1401,11 @@ ggplot(acuracia_env, aes(x = fct_reorder(env, acuracia), y = acuracia, fill = ac
   theme_bw(base_size = 12)
 salvar("03_acuracia_ambiente")
 ```
+**Figura 6.** Acurácia seletiva dos ambientes experimentais do Zimbabwe, estimada pela correlação entre os valores genéticos preditos (BLUPs) obtidos pelo modelo `M2` e as médias fenotípicas observadas de produtividade de grãos (GY). Valores mais elevados indicam maior capacidade do ambiente em discriminar diferenças genéticas entre os genótipos avaliados.
+
+Os ambientes experimentais apresentaram elevada acurácia seletiva, com valores variando aproximadamente de 0,81 a 1,00 (Figura 6). A maior parte dos ambientes apresentou acurácia superior a 0,95, indicando elevada precisão na discriminação dos genótipos.
+
+Os ambientes E0183, E0231, E0051 e E0184 apresentaram os maiores valores de acurácia, próximos de 1,00, enquanto E0110, E0275, E0178 e E0047 apresentaram os menores valores. Ainda assim, todos os ambientes mantiveram acurácia superior a 0,80, evidenciando boa qualidade experimental e confiabilidade das estimativas dos valores genéticos.
 
 ## Bloco D — Análise multi-trait (correlações fenotípicas)
 
@@ -1288,7 +1453,14 @@ ggplot(mat_cor_long, aes(x = Var1, y = Var2, fill = cor)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 0),
         panel.grid  = element_blank())
 salvar("04_correlacao_traits")
+```
+**Figura 7.** Correlações fenotípicas de Pearson entre produtividade de grãos (GY), dias para maturidade (NDM), dias para florescimento (FLW_DAYS), altura de plantas na maturidade (PH_R8), massa de cem grãos (W100G), teor de proteína (PROT) e teor de óleo (OIL) para os ensaios conduzidos no Zimbabwe. 
 
+A matriz de correlação revelou que a maioria das associações entre os caracteres apresentou baixa magnitude (Figura 7). A produtividade de grãos (GY) apresentou correlação positiva fraca com o teor de óleo (OIL; *r* = 0,27), correlação negativa fraca com o teor de proteína (PROT; *r* = −0,33), altura de plantas (PH_R8; *r* = −0,15) e massa de cem grãos (W100G; *r* = −0,11), além de correlações praticamente nulas com os dias para maturidade (NDM; *r* = −0,01) e florescimento (FLW_DAYS; *r* = 0,03).
+
+Entre os demais caracteres, destacou-se a forte correlação positiva entre dias para florescimento e dias para maturidade (*r* = 0,84) e a forte correlação negativa entre teor de proteína e teor de óleo (*r* = −0,70).
+
+```{r}
 # Fig 05 — Scatter GY × NDM
 medias_gen |>
   filter(!is.na(GY), !is.na(NDM)) |>
@@ -1301,7 +1473,13 @@ medias_gen |>
        x = "Dias para Maturidade (NDM)", y = "GY médio (kg/ha)") +
   theme_bw(base_size = 12)
 salvar("05_scatter_GY_NDM")
+```
 
+**Figura 8.** Relação entre a produtividade média de grãos (GY, kg ha⁻¹) e os dias para maturidade (NDM) dos genótipos avaliados no Zimbabwe. Cada ponto representa a média fenotípica de um genótipo, enquanto a linha vermelha tracejada corresponde ao ajuste de regressão linear e a faixa cinza representa o intervalo de confiança de 95%.
+
+A produtividade de grãos apresentou baixa associação linear com os dias para maturidade (Figura 8). Os genótipos mais produtivos distribuíram-se ao longo de praticamente toda a faixa de maturidade avaliada, e a baixa inclinação da reta de regressão indica ausência de tendência consistente entre a duração do ciclo e a produtividade média. Esse resultado é consistente com a baixa correlação observada entre GY e NDM.
+
+```{r}
 # Fig 06 — Scatter GY × W100G
 medias_gen |>
   filter(!is.na(GY), !is.na(W100G), W100G > 0) |>
@@ -1314,6 +1492,9 @@ medias_gen |>
   theme_bw(base_size = 12)
 salvar("06_scatter_GY_W100G")
 ```
+**Figura 9.** Relação entre a produtividade média de grãos (GY, kg ha⁻¹) e a massa de cem grãos (W100G) dos genótipos avaliados no Zimbabwe. Cada ponto representa a média fenotípica de um genótipo, enquanto a linha vermelha tracejada corresponde ao ajuste de regressão linear e a faixa cinza representa o intervalo de confiança de 95%.
+
+A produtividade de grãos apresentou baixa associação com a massa de cem grãos (Figura 9), com tendência linear levemente negativa. Os genótipos mais produtivos distribuíram-se ao longo de ampla faixa de valores de W100G, indicando ausência de relação consistente entre o tamanho das sementes e a produtividade média. Esse padrão é consistente com a baixa correlação observada entre essas variáveis.
 
 ## Bloco E — Estabilidade WAASB
 
@@ -1400,6 +1581,11 @@ ggplot(waasb_tab, aes(x = WAASB, y = blup_gy, label = gen)) +
   theme_bw(base_size = 12)
 salvar("07_biplot_WAASB")
 ```
+**Figura 10.** Biplot da produtividade de grãos predita pelos BLUPs (GY) em função do índice WAASB para os genótipos de soja avaliados no Zimbabwe. O índice WAASB representa a estabilidade fenotípica, sendo que menores valores indicam maior estabilidade. As linhas tracejadas correspondem às médias gerais de produtividade e WAASB, dividindo os genótipos em quatro quadrantes de desempenho.
+
+O biplot WAASB × GY permitiu avaliar simultaneamente a produtividade média e a estabilidade fenotípica dos genótipos (Figura 10). Os genótipos localizados no quadrante superior esquerdo (Quadrante I) combinaram elevada produtividade e alta estabilidade (menores valores de WAASB), destacando-se G148, G020, G145, G110, G006, G144 e G068.
+
+No quadrante superior direito (Quadrante II) foram agrupados genótipos de elevada produtividade, porém com maiores valores de WAASB, incluindo G150, G149 e G107. O quadrante inferior esquerdo (Quadrante III) reuniu genótipos de baixa produtividade e maior estabilidade relativa, enquanto o quadrante inferior direito (Quadrante IV) concentrou os materiais com baixa produtividade e menor estabilidade.
 
 ## Comparação dos modelos
 
@@ -1474,7 +1660,13 @@ ggplot(blup_plot, aes(x = gen, y = predicted.value)) +
        x = "Genótipo", y = "GY predito (kg/ha)") +
   theme_bw(base_size = 12)
 salvar("08_BLUPs_genotipo", w = 10, h = 12)
+```
+**Figura 11.** Ranking dos genótipos de soja com base nos valores genéticos preditos (BLUPs) para produtividade de grãos (GY), obtidos pelo modelo misto `M2`. Os pontos representam os valores preditos para cada genótipo e as barras horizontais correspondem aos intervalos de confiança de 95%.
 
+Os valores genéticos preditos evidenciaram ampla variabilidade entre os genótipos avaliados, com produtividades estimadas variando aproximadamente de 1.700 a 3.300 kg ha⁻¹ (Figura 11). Os genótipos posicionados na extremidade superior do ranking apresentaram os maiores valores preditos de produtividade, enquanto aqueles na extremidade inferior apresentaram os menores desempenhos. A amplitude dos intervalos de confiança variou entre os genótipos, indicando diferenças na precisão das estimativas.
+
+
+```{r}
 # Fig 09 — Heatmap G×E
 blup_ge |>
   ggplot(aes(x = env, y = gen, fill = predicted.value)) +
@@ -1490,7 +1682,14 @@ blup_ge |>
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         axis.text.y = element_text(size = 7))
 salvar("09_heatmap_GxE", w = 12, h = 14)
+```
+**Figura 12.** Heatmap dos valores genéticos preditos (BLUPs) para produtividade de grãos (GY) das combinações genótipo × ambiente obtidos pelo modelo `M2`. Tons verdes indicam maiores produtividades preditas, enquanto tons alaranjados representam menores valores de produtividade.
 
+O mapa de calor evidenciou elevada heterogeneidade na interação genótipo × ambiente (Figura 12). Poucos genótipos mantiveram desempenho consistentemente elevado em todos os ambientes, enquanto a maioria apresentou variações expressivas na produtividade predita em função das condições ambientais.
+
+Também foram identificados ambientes com maior capacidade discriminatória, caracterizados por ampla variação na produtividade predita entre os genótipos, em contraste com ambientes onde os valores permaneceram mais homogêneos. Esse padrão evidencia alteração no desempenho relativo dos genótipos entre os diferentes ambientes.
+
+```{r}
 # Fig 10 — Partição da variância
 data.frame(
   Componente = c("Genótipo (G)", "Interação G×E", "Resíduo"),
@@ -1519,15 +1718,14 @@ waasb_tab |>
 
 cat(sprintf("\nTodas as figuras salvas em: %s/%s/\n", base_dir, dir_figs))
 ```
+**Figura 13.** Partição dos componentes de variância para produtividade de grãos (GY) estimados pelo modelo misto `M2`. As proporções correspondem à variância atribuída ao efeito de genótipo (G), à interação genótipo × ambiente (G×E) e ao componente residual. A herdabilidade em sentido amplo estimada pelo modelo foi de H² = 0,91.
+
+A decomposição dos componentes de variância revelou que o componente residual respondeu por 54,3% da variância total da produtividade de grãos, seguido pela interação genótipo × ambiente (25,9%) e pelo efeito genotípico (19,9%) (Figura 13). A herdabilidade em sentido amplo foi elevada (H² = 0,91), indicando alta precisão na estimação dos valores genéticos.
 
 
 ## Integração GxE × Adequabilidade Climática
 A clusterização dos ambientes em mega-ambientes climáticos é realizada por *k-means* sobre uma matriz composta por oito variáveis: as cinco adequabilidades (cenário atual e quatro cenários futuros), além das coordenadas geográficas (LAT e LON) e da elevação (ELEV). Todas as variáveis são previamente normalizadas utilizando a função `rescale01()`. O número ótimo de grupos (*k*) é determinado pela maximização do coeficiente médio de silhueta, avaliando valores de *k* entre 2 e `min(6, n_ambientes - 1)`, com 50 inicializações aleatórias para cada valor testado (`seed = 42`). Após a seleção do número ótimo de grupos, o modelo final de *k-means* é ajustado utilizando 100 inicializações aleatórias (`nstart = 100`), aumentando a estabilidade e a reprodutibilidade da solução obtida.
----
-title: "Script 3 — Priorização espacial, mega-ambientes e ranking genotípico"
-format: html
-editor: visual
----
+
 
 ## Objetivo geral do script
 
@@ -1775,7 +1973,14 @@ ggplot() +
   theme_bw()
 
 salvar("11_mapa_IPS", w = 10, h = 8)
+```
+**Figura 14.** Índice de Priorização Espacial (IPS) dos ambientes experimentais avaliados no Zimbabwe, sobreposto ao mapa de adequabilidade climática atual. O tamanho dos círculos representa o valor do IPS de cada ambiente, enquanto as cores indicam os diferentes mega-ambientes obtidos por análise de agrupamento. O fundo corresponde à adequabilidade climática atual estimada pelo modelo de nicho ecológico.
 
+A distribuição espacial do Índice de Priorização Espacial (IPS) evidenciou diferenças entre os ambientes experimentais quanto ao seu potencial de priorização (Figura 14). Os maiores valores de IPS concentraram-se principalmente na região centro-norte do Zimbabwe, coincidindo com áreas de maior adequabilidade climática.
+
+A análise de agrupamento identificou cinco mega-ambientes climáticos distribuídos pelo território. Ambientes pertencentes ao mesmo mega-ambiente apresentaram maior similaridade quanto às condições climáticas e à adequabilidade ambiental.
+
+```{r}
 # Fig 12 — Delta adequabilidade
 tab_master |>
   mutate(delta_suit = suit_futura - atual) |>
@@ -1791,7 +1996,12 @@ tab_master |>
   theme_bw()
 
 salvar("12_delta_adequabilidade", w = 9, h = 7)
+```
+**Figura 15.** Variação percentual da adequabilidade climática futura dos ambientes experimentais do Zimbabwe em relação às condições climáticas atuais. Os valores negativos representam redução da adequabilidade média projetada considerando os cenários climáticos futuros avaliados.
 
+Todos os ambientes apresentaram redução da adequabilidade climática futura em relação às condições atuais (Figura 15), embora com magnitudes distintas. Alguns locais apresentaram pequenas reduções, enquanto outros exibiram perdas mais acentuadas, evidenciando diferenças na persistência da adequabilidade climática entre os ambientes avaliados.
+
+```{r}
 # Fig 13 — BLUP × Suit futura
 tab_master |>
   ggplot(aes(x = blup_gy_env, y = suit_futura, size = IPS, colour = cluster, label = env)) +
@@ -1808,7 +2018,14 @@ tab_master |>
   theme_bw()
 
 salvar("13_blup_vs_suit_futura", w = 10, h = 7)
+```
+**Figura 16.** Relação entre o BLUP médio de produtividade de grãos (GY) e a adequabilidade climática futura dos ambientes experimentais do Zimbabwe. O tamanho dos pontos representa o Índice de Priorização Espacial (IPS), enquanto as cores indicam os diferentes mega-ambientes climáticos. As linhas tracejadas representam os valores médios de BLUP e adequabilidade futura, dividindo os ambientes em quatro quadrantes de desempenho.
 
+A relação entre produtividade predita e adequabilidade climática futura evidenciou diferenças entre os ambientes experimentais (Figura 16). Ambientes localizados no quadrante superior direito apresentaram simultaneamente elevada produtividade média e alta adequabilidade climática futura, enquanto aqueles situados no quadrante inferior esquerdo reuniram baixa produtividade e menor adequabilidade.
+
+Os diferentes mega-ambientes ocuparam posições distintas no espaço formado pelas duas variáveis. Além disso, ambientes com maiores valores de IPS concentraram-se predominantemente entre aqueles com elevada produtividade e maior adequabilidade climática futura.
+
+```{r}
 # Fig 14 — Componentes do IPS
 tab_master |>
   select(env, cluster, n_blup, n_est, n_atual, n_fut, IPS) |>
@@ -1837,7 +2054,14 @@ tab_master |>
   theme(axis.text.x = element_text(angle = 30, hjust = 1))
 
 salvar("14_heatmap_IPS_componentes", w = 9, h = 10)
+```
+**Figura 17.** Decomposição do Índice de Priorização Espacial (IPS) em seus componentes normalizados para cada ambiente experimental do Zimbabwe. As colunas representam os componentes utilizados no cálculo do índice (acurácia seletiva, BLUP médio de produtividade, adequabilidade climática atual e adequabilidade climática futura), enquanto as linhas correspondem aos ambientes, agrupados por mega-ambiente. Valores próximos de 1 (amarelo) indicam maior contribuição relativa do componente para o IPS.
 
+A decomposição do IPS revelou diferenças entre os ambientes quanto à contribuição relativa de seus componentes (Figura 17). Enquanto alguns ambientes apresentaram maiores escores para produtividade e adequabilidade climática, outros se destacaram principalmente pela elevada acurácia seletiva.
+
+A organização por mega-ambientes evidenciou padrões semelhantes entre ambientes pertencentes ao mesmo grupo climático. Os ambientes com maiores valores de IPS apresentaram, em geral, elevados escores de produtividade predita, adequabilidade climática e acurácia seletiva.
+
+```{r}
 # Fig 15 — Top 5 genótipos por mega-ambiente
 top5_ma_full |>
   mutate(gen = tidytext::reorder_within(gen, blup_ma, cluster)) |>
@@ -1855,7 +2079,16 @@ top5_ma_full |>
   theme_bw()
 
 salvar("15_top5_gen_por_megaambiente", w = 12, h = 9)
+```
+**Figura 18.** Genótipos recomendados para cada mega-ambiente climático identificado no Zimbabwe com base no BLUP médio de produtividade de grãos. A posição no eixo horizontal representa o valor médio do BLUP dentro de cada mega-ambiente, enquanto a escala de cores corresponde ao índice WAASB, em que menores valores indicam maior estabilidade fenotípica.
 
+A recomendação de genótipos por mega-ambiente evidenciou diferenças na adaptação dos materiais às distintas condições ambientais do Zimbabwe (Figura 18). Alguns genótipos foram recomendados em mais de um mega-ambiente, enquanto outros apresentaram adaptação mais específica.
+
+Os mega-ambientes MA-3, MA-4 e MA-5 concentraram os maiores valores de BLUP médio, destacando os genótipos G150, G107 e G149. Por outro lado, os mega-ambientes MA-1 e MA-2 apresentaram recomendações mais específicas, incluindo genótipos como G142, G092, G076 e G130.
+
+A coloração dos pontos evidenciou diferenças na estabilidade fenotípica entre os genótipos recomendados, com menores valores de WAASB associados aos materiais mais estáveis.
+
+```{r}
 # Fig 16 — Área adequada com cálculo correto por célula
 thr <- 0.5
 
@@ -1906,6 +2139,11 @@ ggplot(area_df, aes(x = cenario, y = area_km2, fill = pct)) +
 
 salvar("16_area_adequada_por_cenario", w = 10, h = 6)
 ```
+**Figura 19.** Área potencialmente adequada para o cultivo da soja no Zimbabwe, considerando um limiar de adequabilidade climática ≥ 0,5, nas condições atuais e nos cenários futuros SSP1-2.6 e SSP2-4.5 para os períodos de 2021–2040 e 2041–2060. Os valores acima das barras indicam a área estimada (km²) e a variação percentual em relação ao cenário atual.
+
+A área potencialmente adequada para o cultivo da soja foi reduzida em todos os cenários climáticos futuros avaliados (Figura 19). Nas condições atuais, a área adequada foi estimada em aproximadamente 126.007 km². No cenário SSP1-2.6, essa área foi reduzida para 71.096 km² (−43,6%) em 2021–2040 e para 69.481 km² (−44,9%) em 2041–2060.
+
+No cenário SSP2-4.5, a área adequada foi estimada em 85.304 km² (−32,3%) para 2021–2040 e em apenas 27.255 km² (−78,4%) para 2041–2060, correspondendo à maior redução observada entre os cenários avaliados.
 
 ## Bloco 6 — Exportação
 
@@ -1950,14 +2188,181 @@ cat("- tabela_area_adequada_por_cenario.csv\n")
 cat("Figuras salvas em:", file.path(base_dir, dir_figs), "\n")
 ```
 
+# Discussão
+
+## Efeito do ambiente sobre a produtividade da soja no Zimbabwe
+
+A ampla variação observada na produtividade entre os ambientes evidencia a elevada heterogeneidade das condições de cultivo presentes na rede experimental do Zimbabwe. A diferença superior a 7.700 kg ha^-1^ entre os menores e maiores valores de produtividade demonstra que fatores ambientais exerceram influência substancial sobre o desempenho da cultura, resultado esperado em ensaios multiambientais conduzidos sob diferentes condições edafoclimáticas e de manejo .
+
+Essa heterogeneidade foi confirmada quantitativamente pelo coeficiente de correlação intraclasse (ICC = 0,641), indicando que aproximadamente dois terços da variabilidade total da produtividade foram explicados pelas diferenças entre ambientes. Valores dessa magnitude evidenciam forte dependência entre observações pertencentes ao mesmo ambiente e demonstram que modelos convencionais, baseados na independência das observações, não seriam adequados para representar a estrutura hierárquica presente nesses dados .
+
+A elevada contribuição do efeito ambiental também reforça a importância das redes multiambientais para programas de melhoramento. A avaliação de genótipos em ampla diversidade de condições permite caracterizar com maior precisão sua adaptação e reduz o risco de recomendações baseadas em ambientes pouco representativos. Além disso, evidencia que ganhos obtidos em um único ambiente dificilmente podem ser extrapolados para outras regiões de cultivo .
+
+Nesse contexto, a utilização de modelos lineares mistos mostrou-se particularmente apropriada, pois permitiu particionar simultaneamente os componentes genéticos, ambientais e da interação genótipo × ambiente, produzindo estimativas menos viesadas do mérito genético dos materiais avaliados.
+
+## Importância da interação genótipo × ambiente
+
+A decomposição dos componentes de variância revelou que a interação genótipo × ambiente respondeu por aproximadamente 23% da variabilidade total da produtividade, valor superior ao componente genotípico principal (19%). Esse resultado evidencia que alterações no desempenho relativo dos genótipos entre ambientes constituíram uma importante fonte de variação da produtividade observada no presente estudo.
+
+A expressiva contribuição da interação genótipo × ambiente é frequentemente relatada em programas de melhoramento de soja conduzidos em redes multiambientais, especialmente quando os ensaios abrangem regiões contrastantes quanto à altitude, precipitação, temperatura e características edáficas . Nessas condições, diferenças ambientais modificam a expressão fenotípica dos genótipos, fazendo com que a superioridade relativa de um material dependa do ambiente em que é avaliado.
+
+Sob a perspectiva do melhoramento vegetal, a presença de interação genótipo × ambiente possui importantes implicações para a seleção. Quando essa interação é elevada, classificações baseadas exclusivamente nas médias fenotípicas tendem a apresentar menor estabilidade entre ambientes, aumentando o risco de recomendar cultivares com desempenho inconsistente fora das condições nas quais foram originalmente avaliadas . Consequentemente, torna-se necessária a utilização de metodologias capazes de modelar explicitamente a interação G×E, permitindo distinguir genótipos de ampla adaptação daqueles com adaptação específica a determinados conjuntos de ambientes .
+
+A influência da interação G×E também foi evidenciada pelas alterações observadas na classificação dos genótipos após a predição dos BLUPs. Parte das diferenças inicialmente atribuídas ao desempenho médio foi redistribuída após a separação dos componentes genéticos, ambientais e da interação, resultando em estimativas mais robustas do mérito genético dos materiais avaliados. Esse comportamento representa uma das principais vantagens dos modelos mistos em ensaios multiambientais, uma vez que permite reduzir o viés decorrente do desbalanceamento experimental e aumentar a precisão das estimativas genéticas .
+
+## Contribuição dos modelos mistos REML/BLUP
+
+A comparação entre os modelos avaliados demonstrou melhoria progressiva do ajuste estatístico à medida que componentes adicionais foram incorporados à estrutura do modelo. A inclusão do efeito aleatório de genótipo promoveu expressiva redução nos critérios de informação em relação ao modelo nulo, enquanto a incorporação da interação genótipo × ambiente proporcionou novo incremento na qualidade do ajuste, evidenciando que parte substancial da variabilidade observada não poderia ser explicada apenas pelos efeitos principais .
+
+Entretanto, o melhor desempenho foi obtido pelo modelo Factor Analytic de primeira ordem (FA1), que apresentou os menores valores de AIC entre todas as estruturas avaliadas. A superioridade desse modelo indica que a interação genótipo × ambiente não ocorreu de forma completamente aleatória, mas apresentou uma estrutura de covariância entre ambientes passível de ser representada por fatores latentes. Essa característica é consistente com estudos que demonstram que modelos fatoriais descrevem de maneira eficiente as correlações genéticas entre ambientes, reduzindo a complexidade da matriz de covariância sem perda significativa de informação .
+
+Do ponto de vista prático, a utilização da estrutura FA1 demonstra que determinados ambientes compartilham padrões semelhantes de resposta dos genótipos. Em vez de assumir independência entre todos os ambientes, o modelo explora as correlações existentes entre eles, aumentando a precisão da predição dos valores genéticos e reduzindo o número de parâmetros necessários para representar a interação G×E . Como consequência, obtêm-se estimativas mais robustas do desempenho genotípico, particularmente em redes experimentais desbalanceadas ou compostas por grande número de ambientes.
+
+A utilização de modelos fatoriais tornou-se uma das principais abordagens para análise de ensaios multiambientais em programas modernos de melhoramento vegetal . Diversos estudos demonstram que essas estruturas apresentam melhor desempenho do que modelos baseados em matrizes de covariância não estruturadas, especialmente quando o número de ambientes é elevado, permitindo simultaneamente melhorar a qualidade do ajuste, identificar padrões de similaridade entre ambientes e subsidiar a definição de mega-ambientes para recomendação regionalizada de cultivares.
+
+## Predição dos valores genéticos e confiabilidade dos BLUPs
+
+Uma das principais vantagens dos BLUPs consiste na utilização simultânea de toda a informação disponível na população avaliada para a predição dos valores genéticos. Como consequência, as estimativas sofrem um processo de contração ("shrinkage"), pelo qual genótipos avaliados com menor precisão experimental tendem a apresentar valores mais próximos da média populacional, reduzindo o risco de superestimação decorrente de condições ambientais favoráveis ou de reduzido número de observações .
+
+As alterações observadas entre o ranking baseado nas médias fenotípicas e aquele obtido pelos BLUPs refletem diretamente esse comportamento. Parte das diferenças inicialmente atribuídas ao desempenho médio foi redistribuída após a separação dos componentes genéticos, ambientais e da interação genótipo × ambiente, produzindo estimativas mais robustas do mérito genético dos materiais avaliados. Resultados semelhantes têm sido amplamente relatados em programas de melhoramento conduzidos sob múltiplos ambientes, nos quais a utilização de BLUPs proporciona maior precisão na classificação dos genótipos quando comparada a abordagens baseadas exclusivamente em médias observadas (Piepho et al., 2003; Smith et al., 2005).
+
+Além de sua importância para a seleção direta dos materiais superiores, os BLUPs constituíram a base para as análises subsequentes de estabilidade, agrupamento ambiental e integração com a modelagem climática realizadas neste estudo. Dessa forma, a qualidade das estimativas genéticas influencia diretamente a confiabilidade das inferências obtidas nas etapas posteriores da análise, reforçando a relevância da modelagem mista para programas modernos de melhoramento vegetal .
+
+## Estabilidade fenotípica e seleção de genótipos superiores
+
+A estabilidade fenotípica constitui um dos principais critérios de seleção em programas de melhoramento conduzidos em ambientes heterogêneos. Embora elevada produtividade seja requisito fundamental para a recomendação de novas cultivares, genótipos altamente produtivos podem apresentar desempenho inconsistente quando submetidos a diferentes condições ambientais. Dessa forma, programas modernos de melhoramento procuram identificar materiais capazes de combinar elevado potencial produtivo com ampla adaptação e estabilidade fenotípica .
+
+Neste estudo, a estabilidade dos genótipos foi avaliada por meio do índice WAASB (Weighted Average of Absolute Scores from the BLUP Matrix), metodologia proposta por Olivoto et al. (2019), que combina modelos mistos e decomposição por valores singulares (SVD) da matriz BLUP da interação genótipo × ambiente. Diferentemente de abordagens clássicas baseadas exclusivamente em regressões lineares ou componentes principais, o WAASB incorpora simultaneamente a estrutura de variâncias estimada pelos modelos mistos e a magnitude da interação G×E, proporcionando uma medida mais robusta da estabilidade dos genótipos .
+
+Os resultados demonstraram que alguns genótipos apresentaram baixos valores de WAASB, indicando elevada estabilidade fenotípica, embora nem sempre estivessem entre os materiais de maior produtividade média. Em contraste, determinados genótipos destacaram-se pelo elevado desempenho produtivo, porém apresentaram maior contribuição da interação genótipo × ambiente, evidenciando maior sensibilidade às variações ambientais. Esse comportamento confirma que produtividade média e estabilidade representam atributos complementares, cuja associação nem sempre ocorre de forma simultânea .
+
+Sob a perspectiva do melhoramento, a utilização isolada de produtividade ou estabilidade pode conduzir à seleção de materiais excessivamente responsivos ou excessivamente conservadores. Assim, a integração entre os valores genéticos preditos pelos BLUPs e o índice WAASB representa uma estratégia mais equilibrada para identificação de genótipos superiores, permitindo selecionar materiais capazes de combinar elevado potencial produtivo com desempenho consistente ao longo de diferentes ambientes .
+
+A utilização do índice de seleção (SI) complementou essa abordagem ao integrar simultaneamente produtividade e estabilidade em um único critério de classificação. Essa estratégia facilita a identificação de genótipos de ampla adaptação e apresenta elevado potencial para programas nacionais e internacionais de melhoramento, nos quais a recomendação de cultivares depende do desempenho consistente em extensas redes de ensaios multiambientais.
+
+## Adequabilidade climática atual e futura para soja
+
+A forte associação entre florescimento e maturidade (r = 0,84) reflete o controle genético compartilhado das fases fenológicas, sem implicação direta para seleção de produtividade. Mais relevante do ponto de vista prático é o antagonismo proteína–óleo (r = −0,70), que impõe restrição ao melhoramento simultâneo dessas características e exige índices de seleção que ponderem explicitamente os dois componentes de qualidade dos grãos.
+
+Outro resultado relevante foi a ausência de associação consistente entre produtividade de grãos e duração do ciclo. As correlações próximas de zero entre produtividade e dias para maturidade indicam que genótipos mais tardios não apresentaram, necessariamente, maior rendimento. Esse comportamento sugere que, dentro da população avaliada, a produtividade foi determinada principalmente por outros componentes fisiológicos e agronômicos, ampliando as possibilidades de seleção de materiais produtivos em diferentes grupos de maturidade.
+
+Da mesma forma, a baixa correlação entre produtividade e massa de cem grãos indica que o aumento do peso individual das sementes não foi suficiente para explicar a variação observada no rendimento final. Considerando que a produtividade é um caráter quantitativo complexo, determinado pela interação entre número de plantas, número de vagens, número de sementes por vagem e peso individual dos grãos, esse resultado sugere que outros componentes da produção exerceram contribuição mais expressiva para o desempenho dos materiais avaliados .
+
+Em conjunto, as correlações observadas indicam que a seleção para produtividade pode ser conduzida com relativa independência em relação ao ciclo e ao peso individual dos grãos, enquanto características relacionadas à composição química dos grãos exigem maior cautela devido ao antagonismo existente entre proteína e óleo. Essas informações fornecem subsídios importantes para a definição de índices de seleção capazes de equilibrar produtividade, adaptação e qualidade tecnológica dos grãos.
+
+## Integração entre desempenho agronômico e adequabilidade climática
+
+A principal contribuição deste estudo consiste na integração entre modelos mistos para avaliação agronômica e modelagem de nicho ecológico para projeções climáticas futuras. Tradicionalmente, essas abordagens têm sido desenvolvidas de forma independente: programas de melhoramento concentram-se na avaliação do desempenho fenotípico em ensaios multiambientais, enquanto modelos de distribuição de espécies são empregados para estimar a adequabilidade climática de culturas em diferentes cenários ambientais . A integração dessas metodologias amplia significativamente a capacidade de interpretação dos resultados, permitindo incorporar simultaneamente informações agronômicas, ambientais e espaciais ao processo de tomada de decisão em programas de melhoramento.
+
+Os resultados obtidos demonstraram que ambientes altamente produtivos sob as condições climáticas atuais não necessariamente permanecerão entre os mais favoráveis nas projeções futuras. Esse comportamento evidencia que o desempenho observado nas condições presentes não garante adaptação equivalente diante das alterações previstas para temperatura e precipitação ao longo das próximas décadas. Essa constatação reforça a necessidade de incorporar informações climáticas prospectivas ao planejamento de programas de melhoramento, reduzindo a dependência exclusiva de dados históricos para recomendação de cultivares .
+
+Por outro lado, alguns ambientes apresentaram elevada adequabilidade tanto nas condições atuais quanto nos cenários futuros. Esses locais representam áreas estratégicas para a continuidade da avaliação de genótipos, pois reúnem condições favoráveis para a cultura mesmo sob diferentes trajetórias de mudança climática. Sob a perspectiva do melhoramento, tais ambientes podem ser considerados candidatos prioritários para a condução de ensaios de valor de cultivo e uso (VCU), avaliação de linhagens avançadas e programas de seleção recorrente, uma vez que representam ambientes-alvo potencialmente mais estáveis ao longo do tempo .
+
+Outro aspecto relevante refere-se à ausência de correspondência perfeita entre adequabilidade climática e produtividade observada. Esse resultado era esperado, pois modelos de distribuição de espécies descrevem a favorabilidade climática para ocorrência ou desempenho potencial da cultura, mas não incorporam explicitamente fatores agronômicos como fertilidade do solo, manejo, disponibilidade hídrica durante o ciclo, incidência de pragas e doenças ou interações entre fatores bióticos e abióticos . Dessa forma, a modelagem ambiental deve ser interpretada como uma ferramenta complementar ao melhoramento genético, capaz de orientar a definição de ambientes prioritários para avaliação e recomendação de cultivares, mas não como substituta da experimentação de campo.
+
+## Índice de Priorização Espacial como ferramenta de decisão
+
+O Índice de Priorização Espacial (IPS) proposto neste estudo representa uma abordagem integrativa para a seleção de ambientes experimentais, reunindo em uma única métrica, informações provenientes do desempenho agronômico, da qualidade experimental e da adequabilidade climática atual e futura. Em contraste com abordagens tradicionais, que frequentemente consideram apenas a produtividade média ou a representatividade geográfica dos locais de ensaio, o IPS incorpora simultaneamente a acurácia seletiva dos experimentos e a persistência da favorabilidade climática sob diferentes cenários de mudanças climáticas. Essa integração está alinhada às tendências recentes de incorporação de informações ambientais no planejamento de programas de melhoramento vegetal .
+
+A abordagem proposta apresenta vantagens importantes para a definição de ambientes prioritários em redes experimentais. Ambientes altamente produtivos, mas sujeitos à rápida perda de adequabilidade climática ou com baixa qualidade experimental, podem deixar de representar os melhores locais para avaliações de longo prazo. Em contrapartida, ambientes com produtividade intermediária, mas elevada estabilidade climática e alta precisão experimental, podem assumir maior importância estratégica para programas de seleção direcionados à adaptação futura das cultivares. Essa perspectiva está diretamente relacionada ao conceito de Target Population of Environments (TPE), segundo o qual os ambientes de avaliação devem representar não apenas as condições atuais de cultivo, mas também os cenários nos quais as futuras cultivares serão utilizadas.
+
+Outra vantagem do IPS consiste na redução da subjetividade frequentemente associada à escolha dos locais experimentais. Ao integrar diferentes indicadores quantitativos em uma única métrica, torna-se possível estabelecer critérios objetivos para expansão, manutenção ou substituição de ambientes dentro das redes de ensaio. Essa abordagem favorece decisões mais consistentes quanto à distribuição espacial dos experimentos e permite otimizar a utilização de recursos financeiros e operacionais, aspecto particularmente relevante em programas nacionais de melhoramento conduzidos sob limitações orçamentárias .
+
+Embora o IPS tenha sido desenvolvido especificamente para este estudo, sua estrutura apresenta potencial para aplicação em diferentes culturas e programas de melhoramento. A integração entre desempenho agronômico, qualidade experimental e adequabilidade climática fornece uma estrutura flexível para apoiar decisões estratégicas relacionadas ao planejamento de redes experimentais e à recomendação de cultivares em um contexto de mudanças climáticas, podendo ser expandida futuramente com a incorporação de informações genômicas, ambientais e de sensoriamento remoto .
+
+## Mega-ambientes e recomendação regionalizada
+
+A identificação de cinco mega-ambientes demonstra que o território avaliado não constitui um ambiente homogêneo para o cultivo da soja. Embora todos os ensaios tenham sido conduzidos dentro de um mesmo país, diferenças em altitude, temperatura, precipitação e adequabilidade climática foram suficientes para produzir grupos ambientalmente distintos, refletindo diferentes padrões de resposta dos genótipos. A identificação desses grupos está de acordo com o conceito de Target Population of Environments (TPE) , segundo o qual programas de melhoramento devem reconhecer a existência de subconjuntos de ambientes com características ecológicas semelhantes para maximizar a eficiência da seleção e da recomendação de cultivares.
+
+A formação dos mega-ambientes também corrobora os resultados obtidos na modelagem estatística, especialmente a superioridade do modelo Factor Analytic (FA1). Modelos fatoriais assumem que parte da interação genótipo × ambiente pode ser explicada por estruturas latentes de covariância entre ambientes, permitindo identificar grupos de locais com comportamento semelhante (Smith et al., 2001; Smith et al., 2015). Dessa forma, a concordância entre a classificação ambiental obtida pelo FA1 e o agrupamento climático observado neste estudo reforça que a interação G×E apresentou organização espacial consistente, e não um comportamento puramente aleatório.
+
+Sob a perspectiva do melhoramento vegetal, a identificação de mega-ambientes apresenta importantes implicações práticas. Em vez de recomendar uma única cultivar para toda a região produtora, torna-se possível direcionar genótipos específicos para conjuntos de ambientes com características climáticas semelhantes, aumentando a eficiência da recomendação e reduzindo o risco de perdas decorrentes da adaptação inadequada. Além disso, a utilização de mega-ambientes permite racionalizar redes experimentais, reduzindo redundâncias entre locais e direcionando os esforços de avaliação para ambientes representativos da população-alvo de cultivo .
+
+Entretanto, a identificação de genótipos capazes de manter elevado desempenho em múltiplos mega-ambientes demonstra que a seleção para ampla adaptação continua sendo uma estratégia viável e desejável. Esses materiais apresentam especial interesse para programas nacionais de melhoramento, pois permitem ampliar a estabilidade produtiva e simplificar a recomendação de cultivares em regiões sujeitas à elevada variabilidade climática.
+
+Finalmente, a incorporação da adequabilidade climática na definição dos mega-ambientes representa um avanço em relação às abordagens tradicionalmente baseadas apenas na resposta fenotípica dos genótipos. Essa integração permite que a regionalização considere não apenas o comportamento observado nas condições atuais, mas também a persistência da favorabilidade ambiental sob cenários futuros de mudanças climáticas, contribuindo para o planejamento de programas de melhoramento mais resilientes e alinhados às estratégias de agricultura climaticamente inteligente .
+
+## Limitações do estudo
+
+Embora os resultados obtidos tenham demonstrado elevada consistência estatística, algumas limitações devem ser consideradas na interpretação dos resultados.
+
+A primeira refere-se à natureza desbalanceada da rede experimental. Nem todos os genótipos foram avaliados no mesmo número de ambientes, característica comum em programas de melhoramento conduzidos ao longo de múltiplas safras. Embora a metodologia REML/BLUP seja reconhecida por sua robustez frente ao desbalanceamento, a precisão das estimativas ainda depende da quantidade de informação disponível para cada material.
+
+Outra limitação está relacionada à modelagem de nicho ecológico. Os modelos climáticos foram calibrados utilizando a ocorrência da cultura e ambientes de elevada produtividade, não incorporando diretamente diferenças genéticas entre os materiais avaliados. Dessa forma, as projeções representam a adequabilidade potencial para a cultura como um todo, e não para genótipos específicos.
+
+Adicionalmente, fatores como fertilidade do solo, manejo agronômico, disponibilidade hídrica durante o ciclo e incidência de pragas e doenças não foram considerados explicitamente nas projeções ambientais. Esses fatores podem modificar substancialmente a produtividade observada em campo e devem ser incorporados em estudos futuros por meio de modelos mais abrangentes.
+
+## Perspectivas futuras
+
+Os resultados obtidos demonstram o potencial da integração entre modelos mistos, análises de estabilidade e modelagem ambiental como ferramenta para programas modernos de melhoramento vegetal.
+
+Estudos futuros poderão expandir essa abordagem incorporando dados genômicos, permitindo estimar simultaneamente efeitos genéticos, ambientais e genômicos em modelos de seleção genômica dependentes do ambiente. A integração dessas informações poderá aumentar significativamente a capacidade de predição do desempenho de novos genótipos em regiões ainda não avaliadas experimentalmente.
+
+Outra perspectiva promissora consiste na incorporação de variáveis ambientais obtidas por sensoriamento remoto, incluindo índices espectrais da vegetação, umidade do solo, temperatura da superfície e séries temporais climáticas de alta resolução. Essas informações poderão explicar parte da variabilidade atualmente atribuída ao componente residual, aumentando a precisão das estimativas dos modelos mistos.
+
+Finalmente, a estratégia proposta neste estudo pode ser facilmente adaptada para outras culturas e programas internacionais de melhoramento. A combinação entre produtividade, estabilidade fenotípica e adequabilidade climática representa uma abordagem abrangente para identificação de genótipos superiores e definição de ambientes prioritários, contribuindo para o desenvolvimento de sistemas agrícolas mais resilientes frente às mudanças climáticas globais.
 
 # Conclusões
-Os resultados demonstraram que a produtividade da soja no Zimbabwe é fortemente influenciada pela interação genótipo × ambiente, cuja contribuição para a variância total foi superior ao efeito genotípico principal. Esse padrão evidencia a necessidade de abordagens analíticas capazes de considerar simultaneamente desempenho médio, estabilidade e adaptação específica dos genótipos.
 
-Os modelos mistos baseados em REML/BLUP forneceram estimativas robustas do mérito genético dos materiais avaliados, enquanto a análise WAASB permitiu identificar genótipos que combinaram alta produtividade e estabilidade fenotípica. As elevadas acurácias seletivas observadas na maioria dos ambientes reforçam a confiabilidade dos rankings obtidos e a consistência das inferências realizadas.
+A interação genótipo × ambiente constituiu uma importante fonte de variação da produtividade, superando o efeito genotípico principal e evidenciando a dependência do desempenho dos genótipos em relação aos ambientes de avaliação. Os modelos mistos REML/BLUP, aliados ao índice WAASB, permitiram identificar genótipos de ampla adaptação e de adaptação específica, com elevada confiabilidade das estimativas, refletida por acurácias seletivas superiores a 0,80 na maior parte dos ambientes.
 
-A modelagem de adequabilidade climática indicou que a distribuição potencial da cultura no Zimbabwe é condicionada principalmente pela interação entre temperatura e disponibilidade hídrica. As projeções futuras sugerem alterações espaciais na adequabilidade climática, com potenciais ganhos e perdas regionais dependendo do cenário de mudança climática considerado. Os mapas de extrapolação ambiental indicaram que a maior parte das projeções foi realizada dentro de condições ambientais compatíveis com o domínio de calibração dos modelos, aumentando a confiabilidade das previsões.
+A modelagem de nicho ecológico indicou redução da área climaticamente adequada para o cultivo da soja em todos os cenários futuros avaliados, com a maior contração projetada no cenário SSP2-4.5 para o período de 2041–2060 (−78,4%). Os mapas de *Mobility-Oriented Parity* (MOP) demonstraram que as projeções foram realizadas predominantemente dentro do domínio ambiental utilizado na calibração dos modelos, conferindo maior robustez às estimativas de adequabilidade.
 
-A integração entre desempenho agronômico e adequabilidade climática por meio do Índice de Priorização Espacial permitiu identificar ambientes estratégicos para expansão da cultura e selecionar genótipos com maior potencial de adaptação futura. Além disso, a definição de mega-ambientes climáticos possibilitou direcionar recomendações específicas para diferentes regiões de produção, aproximando os resultados da aplicação prática em programas de melhoramento e planejamento agrícola.
+A integração entre desempenho agronômico, estabilidade fenotípica e adequabilidade climática, por meio do Índice de Priorização Espacial (IPS) e da definição de cinco mega-ambientes climáticos, permitiu identificar ambientes estratégicos para avaliação e recomendar genótipos de forma regionalizada. De maneira geral, os resultados demonstram que a integração entre modelos mistos, análise de estabilidade e modelagem ambiental constitui uma abordagem eficiente para subsidiar programas de melhoramento orientados à adaptação às mudanças climáticas.
 
-De forma geral, este estudo demonstra que a combinação de modelos mistos, análise de estabilidade e modelagem ambiental constitui uma abordagem eficiente para apoiar a seleção de genótipos e a tomada de decisão frente aos desafios impostos pela variabilidade ambiental e pelas mudanças climáticas, contribuindo para o desenvolvimento de sistemas de produção de soja mais resilientes e sustentáveis no Zimbabwe.
+
+# Referências
+
+Alliprandini, L. F., Abatti, C., Bertagnolli, P. F., Cavassim, J. E., Gabe, H. L., Kurek, A., Matsumoto, M. N., de Oliveira, M. A. R., Pitol, C., Prado, L. C., Steckling, C., & Vello, N. A. (2009). Understanding soybean maturity groups in Brazil: environment, cultivar classification, and stability. *Crop Science*, 49, 801–808.
+
+Andrade, A. F. A., Velazco, S. J. E., & De Marco Júnior, P. (2020). ENMTML: An R package for a straightforward construction of complex ecological niche models. *Environmental Modelling & Software*, 125, 104615.
+
+Araújo, M. B., & New, M. (2007). Ensemble forecasting of species distributions. *Trends in Ecology & Evolution*, 22, 42–47.
+
+Araújo, M. B., & Peterson, A. T. (2012). Uses and misuses of bioclimatic envelope modeling. *Ecology*, 93, 1527–1539.
+
+Araújo, M., et al. (2025). *Pan-African Soybean Trials Network*. Repositório público de dados.
+
+Booth, T. H., Nix, H. A., Busby, J. R., & Hutchinson, M. F. (2014). BIOCLIM: The first species distribution modelling package, its early applications and relevance to most current MAXENT studies. *Diversity and Distributions*, 20, 1–9.
+
+Breiman, L. (2001). Random forests. *Machine Learning*, 45, 5–32.
+
+Butler, D. G., Cullis, B. R., Gilmour, A. R., Gogel, B. J., & Thompson, R. (2023). *ASReml-R Reference Manual*.
+
+Cooper, M., & Hammer, G. L. (1996). *Plant Adaptation and Crop Improvement*. CAB International.
+
+Döscher, R., et al. (2022). The EC-Earth3 Earth system model for the Coupled Model Intercomparison Project 6. *Geoscientific Model Development*, 15, 2973–3020.
+
+FAO. (2024). *FAOSTAT: Crops and livestock products*. Food and Agriculture Organization of the United Nations.
+
+Fick, S. E., & Hijmans, R. J. (2017). WorldClim 2: New 1-km spatial resolution climate surfaces for global land areas. *International Journal of Climatology*, 37, 4302–4315.
+
+Guo, Q., Kelly, M., & Graham, C. H. (2005). Support vector machines for predicting distribution of sudden oak death in California. *Ecological Modelling*, 182, 75–90.
+
+Hartman, G. L., West, E. D., & Herman, T. K. (2011). Crops that feed the World 2. Soybean—worldwide production, use, and constraints caused by pathogens and pests. *Food Security*, 3, 5–17.
+
+Henderson, C. R. (1975). Best linear unbiased estimation and prediction under a selection model. *Biometrics*, 31, 423–447.
+
+IPCC. (2023). *Climate Change 2023: Synthesis Report*. Intergovernmental Panel on Climate Change.
+
+Khojely, D. M., Ibrahim, S. E., Sapey, E., & Han, T. (2018). History, current status, and prospects of soybean production and research in sub-Saharan Africa. *The Crop Journal*, 6, 226–235.
+
+Meinshausen, M., et al. (2020). The shared socio-economic pathway greenhouse gas concentrations and their extensions to 2500. *Geoscientific Model Development*, 13, 3571–3605.
+
+Olivoto, T., Lúcio, A. D. C., da Silva, J. A. G., Marchioro, V. S., de Souza, V. Q., & Jost, E. (2019). Mean performance and stability in multi-environment trials I: Combining features of AMMI and BLUP techniques. *Agronomy Journal*, 111, 2949–2960.
+
+Patterson, H. D., & Thompson, R. (1971). Recovery of inter-block information when block sizes are unequal. *Biometrika*, 58, 545–554.
+
+Phillips, S. J., & Dudík, M. (2008). Modeling of species distributions with Maxent: New extensions and a comprehensive evaluation. *Ecography*, 31, 161–175.
+
+Piepho, H. P., Mohring, J., Melchinger, A. E., & Buchse, A. (2007). BLUP for phenotypic selection in plant breeding and variety testing. *Euphytica*, 161, 209–228.
+
+Rincker, K., et al. (2014). Genetic improvement of U.S. soybean in maturity groups II, III, and IV. *Crop Science*, 54, 1419–1432.
+
+Smith, A. B., Cullis, B. R., & Thompson, R. (2001). Analyzing variety by environment data using multiplicative mixed models and adjustments for spatial field trend. *Biometrics*, 57, 1138–1147.
+
+Smith, A. B., Cullis, B. R., & Thompson, R. (2005). The analysis of crop cultivar breeding and evaluation trials: An overview of current mixed model approaches. *Journal of Agricultural Science*, 143, 449–462.
+
+Van Eeuwijk, F. A., Bustos-Korts, D. V., & Malosetti, M. (2016). What should students in plant breeding know about the statistical aspects of genotype × environment interactions? *Crop Science*, 56, 2119–2140.
+
+Yan, W., & Kang, M. S. (2002). *GGE Biplot Analysis: A Graphical Tool for Breeders, Geneticists, and Agronomists*. CRC Press.
